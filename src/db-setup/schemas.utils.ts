@@ -1,4 +1,24 @@
+import chalk from 'chalk';
+import { findConfigFile } from '../utils/findConfig';
+import { findProjectRoot } from '../utils/findProjectRoot';
 import type { SeedConfig } from './db.setup.types';
+
+export async function loadSeedConfig(): Promise<{ seedOrder: SeedConfig[] }> {
+  const projectRoot = findProjectRoot();
+  const configPath = findConfigFile(['scripts/seed.config.ts', 'seed.config.ts'], projectRoot);
+
+  if (!configPath) {
+    throw new Error('No config file found!');
+  }
+
+  try {
+    const configModule = await import(configPath);
+    return { seedOrder: configModule.seedOrder };
+  } catch (error) {
+    console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
+    process.exit(1);
+  }
+}
 
 // Helper to get all available schemas
 export const getAllSchemas = ({ seedOrder }: { seedOrder: SeedConfig[] }) => seedOrder.map((config) => config.name);

@@ -8,6 +8,7 @@ import { config } from '@dotenvx/dotenvx';
 import { getAllSchemas, getSortedSchemas, validateDependencies } from './schemas.utils';
 import { findConfigFile } from 'utils/findConfig';
 import { findProjectRoot } from 'utils/findProjectRoot';
+import type { SeedConfig } from './db.setup.types';
 
 const projectRoot = findProjectRoot();
 const configPath = findConfigFile(['scripts/seed.config.ts', 'seed.config.ts'], projectRoot);
@@ -16,7 +17,15 @@ if (!configPath) {
   throw new Error('No config file found!');
 }
 
-// const seedOrder = require(configPath);
+// Use dynamic import with proper typing
+let seedOrder: SeedConfig[] = [];
+try {
+  const configModule = await import(configPath);
+  seedOrder = configModule.seedOrder;
+} catch (error) {
+  console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
+  process.exit(1);
+}
 
 // Load server's env file at the start
 config({ path: path.resolve(process.cwd(), 'apps/server/.env.development') });
