@@ -5,27 +5,9 @@ import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '@dotenvx/dotenvx';
-import { getAllSchemas, getSortedSchemas, validateDependencies } from './schemas.utils';
-import { findConfigFile } from 'utils/findConfig';
-import { findProjectRoot } from 'utils/findProjectRoot';
-import type { SeedConfig } from './db.setup.types';
+import { getAllSchemas, getSortedSchemas, loadSeedConfig, validateDependencies } from './schemas.utils';
 
-const projectRoot = findProjectRoot();
-const configPath = findConfigFile(['scripts/seed.config.ts', 'seed.config.ts'], projectRoot);
-
-if (!configPath) {
-  throw new Error('No config file found!');
-}
-
-// Use dynamic import with proper typing
-let seedOrder: SeedConfig[] = [];
-try {
-  const configModule = await import(configPath);
-  seedOrder = configModule.seedOrder;
-} catch (error) {
-  console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
-  process.exit(1);
-}
+const { seedOrder } = await loadSeedConfig();
 
 // Load server's env file at the start
 config({ path: path.resolve(process.cwd(), 'apps/server/.env.development') });
@@ -41,7 +23,7 @@ async function getSchemaSelection() {
   }
 
   // Get available schemas from config
-  const schemas = getAllSchemas().filter((schema) => !SCHEMA_BLACKLIST.includes(schema));
+  const schemas = getAllSchemas({ seedOrder }).filter((schema) => !SCHEMA_BLACKLIST.includes(schema));
 
   if (schemas.length === 0) {
     console.warn(chalk.yellow('⚠️ No schema files found'));
