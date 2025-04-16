@@ -16,6 +16,8 @@ if (!configPath) {
   throw new Error('No config file found!');
 }
 
+// const seedOrder = require(configPath);
+
 // Load server's env file at the start
 config({ path: path.resolve(process.cwd(), 'apps/server/.env.development') });
 
