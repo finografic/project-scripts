@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-export function findConfigFile(configNames: string[], startDir = process.cwd()): string | null {
+export const findConfigFile = (configNames: string[], startDir = process.cwd()): string | null => {
   let dir = startDir;
   while (true) {
     for (const name of configNames) {
@@ -13,4 +13,4 @@ export function findConfigFile(configNames: string[], startDir = process.cwd()):
     dir = parent;
   }
   return null;
-}
+};

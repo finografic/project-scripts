@@ -5,13 +5,13 @@ import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '@dotenvx/dotenvx';
-// import { getAllSchemas, getSortedSchemas, validateDependencies } from './seed.config';
-
+import { getAllSchemas, getSortedSchemas, validateDependencies } from './schemas.utils';
 import { findConfigFile } from 'utils/findConfig';
 import { findProjectRoot } from 'utils/findProjectRoot';
 
 const projectRoot = findProjectRoot();
-const configPath = findConfigFile(['scripts/db.seed.config.js', 'db.seed.config.js'], projectRoot);
+const configPath = findConfigFile(['scripts/seed.config.ts', 'seed.config.ts'], projectRoot);
+
 if (!configPath) {
   throw new Error('No config file found!');
 }
