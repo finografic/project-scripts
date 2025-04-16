@@ -2,6 +2,7 @@
   "name": "@finografic/project-scripts",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.8.0",
   "description": "Fingorafic Project Scripts",
   "author": {
     "name": "Justin",
@@ -12,16 +13,17 @@
   "keywords": [
     "project-scripts"
   ],
-  "packageManager": "pnpm@10.8.0",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
+    "finografic-clean-all": "bin/clean-all.js",
+    "finografic-db-setup": "bin/db.setup.js",
     "project-scripts": "bin/index.js",
     "clean-all": "src/clean-all.ts",
     "db.setup": "src/db.setup.ts"
@@ -35,7 +37,9 @@
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
     "watch": "tsup --format esm,cjs --watch",
     "·········· BUILD": "·····················································",
-    "build": "tsup --format esm,cjs --clean --dts",
+    "build": "tsup src/clean-all.ts --out-dir bin --format esm --dts false && tsup src/db.setup.ts --out-dir bin --format esm --dts false && tsc",
+    "build.V2": "tsc && tsx ./scripts/build-bin.ts",
+    "build.v1": "tsup --format esm,cjs --clean --dts",
     "·········· BUILD:V2": "·····················································",
     "build.v2": "tsup src/index.ts",
     "build.v2.production": "cross-env NODE_ENV=production tsup src/index.ts",
@@ -67,6 +71,9 @@
     "prepack": "pnpm build",
     "prepare": "simple-git-hooks"
   },
+  "peerDependencies": {
+    "jsonc-eslint-parser": "^2.4.0"
+  },
   "dependencies": {
     "@inquirer/confirm": "5.1.8",
     "@inquirer/core": "10.1.9",
@@ -97,9 +104,6 @@
     "tsup": "8.4.0",
     "tsx": "^4.19.3",
     "typescript": "5.8.2"
-  },
-  "peerDependencies": {
-    "jsonc-eslint-parser": "^2.4.0"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

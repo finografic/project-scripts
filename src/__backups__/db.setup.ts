@@ -5,16 +5,7 @@ import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '@dotenvx/dotenvx';
-// import { getAllSchemas, getSortedSchemas, validateDependencies } from './seed.config';
-
-import { findConfigFile } from 'utils/findConfig';
-import { findProjectRoot } from 'utils/findProjectRoot';
-
-const projectRoot = findProjectRoot();
-const configPath = findConfigFile(['scripts/db.seed.config.js', 'db.seed.config.js'], projectRoot);
-if (!configPath) {
-  throw new Error('No config file found!');
-}
+import { getAllSchemas, getSortedSchemas, validateDependencies } from './seed.config';
 
 // Load server's env file at the start
 config({ path: path.resolve(process.cwd(), 'apps/server/.env.development') });

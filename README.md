@@ -14,6 +14,7 @@ git submodule add git@github.com:finografic/project-scripts.git packages/project
 git commit -m "Convert project-scripts to submodule"
 
 # 5. Don't forget to restore your pnpm-workspace.yaml if you modified it
+
 ```
 
 ---

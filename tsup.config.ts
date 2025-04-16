@@ -1,19 +1,39 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
-  clean: true,
-  dts: true,
-  // From first config
-  entry: ['src/index.ts', 'src/cli.ts'],
-  external: ['fs', 'path'],
-  format: ['cjs', 'esm'],
-  minify: false,
-  noExternal: ['eslint-config-flat-gitignore'],
-  outDir: 'dist',
-  platform: 'node',
-  shims: true,
-  sourcemap: false,
-  splitting: false,
-  target: 'node18',
-  treeshake: true,
-});
+export default defineConfig([
+  // Build CLI scripts to bin/
+  {
+    entry: ['src/clean-all.ts', 'src/db.setup.ts'],
+    outDir: 'bin',
+    format: ['esm'],
+    target: 'node18',
+    platform: 'node',
+    shims: true,
+    clean: true,
+    minify: false,
+    splitting: false,
+    sourcemap: false,
+    dts: false, // No types for CLI
+    banner: {
+      js: '#!/usr/bin/env node',
+    },
+    external: ['fs', 'path', 'child_process', 'chalk', '@inquirer/prompts', '@dotenvx/dotenvx'],
+    treeshake: true,
+  },
+  // Build library entry point to dist/
+  {
+    entry: ['src/index.ts'],
+    outDir: 'dist',
+    format: ['esm', 'cjs'],
+    target: 'node18',
+    platform: 'node',
+    shims: true,
+    clean: false, // Already cleaned above
+    minify: false,
+    splitting: false,
+    sourcemap: false,
+    dts: true, // Types for library
+    external: ['fs', 'path'],
+    treeshake: true,
+  },
+]);

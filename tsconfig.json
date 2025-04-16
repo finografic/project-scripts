@@ -1,14 +1,34 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "baseUrl": ".",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowJs": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "constants/*": [
+        "./src/constants/*"
+      ],
+      "hooks/*": [
+        "./src/hooks/*"
+      ],
+      "lib/*": [
+        "./src/lib/*"
+      ],
+      "types": [
+        "./src/types"
+      ],
+      "types/*": [
+        "./src/types/*"
+      ],
+      "utils/*": [
+        "./src/utils/*"
+      ]
+    },
   },
-  "include": ["**/*.ts"]
+  "include": ["src"]
 }
