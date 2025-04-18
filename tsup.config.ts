@@ -3,7 +3,10 @@ import { defineConfig } from 'tsup';
 export default defineConfig([
   // Build CLI scripts to bin/
   {
-    entry: ['src/clean-all/clean-all.ts', 'src/db-setup/db-setup.ts'],
+    entry: {
+      'clean-all': 'src/clean-all/clean-all.ts',
+      'db-setup': 'src/db-setup/db-setup.ts',
+    },
     outDir: 'bin',
     format: ['esm'],
     target: 'node18',
@@ -27,11 +30,11 @@ export default defineConfig([
       'db-setup/index': 'src/db-setup/index.ts',
     },
     outDir: 'dist',
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     target: 'node18',
     platform: 'node',
     shims: true,
-    clean: false, // Already cleaned above
+    clean: true,
     minify: false,
     splitting: false,
     sourcemap: false,
