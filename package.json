@@ -14,9 +14,13 @@
     "project-scripts"
   ],
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    "./clean-all": {
+      "types": "./dist/clean-all/index.d.ts",
+      "import": "./dist/clean-all/index.js"
+    },
+    "./db-setup": {
+      "types": "./dist/db-setup/index.d.ts",
+      "import": "./dist/db-setup/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -37,7 +41,7 @@
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
     "watch": "tsup --format esm,cjs --watch",
     "·········· BUILD": "·····················································",
-    "build": "tsup src/clean-all.ts --out-dir bin --format esm --dts false && tsup src/db.setup.ts --out-dir bin --format esm --dts false && tsc",
+    "build": "tsup",
     "build.V2": "tsc && tsx ./scripts/build-bin.ts",
     "build.v1": "tsup --format esm,cjs --clean --dts",
     "·········· BUILD:V2": "·····················································",

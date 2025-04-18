@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig([
   // Build CLI scripts to bin/
   {
-    entry: ['src/clean-all.ts', 'src/db.setup.ts'],
+    entry: ['src/clean-all/clean-all.ts', 'src/db-setup/db-setup.ts'],
     outDir: 'bin',
     format: ['esm'],
     target: 'node18',
@@ -20,9 +20,12 @@ export default defineConfig([
     external: ['fs', 'path', 'child_process', 'chalk', '@inquirer/prompts', '@dotenvx/dotenvx'],
     treeshake: true,
   },
-  // Build library entry point to dist/
+  // Build library entry points to dist/
   {
-    entry: ['src/index.ts'],
+    entry: {
+      'clean-all/index': 'src/clean-all/index.ts',
+      'db-setup/index': 'src/db-setup/index.ts',
+    },
     outDir: 'dist',
     format: ['esm', 'cjs'],
     target: 'node18',
