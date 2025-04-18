@@ -1,9 +1,9 @@
-#!/usr/bin/env tsx
+// #!/usr/bin/env tsx
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { deleteAsync } from 'del';
 import chalk from 'chalk';
-import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import fs from 'fs';
 
 // Get workspace root - it's 2 levels up from this script
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -66,6 +66,7 @@ interface CleanOptions {
 function isFile(path: string): boolean {
   try {
     return fs.statSync(path).isFile();
+    // biome-ignore lint/correctness/noUnusedVariables: <explanation>
   } catch (error) {
     return false;
   }
@@ -80,6 +81,7 @@ async function cleanAll({ dryRun = false, verbose = false, recursive = false }: 
   );
   if (dryRun) console.log(chalk.yellow('DRY RUN - no files will be deleted\n'));
 
+  // biome-ignore lint/correctness/noUnusedVariables: <explanation>
   let totalPaths = 0;
   let totalFiles = 0;
   const rootPaths = new Set<string>();

@@ -1,7 +1,7 @@
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
-export const findConfigFile = (configNames: string[], startDir = process.cwd()): string | null => {
+export const findScriptConfigFile = (configNames: string[], startDir = process.cwd()): string | null => {
   let dir = startDir;
   while (true) {
     for (const name of configNames) {

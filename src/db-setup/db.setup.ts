@@ -1,10 +1,10 @@
-#!/usr/bin/env tsx
+// #!/usr/bin/env tsx
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '@dotenvx/dotenvx';
 import { checkbox } from '@inquirer/prompts';
 import chalk from 'chalk';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 import { getSchemaSelection, loadSeedConfig } from './schemas.utils';
 import { PATH_FOLDER_ENV } from './schemas.config';
 
@@ -13,7 +13,6 @@ import { PATH_FOLDER_ENV } from './schemas.config';
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 
-// Validate NODE_ENV is one of the expected values
 if (!['development', 'test', 'production'].includes(nodeEnv)) {
   console.warn(chalk.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
 }
@@ -81,7 +80,7 @@ async function main() {
       process.exit(0);
     }
 
-            const { seedOrder } = await loadSeedConfig();
+    const { seedOrder } = await loadSeedConfig();
     const schemas = operations.includes('seed') ? await getSchemaSelection({ seedOrder }) : [];
 
     // Execute selected operations
