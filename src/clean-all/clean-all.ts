@@ -2,7 +2,7 @@ import { deleteAsync } from 'del';
 import chalk from 'chalk';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { CleanOptions } from './clean-all.types';
+import type { CleanOptions, DeleteProgress } from './clean-all.types';
 import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean.config';
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';
@@ -11,7 +11,7 @@ const WORKSPACE_ROOT = findProjectRoot();
 
 // Helper to determine if we're in a package directory
 
-async function cleanAll({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
+export async function clean({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
   const packageScope = getPackageScope();
   const baseDir = packageScope ? path.join(WORKSPACE_ROOT, packageScope) : WORKSPACE_ROOT;
 
@@ -35,7 +35,7 @@ async function cleanAll({ dryRun = false, verbose = false, recursive = false }: 
         dryRun,
         dot: true,
         onProgress: verbose
-          ? (progress: { totalCount: number; deletedCount: number; percent: number }) => {
+          ? (progress: DeleteProgress) => {
               const { deletedCount, totalCount, percent } = progress;
               console.log(chalk.gray(`Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`));
             }
@@ -68,7 +68,7 @@ async function cleanAll({ dryRun = false, verbose = false, recursive = false }: 
       const fileCount = totalFiles;
       console.log(chalk.gray(`  ${fileCount} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(chalk.red('\n✘ Clean operation failed:'), error);
     process.exit(1);
   }
@@ -77,11 +77,12 @@ async function cleanAll({ dryRun = false, verbose = false, recursive = false }: 
 // Allow running directly or importing
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
-  cleanAll({
+  clean({
     dryRun: args.includes('--dry-run') || args.includes('-d'),
     verbose: args.includes('--verbose') || args.includes('-v'),
     recursive: args.includes('--recursive') || args.includes('-r'),
   });
 }
 
-export { cleanAll as clean };
+// Export as both named and default
+export default clean;
