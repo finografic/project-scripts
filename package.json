@@ -23,14 +23,9 @@
       "import": "./dist/db-setup/index.js"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
-    "finografic-clean-all": "bin/clean-all.js",
-    "finografic-db-setup": "bin/db-setup.js",
-    "project-scripts": "bin/index.js",
-    "clean-all": "src/clean-all/clean-all.ts",
-    "db.setup": "src/db-setup/db-setup.ts"
+    "clean-all": "bin/clean-all.js",
+    "db-setup": "bin/db-setup.js"
   },
   "files": [
     "bin",
