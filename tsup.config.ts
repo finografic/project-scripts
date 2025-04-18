@@ -28,6 +28,7 @@ export default defineConfig([
     entry: {
       'clean-all/index': 'src/clean-all/index.ts',
       'db-setup/index': 'src/db-setup/index.ts',
+      'db-setup/config.template': 'src/db-setup/config.template.ts',
     },
     outDir: 'dist',
     format: ['esm'],
@@ -38,7 +39,7 @@ export default defineConfig([
     minify: false,
     splitting: false,
     sourcemap: false,
-    dts: true, // Types for library
+    dts: true,
     external: ['fs', 'path'],
     treeshake: true,
   },

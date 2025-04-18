@@ -12,16 +12,38 @@ export const loadSeedConfig = async ({
 }: { configFileGlob?: string | string[] } = {}): Promise<{ seedOrder: SeedConfig[] }> => {
   const projectRoot = findProjectRoot();
   const configFileGlobArr = Array.isArray(configFileGlob) ? configFileGlob : [configFileGlob];
-  const configPath = findScriptConfigFile([...configFileGlobArr], projectRoot);
+
+  // Try both .ts and .js extensions
+  const configPath = findScriptConfigFile(
+    configFileGlobArr.flatMap((pattern) => [
+      pattern,
+      pattern.replace(/\.ts$/, '.js'),
+      `${pattern}.js`,
+      `${pattern}.ts`,
+    ]),
+    projectRoot,
+  );
 
   if (!configPath) {
-    throw new Error('No config file found!');
+    throw new Error('No config file found! Please create a seed.config.ts or seed.config.js file.');
   }
 
   try {
     const configModule = await import(configPath);
     return { seedOrder: configModule.seedOrder };
-  } catch (error) {
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ERR_UNKNOWN_FILE_EXTENSION'
+    ) {
+      console.error(chalk.red('\n❌ Error loading TypeScript config file.'));
+      console.error(chalk.yellow('Please either:'));
+      console.error(chalk.yellow('1. Use a .js extension for your config file'));
+      console.error(chalk.yellow('2. Run with tsx if you want to keep the .ts extension'));
+      process.exit(1);
+    }
     console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
     process.exit(1);
   }
