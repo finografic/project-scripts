@@ -1,57 +1,33 @@
 #!/usr/bin/env tsx
-import { checkbox } from '@inquirer/prompts';
-import chalk from 'chalk';
-import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from '@dotenvx/dotenvx';
-import { getAllSchemas, getSortedSchemas, loadSeedConfig, validateDependencies } from './schemas.utils';
+import { checkbox } from '@inquirer/prompts';
+import chalk from 'chalk';
+import { execSync } from 'child_process';
+import { getSchemaSelection, loadSeedConfig } from './schemas.utils';
+import { PATH_FOLDER_ENV } from './schemas.config';
 
-const { seedOrder } = await loadSeedConfig();
+// ======================================================================== //
+// NOTE: LOAD ENV CONFIG
 
-// Load server's env file at the start
-config({ path: path.resolve(process.cwd(), 'apps/server/.env.development') });
+const nodeEnv = process.env.NODE_ENV || 'development';
 
-const SCHEMA_BLACKLIST = ['auth_account', 'auth_session', 'auth_verification'];
-
-async function getSchemaSelection() {
-  const schemasDir = path.join(process.cwd(), 'apps/server/src/db/schemas');
-
-  if (!fs.existsSync(schemasDir)) {
-    console.error(chalk.red(`❌ Schemas directory not found: ${schemasDir}`));
-    process.exit(1);
-  }
-
-  // Get available schemas from config
-  const schemas = getAllSchemas({ seedOrder }).filter((schema) => !SCHEMA_BLACKLIST.includes(schema));
-
-  if (schemas.length === 0) {
-    console.warn(chalk.yellow('⚠️ No schema files found'));
-    return [];
-  }
-
-  const selected = await checkbox({
-    message: 'Select schemas to process',
-    choices: schemas.map((schema) => ({
-      name: schema,
-      value: schema,
-      checked: false,
-    })),
-  });
-
-  // Validate dependencies
-  const missingDeps = validateDependencies(selected);
-  if (missingDeps.length > 0) {
-    console.error(chalk.red('\n❌ Missing dependencies:'));
-    missingDeps.forEach(({ schema, dependencies }) => {
-      console.error(chalk.red(`  ${schema} requires: ${dependencies.join(', ')}`));
-    });
-    process.exit(1);
-  }
-
-  // Sort based on dependencies
-  return getSortedSchemas(selected);
+// Validate NODE_ENV is one of the expected values
+if (!['development', 'test', 'production'].includes(nodeEnv)) {
+  console.warn(chalk.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
 }
+
+const envPath = path.resolve(process.cwd(), `${PATH_FOLDER_ENV}/.env.${nodeEnv}`);
+if (!fs.existsSync(envPath)) {
+  console.error(chalk.red(`❌ Environment file not found: ${envPath}`));
+  process.exit(1);
+}
+
+config({ path: envPath });
+
+// ======================================================================== //
+// NOTE: CHOICES - EXECUTION METHODS
 
 async function generateMigrations() {
   execSync('pnpm --filter @touch/server db.migrations.generate', {
@@ -85,9 +61,12 @@ async function seedData(schemas: string[]) {
   }
 }
 
+// ======================================================================== //
+// NOTE: MAIN FUNCTION
+
 async function main() {
   try {
-    // First, select what operations to perform
+    // INITIAL CHOICES..
     const operations = await checkbox({
       message: 'Select operations to perform',
       choices: [
@@ -102,8 +81,8 @@ async function main() {
       process.exit(0);
     }
 
-    // Then select schemas if needed
-    const schemas = operations.includes('seed') ? await getSchemaSelection() : [];
+            const { seedOrder } = await loadSeedConfig();
+    const schemas = operations.includes('seed') ? await getSchemaSelection({ seedOrder }) : [];
 
     // Execute selected operations
     if (operations.includes('generate')) {
