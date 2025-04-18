@@ -105,7 +105,13 @@ export async function main() {
   }
 }
 
-// Only run if this is the main module
+// Export both the main function and run it if this is the main module
+export default main;
+
+// Run when called directly (e.g., via CLI)
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main();
+  main().catch((error) => {
+    console.error('Failed to run db-setup:', error);
+    process.exit(1);
+  });
 }
