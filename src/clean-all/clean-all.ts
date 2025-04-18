@@ -1,74 +1,15 @@
 import { deleteAsync } from 'del';
 import chalk from 'chalk';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import type { CleanOptions } from './clean-all.types';
+import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean.config';
+import { isFile } from '../utils/fs.utils';
+import { findProjectRoot, getPackageScope } from '../utils/project.utils';
 
-// Get workspace root - it's 2 levels up from this script
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_ROOT = path.resolve(__dirname, '..');
+const WORKSPACE_ROOT = findProjectRoot();
 
 // Helper to determine if we're in a package directory
-function getPackageScope(): string | null {
-  const cwd = process.cwd();
-  // If we're in workspace root, return null
-  if (cwd === WORKSPACE_ROOT) return null;
-
-  // Check if we're in a package directory (apps/* or packages/*)
-  const relativePath = path.relative(WORKSPACE_ROOT, cwd);
-  const parts = relativePath.split(path.sep);
-
-  if ((parts[0] === 'apps' || parts[0] === 'packages') && parts[1]) {
-    return path.join(parts[0], parts[1]);
-  }
-
-  return null;
-}
-
-// Never delete these
-const GLOB_DELETE_EXCLUDE = [
-  '.git',
-  '.env',
-  '.env.*',
-  'pnpm-workspace.yaml',
-  'package.json',
-  'apps',
-  'packages',
-  'config',
-  'scripts',
-] as const;
-
-// Patterns to delete, in order of safety
-const GLOB_DELETE_INCLUDE = [
-  // Build artifacts first
-  '.turbo',
-  '**/dist',
-  '**/*.tsbuildinfo',
-
-  // PNPM specific - most problematic parts first
-  '**/node_modules/.pnpm/**/.*',
-  '**/node_modules/.pnpm/**/*',
-  '**/node_modules/.pnpm',
-  '**/node_modules',
-
-  // Root specific files
-  'pnpm-lock.yaml',
-] as const;
-
-interface CleanOptions {
-  dryRun?: boolean;
-  verbose?: boolean;
-  recursive?: boolean;
-}
-
-// Helper to safely check if path is a file
-function isFile(path: string): boolean {
-  try {
-    return fs.statSync(path).isFile();
-  } catch (error) {
-    return false;
-  }
-}
 
 async function cleanAll({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
   const packageScope = getPackageScope();
@@ -122,6 +63,7 @@ async function cleanAll({ dryRun = false, verbose = false, recursive = false }: 
 
     console.log(chalk.green(`\n✔ Clean ${dryRun ? 'simulation' : 'operation'} completed successfully`));
     console.log(chalk.gray(`  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`));
+    console.log(chalk.gray(`  ${totalPaths} total paths processed`));
     if (totalFiles > 0) {
       const fileCount = totalFiles;
       console.log(chalk.gray(`  ${fileCount} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
@@ -142,5 +84,4 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   });
 }
 
-export type { CleanOptions };
-export { cleanAll as clean, GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE };
+export { cleanAll as clean };

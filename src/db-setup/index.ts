@@ -1,5 +1,3 @@
-export * from './db-setup';
 export { main as default } from './db-setup';
-export * from './db-setup.types';
-export * from './schemas.config';
-export * from './schemas.utils';
+export type { SeedConfig } from './db-setup.types';
+export { PATH_FILES_CONFIG, PATH_FOLDER_SCHEMAS, SCHEMAS_BLOCKLIST } from './schemas.config';
