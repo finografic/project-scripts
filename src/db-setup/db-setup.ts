@@ -1,6 +1,6 @@
-// #!/usr/bin/env tsx
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { config } from '@dotenvx/dotenvx';
 import { checkbox } from '@inquirer/prompts';
 import chalk from 'chalk';
@@ -63,7 +63,7 @@ async function seedData(schemas: string[]) {
 // ======================================================================== //
 // NOTE: MAIN FUNCTION
 
-async function main() {
+export async function main() {
   try {
     // INITIAL CHOICES..
     const operations = await checkbox({
@@ -105,4 +105,7 @@ async function main() {
   }
 }
 
-main();
+// Only run if this is the main module
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

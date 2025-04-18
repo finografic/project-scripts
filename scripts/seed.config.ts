@@ -1,4 +1,4 @@
-import type { SeedConfig } from '../src/db-setup/db.setup.types';
+import type { SeedConfig } from '../src/db-setup/db-setup.types';
 
 export const seedOrder: SeedConfig[] = [
   {

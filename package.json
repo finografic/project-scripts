@@ -23,10 +23,10 @@
   "types": "./dist/index.d.ts",
   "bin": {
     "finografic-clean-all": "bin/clean-all.js",
-    "finografic-db-setup": "bin/db.setup.js",
+    "finografic-db-setup": "bin/db-setup.js",
     "project-scripts": "bin/index.js",
-    "clean-all": "src/clean-all.ts",
-    "db.setup": "src/db.setup.ts"
+    "clean-all": "src/clean-all/clean-all.ts",
+    "db.setup": "src/db-setup/db-setup.ts"
   },
   "files": [
     "bin",
@@ -104,6 +104,13 @@
     "tsup": "8.4.0",
     "tsx": "^4.19.3",
     "typescript": "5.8.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "esbuild",
+      "simple-git-hooks"
+    ]
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

@@ -1,9 +1,8 @@
-#!/usr/bin/env tsx
 import { deleteAsync } from 'del';
 import chalk from 'chalk';
-import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import fs from 'fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import fs from 'node:fs';
 
 // Get workspace root - it's 2 levels up from this script
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

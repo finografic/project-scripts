@@ -3,7 +3,7 @@ import path from 'node:path';
 import chalk from 'chalk';
 import { findScriptConfigFile } from '../utils/config.utils';
 import { findProjectRoot } from '../utils/project.utils';
-import type { SeedConfig } from './db.setup.types';
+import type { SeedConfig } from './db-setup.types';
 import { PATH_FILES_CONFIG, PATH_FOLDER_SCHEMAS, SCHEMAS_BLOCKLIST } from './schemas.config';
 import { checkbox } from '@inquirer/prompts';
 
