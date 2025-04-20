@@ -9,26 +9,33 @@ import { findProjectRoot, getPackageScope } from '../utils/project.utils';
 
 const WORKSPACE_ROOT = findProjectRoot();
 
-// Helper to determine if we're in a package directory
+// Helper to check if a path matches any of our include patterns
+const matchesIncludePattern = (filePath: string): boolean => {
+  return GLOB_DELETE_INCLUDE.some((pattern) => {
+    // Convert glob pattern to regex
+    const regexPattern = pattern.replace(/\./g, '\\.').replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*');
+    return new RegExp(`^${regexPattern}$`).test(filePath);
+  });
+};
 
 export async function clean({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
-  // Debug info
-  console.log(chalk.magenta('\nDebug Information:'));
-  console.log(chalk.magenta('  Current Directory:', process.cwd()));
-  console.log(chalk.magenta('  Project Root:', WORKSPACE_ROOT));
+  // Path info
+  console.log(chalk.white('\nPath Information:'));
+  console.log(chalk.gray('  Current Directory:', process.cwd()));
+  console.log(chalk.gray('  Project Root:', WORKSPACE_ROOT));
 
   const packageScope = getPackageScope();
   const baseDir = packageScope ? path.join(WORKSPACE_ROOT, packageScope) : WORKSPACE_ROOT;
 
-  console.log(chalk.magenta('  Package Scope:', packageScope || 'none'));
-  console.log(chalk.magenta('  Base Directory:', baseDir));
+  // Determine scope type for messaging
+  const scopeType = packageScope ? 'Local package' : recursive ? 'Project (deep)' : 'Project root (only)';
+
+  console.log(chalk.gray('  Package Scope:', packageScope || 'none'));
+  console.log(chalk.gray('  Base Directory:', baseDir));
+  console.log(chalk.gray('  Scope Type:', scopeType));
 
   // Operation info
-  console.log(
-    chalk[dryRun ? 'gray' : 'magenta'](
-      `\nCleaning ${packageScope || 'workspace root'}${recursive ? ' recursively' : ''}...`,
-    ),
-  );
+  console.log(chalk[dryRun ? 'gray' : 'magenta'](`\nCleaning ${scopeType}...`));
 
   if (dryRun) {
     console.log(chalk.gray('DRY RUN - no files will be deleted'));
@@ -82,11 +89,13 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
         });
       }
 
-      // Add root-level paths to our set
+      // Add root-level paths to our set if they match include patterns
       deletedPaths.forEach((file) => {
         const relPath = path.relative(baseDir, file);
         const rootPath = relPath.split(path.sep)[0];
-        if (rootPath) rootPaths.add(rootPath);
+        if (rootPath && matchesIncludePattern(rootPath)) {
+          rootPaths.add(rootPath);
+        }
       });
 
       totalPaths += deletedPaths.length;
@@ -94,10 +103,13 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
     }
 
     if (verbose || dryRun) {
-      console.log(chalk[dryRun ? 'gray' : 'magenta']('\nRoot paths affected:'));
-      Array.from(rootPaths)
-        .sort()
-        .forEach((file) => console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`)));
+      const filteredRootPaths = Array.from(rootPaths).filter(matchesIncludePattern);
+      if (filteredRootPaths.length > 0) {
+        console.log(chalk[dryRun ? 'gray' : 'magenta']('\nRoot paths affected:'));
+        filteredRootPaths
+          .sort()
+          .forEach((file) => console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`)));
+      }
     }
 
     // Summary
@@ -106,18 +118,10 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
         `\n✔ Clean ${dryRun ? 'simulation' : 'operation'} completed successfully`,
       ),
     );
-    console.log(
-      chalk[dryRun ? 'gray' : 'magenta'](
-        `  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`,
-      ),
-    );
-    console.log(chalk[dryRun ? 'gray' : 'magenta'](`  ${totalPaths} total paths processed`));
+    console.log(chalk.gray(`  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`));
+    console.log(chalk.gray(`  ${totalPaths} total paths processed`));
     if (totalFiles > 0) {
-      console.log(
-        chalk[dryRun ? 'gray' : 'magenta'](
-          `  ${totalFiles} total files ${dryRun ? 'would be' : 'were'} deleted\n`,
-        ),
-      );
+      console.log(chalk.gray(`  ${totalFiles} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
     }
   } catch (error: unknown) {
     console.error(chalk.yellow('\n✘ Clean operation failed:'));
@@ -143,5 +147,4 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   });
 }
 
-// Export as both named and default
 export default clean;

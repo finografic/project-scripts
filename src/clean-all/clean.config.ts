@@ -15,6 +15,7 @@ export const GLOB_DELETE_EXCLUDE = [
 export const GLOB_DELETE_INCLUDE = [
   // Build artifacts first
   '.turbo',
+  '.tsup',
   '**/dist',
   '**/*.tsbuildinfo',
 
