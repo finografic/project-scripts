@@ -12,13 +12,36 @@ const WORKSPACE_ROOT = findProjectRoot();
 // Helper to determine if we're in a package directory
 
 export async function clean({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
+  // Debug info
+  console.log(chalk.magenta('\nDebug Information:'));
+  console.log(chalk.magenta('  Current Directory:', process.cwd()));
+  console.log(chalk.magenta('  Project Root:', WORKSPACE_ROOT));
+
   const packageScope = getPackageScope();
   const baseDir = packageScope ? path.join(WORKSPACE_ROOT, packageScope) : WORKSPACE_ROOT;
 
+  console.log(chalk.magenta('  Package Scope:', packageScope || 'none'));
+  console.log(chalk.magenta('  Base Directory:', baseDir));
+
+  // Operation info
   console.log(
-    chalk.yellow(`\nCleaning ${packageScope || 'workspace root'}${recursive ? ' recursively' : ''}...`),
+    chalk[dryRun ? 'gray' : 'magenta'](
+      `\nCleaning ${packageScope || 'workspace root'}${recursive ? ' recursively' : ''}...`,
+    ),
   );
-  if (dryRun) console.log(chalk.yellow('DRY RUN - no files will be deleted\n'));
+
+  if (dryRun) {
+    console.log(chalk.gray('DRY RUN - no files will be deleted'));
+    console.log(chalk.gray('Patterns to be processed:'));
+    GLOB_DELETE_INCLUDE.forEach((pattern) => {
+      console.log(chalk.gray(`  - ${pattern}`));
+    });
+    console.log(chalk.gray('\nExcluded patterns:'));
+    GLOB_DELETE_EXCLUDE.forEach((pattern) => {
+      console.log(chalk.gray(`  - ${pattern}`));
+    });
+    console.log('');
+  }
 
   let totalPaths = 0;
   let totalFiles = 0;
@@ -31,17 +54,33 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
       // Only apply recursive flag at root level
       const finalPattern = !packageScope && recursive ? fullPattern : fullPattern.replace(/^\*\*\//, '');
 
+      if (verbose) {
+        console.log(chalk[dryRun ? 'gray' : 'magenta'](`\nProcessing pattern: ${pattern}`));
+        console.log(chalk[dryRun ? 'gray' : 'magenta'](`Final pattern: ${finalPattern}`));
+      }
+
       const deletedPaths = await deleteAsync(finalPattern, {
         dryRun,
         dot: true,
         onProgress: verbose
           ? (progress: DeleteProgress) => {
               const { deletedCount, totalCount, percent } = progress;
-              console.log(chalk.gray(`Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`));
+              console.log(
+                chalk[dryRun ? 'gray' : 'magenta'](
+                  `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
+                ),
+              );
             }
           : undefined,
         ignore: GLOB_DELETE_EXCLUDE.map((p) => path.join(baseDir, p).replace(/\\/g, '/')),
       });
+
+      if (verbose && deletedPaths.length > 0) {
+        console.log(chalk[dryRun ? 'gray' : 'magenta']('\nPaths affected:'));
+        deletedPaths.forEach((file) => {
+          console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`));
+        });
+      }
 
       // Add root-level paths to our set
       deletedPaths.forEach((file) => {
@@ -55,21 +94,41 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
     }
 
     if (verbose || dryRun) {
-      console.log('\nRoot paths that would be affected:');
+      console.log(chalk[dryRun ? 'gray' : 'magenta']('\nRoot paths affected:'));
       Array.from(rootPaths)
         .sort()
-        .forEach((file) => console.log(chalk.gray(`- ${file}`)));
+        .forEach((file) => console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`)));
     }
 
-    console.log(chalk.green(`\n✔ Clean ${dryRun ? 'simulation' : 'operation'} completed successfully`));
-    console.log(chalk.gray(`  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`));
-    console.log(chalk.gray(`  ${totalPaths} total paths processed`));
+    // Summary
+    console.log(
+      chalk[dryRun ? 'gray' : 'green'](
+        `\n✔ Clean ${dryRun ? 'simulation' : 'operation'} completed successfully`,
+      ),
+    );
+    console.log(
+      chalk[dryRun ? 'gray' : 'magenta'](
+        `  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`,
+      ),
+    );
+    console.log(chalk[dryRun ? 'gray' : 'magenta'](`  ${totalPaths} total paths processed`));
     if (totalFiles > 0) {
-      const fileCount = totalFiles;
-      console.log(chalk.gray(`  ${fileCount} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
+      console.log(
+        chalk[dryRun ? 'gray' : 'magenta'](
+          `  ${totalFiles} total files ${dryRun ? 'would be' : 'were'} deleted\n`,
+        ),
+      );
     }
   } catch (error: unknown) {
-    console.error(chalk.red('\n✘ Clean operation failed:'), error);
+    console.error(chalk.yellow('\n✘ Clean operation failed:'));
+    if (error instanceof Error) {
+      console.error(chalk.yellow('  Error:', error.message));
+      if (error.stack) {
+        console.error(chalk.yellow('  Stack:', error.stack));
+      }
+    } else {
+      console.error(chalk.yellow('  Unknown error:', error));
+    }
     process.exit(1);
   }
 }
