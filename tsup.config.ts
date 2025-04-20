@@ -40,6 +40,7 @@ export default defineConfig([
     splitting: false,
     sourcemap: false,
     dts: true,
+    bundle: true,
     external: ['fs', 'path'],
     treeshake: true,
   },
