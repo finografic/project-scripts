@@ -137,7 +137,7 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
     }
     process.exit(1);
   }
-  console.log('/n');
+  console.log('\n');
 }
 
 // Allow running directly or importing
