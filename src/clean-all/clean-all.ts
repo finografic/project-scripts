@@ -19,6 +19,9 @@ const matchesIncludePattern = (filePath: string): boolean => {
 };
 
 export async function clean({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
+  if (dryRun) {
+    console.log(chalk.green('DRY RUN - no files will be deleted\n'));
+  }
   // Path info
   console.log(chalk.white('\nPath Information:'));
   console.log(chalk.gray('  Current Directory:', process.cwd()));
@@ -35,10 +38,9 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
   console.log(chalk.gray('  Scope Type:', scopeType));
 
   // Operation info
-  console.log(chalk[dryRun ? 'gray' : 'magenta'](`\nCleaning ${scopeType}...`));
+  console.log(chalk[dryRun ? 'white' : 'magenta'](`\nCleaning ${scopeType}...\n`));
 
   if (dryRun) {
-    console.log(chalk.gray('DRY RUN - no files will be deleted'));
     console.log(chalk.gray('Patterns to be processed:'));
     GLOB_DELETE_INCLUDE.forEach((pattern) => {
       console.log(chalk.gray(`  - ${pattern}`));
@@ -135,6 +137,7 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
     }
     process.exit(1);
   }
+  console.log('/n');
 }
 
 // Allow running directly or importing
