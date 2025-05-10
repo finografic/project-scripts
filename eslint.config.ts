@@ -1,4 +1,4 @@
-import { ERROR, fino, INCLUDE_FILES_TS, OFF } from '@finografic/eslint-config';
+import { ERROR, fino, GLOB_ALL_SRC, OFF } from '@finografic/eslint-config';
 
 export default fino(
   {
@@ -19,6 +19,6 @@ export default fino(
     },
   },
   {
-    files: [...INCLUDE_FILES_TS],
+    files: [...GLOB_ALL_SRC],
   },
 );

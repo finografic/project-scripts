@@ -2,7 +2,7 @@ import { deleteAsync } from 'del';
 import chalk from 'chalk';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { CleanOptions, DeleteProgress } from './clean-all.types';
+import type { CleanOptions, DeleteProgress } from './clean.types';
 import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean.config';
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';

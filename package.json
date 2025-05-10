@@ -14,9 +14,9 @@
     "project-scripts"
   ],
   "exports": {
-    "./clean-all": {
-      "types": "./dist/clean-all/index.d.ts",
-      "import": "./dist/clean-all/index.js"
+    "./clean": {
+      "types": "./dist/clean/index.d.ts",
+      "import": "./dist/clean/index.js"
     },
     "./db-setup": {
       "types": "./dist/db-setup/index.d.ts",
@@ -24,7 +24,7 @@
     }
   },
   "bin": {
-    "clean-all": "bin/clean-all.js",
+    "clean": "bin/clean.js",
     "db-setup": "bin/db-setup.js"
   },
   "files": [
@@ -52,12 +52,16 @@
     "view.registry.gitub": "dotenvx run -- pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "···················································",
     "eslint-config": "dotenvx run -- pnpm update @finografic/eslint-config --latest",
+    "upgrade.deps.all": "pnpm update --latest",
     "·········· LINTING": "···················································",
     "lint": "eslint .",
+    "lint.dry": "eslint . --fix-dry-run",
     "lint.fix": "eslint . --fix",
     "lint.prod": "cross-env NODE_ENV=production eslint .",
+    "lint.dry.prod": "cross-env NODE_ENV=production eslint . --fix-dry-run",
     "lint.fix.prod": "cross-env NODE_ENV=production eslint . --fix",
     "lint.strict": "cross-env STRICT_LINT=true eslint .",
+    "inspect.eslint-config": "eslint-config-inspector",
     "·········· BIOME": "·····················································",
     "biome.format": "biome format --write .",
     "biome.lint": "biome lint .",
@@ -74,41 +78,42 @@
     "jsonc-eslint-parser": "^2.4.0"
   },
   "dependencies": {
-    "@inquirer/confirm": "5.1.8",
-    "@inquirer/core": "10.1.9",
-    "@inquirer/input": "4.1.8",
-    "@inquirer/prompts": "7.1.0",
-    "del": "8.0.0",
+    "@inquirer/confirm": "5.1.9",
+    "@inquirer/core": "10.1.10",
+    "@inquirer/input": "4.1.9",
+    "@inquirer/prompts": "7.5.0",
     "parse-gitignore": "^2.0.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@dotenvx/dotenvx": "1.39.0",
-    "@eslint/js": "9.23.0",
-    "@finografic/eslint-config": "9.0.10",
+    "@dotenvx/dotenvx": "1.43.0",
+    "@eslint/js": "9.26.0",
+    "@finografic/eslint-config": "9.18.4",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "22.13.14",
+    "@types/node": "22.15.17",
     "@types/prompts": "^2.4.9",
     "@types/yargs": "^17.0.33",
     "chalk": "5.4.1",
-    "dotenv": "^16.4.7",
+    "del": "8.0.0",
+    "dotenv": "^16.5.0",
     "env-cmd": "^10.1.0",
-    "eslint": "^9.23.0",
-    "eslint-plugin-jsonc": "^2.4.0",
+    "eslint": "^9.26.0",
+    "eslint-plugin-jsonc": "^2.20.0",
     "eslint-plugin-node": "^11.1.0",
-    "globals": "^16.0.0",
-    "lint-staged": "^15.5.0",
-    "simple-git-hooks": "^2.12.1",
+    "globals": "^16.1.0",
+    "lint-staged": "^15.5.2",
+    "simple-git-hooks": "^2.13.0",
     "tsup": "8.4.0",
-    "tsx": "^4.19.3",
-    "typescript": "5.8.2"
+    "tsx": "^4.19.4",
+    "typescript": "5.8.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "@biomejs/biome",
       "esbuild",
-      "simple-git-hooks"
+      "simple-git-hooks",
+      "unrs-resolver"
     ]
   },
   "simple-git-hooks": {

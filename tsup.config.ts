@@ -4,7 +4,7 @@ export default defineConfig([
   // Build CLI scripts to bin/
   {
     entry: {
-      'clean-all': 'src/clean-all/clean-all.ts',
+      'clean': 'src/clean/clean.ts',
       'db-setup': 'src/db-setup/db-setup.ts',
     },
     outDir: 'bin',
@@ -26,7 +26,7 @@ export default defineConfig([
   // Build library entry points to dist/
   {
     entry: {
-      'clean-all/index': 'src/clean-all/index.ts',
+      'clean/index': 'src/clean/index.ts',
       'db-setup/index': 'src/db-setup/index.ts',
       'db-setup/config.template': 'src/db-setup/config.template.ts',
     },

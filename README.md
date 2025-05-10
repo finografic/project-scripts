@@ -10,19 +10,19 @@ pnpm add -D @finografic/project-scripts
 
 ## Utilities
 
-### `clean-all`
+### `clean`
 
 A utility for cleaning build artifacts and dependencies from your project.
 
 ```bash
 # Clean with default options
-clean-all
+clean
 
 # Clean recursively (includes all workspaces)
-clean-all --recursive
+clean --recursive
 
 # Dry run (shows what would be deleted)
-clean-all --dry-run
+clean --dry-run
 
 # Available flags
 --recursive, -r    Clean all workspaces recursively
