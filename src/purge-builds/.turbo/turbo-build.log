@@ -1,8 +1,5 @@
 
-
-> @workspace/purge-builds@0.0.1 prebuild /Users/justin/repos-finografic/touch-monorepo/packages/purge-builds
-> node -v | grep -q 'v20.15.0' || (echo 'ERROR: Node v20.15.0 required for build' && exit 1)
-
+[43m[30m WARN [39m[49m Unsupported engine: wanted: {"node":"20.15.0"} (current: {"node":"v22.17.1","pnpm":"10.13.1"})
 
 > @workspace/purge-builds@0.0.1 build /Users/justin/repos-finografic/touch-monorepo/packages/purge-builds
 > rm -rf dist && tsup
@@ -15,4 +12,4 @@
 [34mCLI[39m Cleaning output folder
 [34mESM[39m Build start
 [32mESM[39m [1mdist/index.js [22m[32m8.26 KB[39m
-[32mESM[39m ⚡️ Build success in 7ms
+[32mESM[39m ⚡️ Build success in 8ms
