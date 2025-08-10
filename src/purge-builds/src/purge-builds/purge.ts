@@ -147,19 +147,19 @@ setTimeout(cleanupNodeModules, 1000);
     }
 
     // Wait for completion
-    const spinner = ora('Waiting for node_modules deletion...').start();
+    const spinner = ora("Waiting for node_modules deletion...").start();
     let attempts = 0;
     const maxAttempts = 10; // 5 seconds total (500ms * 10)
 
     while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       try {
         await fs.access(originalPath);
         // Still exists
       } catch {
         // node_modules is gone
-        spinner.succeed('Successfully deleted node_modules');
+        spinner.succeed("Successfully deleted node_modules");
         return true;
       }
 
@@ -167,7 +167,7 @@ setTimeout(cleanupNodeModules, 1000);
       spinner.text = `Waiting for node_modules deletion... (${attempts}/${maxAttempts})`;
     }
 
-    spinner.warn('Deletion process started but completion unconfirmed');
+    spinner.warn("Deletion process started but completion unconfirmed");
     return true;
   } catch (error) {
     return false;
@@ -460,11 +460,11 @@ export async function purge({
   console.log(chalk.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
-  const scanSpinner = ora('Scanning for build artifacts...').start();
+  const scanSpinner = ora("Scanning for build artifacts...").start();
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
 
   if (itemsToDelete.length === 0) {
-    scanSpinner.succeed('No build artifacts found to clean!');
+    scanSpinner.succeed("No build artifacts found to clean!");
     return;
   }
 
@@ -530,7 +530,7 @@ export async function purge({
   );
 
   // Actually delete immediate items
-  const deleteSpinner = ora('Deleting items...').start();
+  const deleteSpinner = ora("Deleting items...").start();
   let deletedCount = 0;
   let freedSpace = 0;
   let errorCount = 0;
@@ -622,9 +622,9 @@ export async function purge({
   }
 
   // Clean up any empty directories left behind
-  const cleanupSpinner = ora('Cleaning up empty directories...').start();
+  const cleanupSpinner = ora("Cleaning up empty directories...").start();
   await cleanupEmptyDirectories(workingDir);
-  cleanupSpinner.succeed('Cleaned up empty directories');
+  cleanupSpinner.succeed("Cleaned up empty directories");
 
   // Final summary
   const duration = Date.now() - startTime;
