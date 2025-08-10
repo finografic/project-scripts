@@ -629,20 +629,14 @@ export async function purge({
   // Final summary
   const duration = Date.now() - startTime;
   console.log(chalk.green(`\n✅ Cleanup completed in ${duration}ms`));
-  console.log(chalk.gray(`   • ${deletedCount} items deleted`));
-  console.log(chalk.gray(`   • ${formatBytes(freedSpace)} freed`));
 
-  if (deferredItems.length > 0) {
-    const deferredSize = deferredItems.reduce(
-      (sum, item) => sum + item.size,
-      0
-    );
-    console.log(
-      chalk.yellow(
-        `   • ${deferredItems.length} items deferred (${formatBytes(deferredSize)})`
-      )
-    );
-  }
+  // Add deferred items to totals since we're actively deleting them
+  const deferredSize = deferredItems.reduce((sum, item) => sum + item.size, 0);
+  const totalDeleted = deletedCount + deferredItems.length;
+  const totalFreed = freedSpace + deferredSize;
+
+  console.log(chalk.gray(`   • ${totalDeleted} items deleted`));
+  console.log(chalk.gray(`   • ${formatBytes(totalFreed)} freed`));
 
   if (errorCount > 0) {
     console.log(chalk.yellow(`   • ${errorCount} errors encountered`));
