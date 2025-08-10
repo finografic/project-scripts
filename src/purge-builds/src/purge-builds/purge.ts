@@ -50,10 +50,17 @@ async function scheduleDeferredDeletion(
       ).unref();
     } else {
       // Unix/macOS: Use sleep to delay execution with force
-      spawn("sh", ["-c", `sleep 2 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`], {
-        detached: true,
-        stdio: "ignore",
-      }).unref();
+      spawn(
+        "sh",
+        [
+          "-c",
+          `sleep 2 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`,
+        ],
+        {
+          detached: true,
+          stdio: "ignore",
+        }
+      ).unref();
     }
 
     return true;
@@ -82,23 +89,23 @@ const { spawn } = require('child_process');
 async function cleanupNodeModules() {
   try {
     console.log('🔄 Detached process cleaning up node_modules...');
-    
+
     // Try multiple approaches for stubborn directories
     try {
       await fs.rm('${originalPath}', { recursive: true, force: true });
       console.log('✅ Successfully deleted node_modules (fs.rm)');
     } catch (error) {
       console.log('⚠️ fs.rm failed, trying shell command...');
-      
+
       // Fallback to shell command for stubborn files like .pnpm
       return new Promise((resolve) => {
-        const cmd = process.platform === 'win32' 
+        const cmd = process.platform === 'win32'
           ? 'rmdir /s /q "${originalPath}"'
           : 'rm -rf "${originalPath}" && find "$(dirname "${originalPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true';
-        
+
         const shell = process.platform === 'win32' ? 'cmd' : 'sh';
         const args = process.platform === 'win32' ? ['/c', cmd] : ['-c', cmd];
-        
+
         const proc = spawn(shell, args, { stdio: 'pipe' });
         proc.on('close', (code) => {
           if (code === 0) {
@@ -338,17 +345,19 @@ async function cleanupEmptyDirectories(workingDir: string): Promise<void> {
 /**
  * Find empty node_modules directories
  */
-async function findEmptyNodeModulesDirectories(dirPath: string): Promise<string[]> {
+async function findEmptyNodeModulesDirectories(
+  dirPath: string
+): Promise<string[]> {
   const emptyDirs: string[] = [];
-  
+
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
-    
+
     for (const item of items) {
       if (item.isDirectory()) {
         const itemPath = path.join(dirPath, item.name);
-        
-        if (item.name === 'node_modules') {
+
+        if (item.name === "node_modules") {
           // Check if this node_modules directory is empty
           try {
             const contents = await fs.readdir(itemPath);
@@ -368,7 +377,7 @@ async function findEmptyNodeModulesDirectories(dirPath: string): Promise<string[
   } catch {
     // Ignore access errors
   }
-  
+
   return emptyDirs;
 }
 
