@@ -17,6 +17,9 @@
     "clean",
     "purge",
     "database-setup",
+    "sqlite",
+    "sqlite3",
+    "better-sqlite3",
     "typescript",
     "cli"
   ],
@@ -33,6 +36,10 @@
       "types": "./dist/purge-builds/src/purge-builds/index.d.ts",
       "import": "./dist/purge-builds/src/purge-builds/index.js"
     },
+    "./sqlite-rebuild": {
+      "types": "./dist/sqlite-rebuild/index.d.ts",
+      "import": "./dist/sqlite-rebuild/index.js"
+    },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
@@ -41,7 +48,8 @@
   "bin": {
     "clean-docs": "bin/clean-docs.js",
     "db-setup": "bin/db-setup.js",
-    "purge-builds": "bin/purge-builds.js"
+    "purge-builds": "bin/purge-builds.js",
+    "sqlite-rebuild": "bin/sqlite-rebuild.js"
   },
   "files": [
     "bin",

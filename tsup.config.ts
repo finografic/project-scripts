@@ -1,6 +1,23 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig([
+  // Build sqlite-rebuild CLI script
+  {
+    entry: ["src/sqlite-rebuild/sqlite-rebuild.ts"],
+    outDir: "./bin",
+    format: ["esm"],
+    target: "node18",
+    platform: "node",
+    clean: false,
+    dts: false,
+    bundle: true,
+    splitting: false,
+    treeshake: true,
+    banner: {
+      js: "#!/usr/bin/env node",
+    },
+    external: ["fs", "path", "child_process"],
+  },
   // Build CLI scripts to bin/
   {
     entry: {
@@ -32,6 +49,7 @@ export default defineConfig([
       "db-setup/config.template": "src/db-setup/config.template.ts",
       "purge-builds/src/purge-builds/index":
         "src/purge-builds/src/purge-builds/index.ts",
+      "sqlite-rebuild/index": "src/sqlite-rebuild/index.ts",
       "utils/index": "src/utils/index.ts",
     },
     outDir: "dist",
