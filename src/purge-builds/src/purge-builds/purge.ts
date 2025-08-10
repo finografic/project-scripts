@@ -25,11 +25,39 @@ const DELETE_PATTERNS = {
 // Protection patterns are now handled directly in shouldDelete function
 
 /**
+ * Get the directory where this CLI is currently running from
+ */
+function getCurrentExecutionPath(): string {
+  // Get the actual file path of this running script
+  const scriptPath = process.argv[1];
+  return path.resolve(scriptPath);
+}
+
+/**
+ * Check if a path is part of our current execution environment
+ */
+function isPartOfCurrentExecution(itemPath: string): boolean {
+  const currentScript = getCurrentExecutionPath();
+  
+  // If we're running from node_modules, protect only our specific package
+  if (currentScript.includes('node_modules/@finografic/project-scripts')) {
+    return itemPath.includes('node_modules/@finografic/project-scripts');
+  }
+  
+  // If we're running from a local package, protect that specific path
+  if (currentScript.includes('packages/purge-builds')) {
+    return itemPath.includes('packages/purge-builds/dist');
+  }
+  
+  return false;
+}
+
+/**
  * Check if a path should be deleted based on patterns
  */
 function shouldDelete(itemPath: string, itemName: string, isDirectory: boolean): boolean {
   // Never delete ourselves (self-preservation)
-  if (itemPath.includes('packages/purge-builds/dist')) {
+  if (isPartOfCurrentExecution(itemPath)) {
     return false;
   }
 
@@ -179,7 +207,11 @@ export async function purge({ dryRun = false, verbose = false, recursive = false
   console.log(chalk.white('📁 Scanning for build artifacts...\n'));
   console.log(chalk.gray(`Working Directory: ${workingDir}`));
   console.log(chalk.gray(`Mode: ${recursive ? 'Recursive (deep)' : 'Current level only'}`));
-  console.log(chalk.gray(`Operation: ${dryRun ? 'DRY RUN (simulation)' : 'LIVE (actual deletion)'}\n`));
+  console.log(chalk.gray(`Operation: ${dryRun ? 'DRY RUN (simulation)' : 'LIVE (actual deletion)'}`));
+  
+  // Show self-preservation info
+  const currentScript = getCurrentExecutionPath();
+  console.log(chalk.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
