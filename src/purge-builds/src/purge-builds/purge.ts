@@ -49,8 +49,8 @@ async function scheduleDeferredDeletion(
         }
       ).unref();
     } else {
-      // Unix/macOS: Use sleep to delay execution
-      spawn("sh", ["-c", `sleep 2 && rm -rf "${itemPath}"`], {
+      // Unix/macOS: Use sleep to delay execution with force
+      spawn("sh", ["-c", `sleep 2 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`], {
         detached: true,
         stdio: "ignore",
       }).unref();
@@ -77,12 +77,39 @@ async function executeFromMemory(originalPath: string): Promise<boolean> {
 // Detached purge script
 const fs = require('fs').promises;
 const path = require('path');
+const { spawn } = require('child_process');
 
 async function cleanupNodeModules() {
   try {
     console.log('🔄 Detached process cleaning up node_modules...');
-    await fs.rm('${originalPath}', { recursive: true, force: true });
-    console.log('✅ Successfully deleted node_modules');
+    
+    // Try multiple approaches for stubborn directories
+    try {
+      await fs.rm('${originalPath}', { recursive: true, force: true });
+      console.log('✅ Successfully deleted node_modules (fs.rm)');
+    } catch (error) {
+      console.log('⚠️ fs.rm failed, trying shell command...');
+      
+      // Fallback to shell command for stubborn files like .pnpm
+      return new Promise((resolve) => {
+        const cmd = process.platform === 'win32' 
+          ? 'rmdir /s /q "${originalPath}"'
+          : 'rm -rf "${originalPath}" && find "$(dirname "${originalPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true';
+        
+        const shell = process.platform === 'win32' ? 'cmd' : 'sh';
+        const args = process.platform === 'win32' ? ['/c', cmd] : ['-c', cmd];
+        
+        const proc = spawn(shell, args, { stdio: 'pipe' });
+        proc.on('close', (code) => {
+          if (code === 0) {
+            console.log('✅ Successfully deleted node_modules (shell command)');
+          } else {
+            console.log('⚠️ Shell command completed with code:', code);
+          }
+          resolve();
+        });
+      });
+    }
 
     // Clean up temp files
     await fs.rm('${tempDir}', { recursive: true, force: true });
@@ -287,6 +314,62 @@ async function deleteItem(
   } catch {
     return false;
   }
+}
+
+/**
+ * Clean up empty parent directories after deletion
+ */
+async function cleanupEmptyDirectories(workingDir: string): Promise<void> {
+  try {
+    // Find and remove empty node_modules directories
+    const emptyDirs = await findEmptyNodeModulesDirectories(workingDir);
+    for (const dir of emptyDirs) {
+      try {
+        await fs.rmdir(dir);
+      } catch {
+        // Ignore errors for directories that aren't actually empty
+      }
+    }
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
+/**
+ * Find empty node_modules directories
+ */
+async function findEmptyNodeModulesDirectories(dirPath: string): Promise<string[]> {
+  const emptyDirs: string[] = [];
+  
+  try {
+    const items = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    for (const item of items) {
+      if (item.isDirectory()) {
+        const itemPath = path.join(dirPath, item.name);
+        
+        if (item.name === 'node_modules') {
+          // Check if this node_modules directory is empty
+          try {
+            const contents = await fs.readdir(itemPath);
+            if (contents.length === 0) {
+              emptyDirs.push(itemPath);
+            }
+          } catch {
+            // Ignore access errors
+          }
+        } else {
+          // Recurse into subdirectories
+          const subEmptyDirs = await findEmptyNodeModulesDirectories(itemPath);
+          emptyDirs.push(...subEmptyDirs);
+        }
+      }
+    }
+  } catch {
+    // Ignore access errors
+  }
+  
+  return emptyDirs;
 }
 
 /**
@@ -504,6 +587,9 @@ export async function purge({
       }
     }
   }
+
+  // Clean up any empty directories left behind
+  await cleanupEmptyDirectories(workingDir);
 
   // Final summary
   const duration = Date.now() - startTime;
