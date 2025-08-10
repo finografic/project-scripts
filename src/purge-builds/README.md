@@ -75,7 +75,7 @@ purge-builds --recursive --detach
 2. 📋 **Copies deletion logic** to memory/temp location
 3. 🚀 **Spawns detached process** that runs independently
 4. ✅ **Original process exits** cleanly, freeing all locks
-5. ⏰ **Detached process waits** 3 seconds for full cleanup
+5. ⏰ **Detached process waits** 1 second for full cleanup
 6. 🗑️ **Executes deletion** from outside the target directory
 7. 🧹 **Self-cleans** temporary files
 
@@ -96,12 +96,12 @@ purge-builds --recursive  # Uses timer approach
 
 **How it works:**
 1. 🔄 **Spawns detached shell command** with platform-specific delay
-2. ⏰ **Timer waits** for original process to exit (2 seconds)
+2. ⏰ **Timer waits** for original process to exit (1 second)
 3. 🗑️ **Executes deletion** after delay via shell command
 
 **Platform Commands:**
-- **macOS/Linux**: `sh -c "sleep 2 && rm -rf /path/to/node_modules"`
-- **Windows**: `cmd /c "timeout /t 2 /nobreak && rmdir /s /q C:\path\to\node_modules"`
+- **macOS/Linux**: `sh -c "sleep 1 && rm -rf /path/to/node_modules"`
+- **Windows**: `cmd /c "timeout /t 1 /nobreak && rmdir /s /q C:\path\to\node_modules"`
 
 **Advantages:**
 - ✅ Simple and lightweight
@@ -295,22 +295,30 @@ Operation: DRY RUN (simulation)
 Would have freed 1.2 GB of space.
 ```
 
-### Memory Detachment Output
+### Live Operation Output
 
 ```
-📁 Scanning for build artifacts...
+Working Directory: /path/to/monorepo
+Mode: Recursive (deep)
+Operation: LIVE (actual deletion)
 
-🗑️  Deleting items...
+✔ Found 32 items to clean
+   • 30 directories
+   • 2 files
+   • 2.1 GB total size
+
+✔ Deleted 31 items
 
 🔄 Handling deferred deletions...
 
 🧠 Attempting memory detachment for node_modules...
+⚠ Deletion process started but completion unconfirmed
 ⏰ Memory-detached: node_modules will be deleted after process exits
+✔ Cleaned up empty directories
 
-✅ Cleanup completed in 1247ms
-   • 14 items deleted
-   • 128.5 MB freed
-   • 1 items deferred (1.1 GB)
+✅ Cleanup completed in 8561ms
+   • 32 items deleted
+   • 2.1 GB freed
 ```
 
 ## 🔗 Integration
@@ -363,5 +371,7 @@ This tool represents a novel solution to the "self-deletion paradox" in CLI appl
 - ✨ **Intelligent fallback system** for maximum reliability
 - ✨ **Self-cleaning temporary files** to prevent system pollution
 - ✨ **Real-time progress feedback** with beautiful CLI output
+- ✨ **Interactive spinners** for each operation phase
+- ✨ **Accurate progress tracking** with combined deletion totals
 
 *Built with ❤️ for the JavaScript/TypeScript ecosystem*
