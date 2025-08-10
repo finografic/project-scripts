@@ -11,21 +11,37 @@
   },
   "license": "MIT",
   "keywords": [
-    "project-scripts"
+    "project-scripts",
+    "build-tools",
+    "monorepo",
+    "clean",
+    "purge",
+    "database-setup",
+    "typescript",
+    "cli"
   ],
   "exports": {
-    "./clean": {
-      "types": "./dist/clean/index.d.ts",
-      "import": "./dist/clean/index.js"
+    "./clean-docs": {
+      "types": "./dist/clean-docs/index.d.ts",
+      "import": "./dist/clean-docs/index.js"
     },
     "./db-setup": {
       "types": "./dist/db-setup/index.d.ts",
       "import": "./dist/db-setup/index.js"
+    },
+    "./purge-builds": {
+      "types": "./dist/purge-builds/src/purge-builds/index.d.ts",
+      "import": "./dist/purge-builds/src/purge-builds/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
     }
   },
   "bin": {
-    "clean": "bin/clean.js",
-    "db-setup": "bin/db-setup.js"
+    "clean-docs": "bin/clean-docs.js",
+    "db-setup": "bin/db-setup.js",
+    "purge-builds": "bin/purge-builds.js"
   },
   "files": [
     "bin",
