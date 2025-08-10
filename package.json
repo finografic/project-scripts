@@ -62,10 +62,6 @@
     "lint.fix.prod": "cross-env NODE_ENV=production eslint . --fix",
     "lint.strict": "cross-env STRICT_LINT=true eslint .",
     "inspect.eslint-config": "eslint-config-inspector",
-    "·········· BIOME": "·····················································",
-    "biome.format": "biome format --write .",
-    "biome.lint": "biome lint .",
-    "biome.check": "biome check --apply .",
     "·········· UTILS": "·····················································",
     "tsc.debug": "pnpm exec tsc --pretty --project tsconfig.json",
     "typecheck": "pnpm exec tsc --project tsconfig.json --noEmit",
@@ -86,7 +82,6 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
     "@dotenvx/dotenvx": "1.43.0",
     "@eslint/js": "9.26.0",
     "@finografic/eslint-config": "9.18.4",
@@ -110,7 +105,6 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@biomejs/biome",
       "esbuild",
       "simple-git-hooks",
       "unrs-resolver"
