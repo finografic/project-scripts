@@ -53,6 +53,18 @@ function isPartOfCurrentExecution(itemPath: string): boolean {
 }
 
 /**
+ * Check if we should defer deletion of node_modules
+ */
+function shouldDeferNodeModules(itemPath: string): boolean {
+  const currentScript = getCurrentExecutionPath();
+  const workingDir = process.cwd();
+  
+  // If this is the main node_modules and we're running from within it
+  return itemPath === path.join(workingDir, 'node_modules') && 
+         currentScript.includes('node_modules');
+}
+
+/**
  * Check if a path should be deleted based on patterns
  */
 function shouldDelete(itemPath: string, itemName: string, isDirectory: boolean): boolean {
@@ -264,14 +276,18 @@ export async function purge({ dryRun = false, verbose = false, recursive = false
     return;
   }
 
-  // Actually delete items
+  // Separate items into immediate and deferred deletions
+  const immediateItems = itemsToDelete.filter(item => !shouldDeferNodeModules(item.path));
+  const deferredItems = itemsToDelete.filter(item => shouldDeferNodeModules(item.path));
+
+  // Actually delete immediate items
   console.log(chalk.magenta('🗑️  Deleting items...\n'));
 
   let deletedCount = 0;
   let freedSpace = 0;
   let errorCount = 0;
 
-  for (const item of itemsToDelete) {
+  for (const item of immediateItems) {
     const relativePath = path.relative(workingDir, item.path);
 
     if (verbose) {
@@ -296,11 +312,29 @@ export async function purge({ dryRun = false, verbose = false, recursive = false
     }
   }
 
+  // Handle deferred deletions (node_modules that we can't delete while running from them)
+  if (deferredItems.length > 0) {
+    console.log(chalk.cyan('\n🔄 Handling deferred deletions...\n'));
+    
+    for (const item of deferredItems) {
+      const relativePath = path.relative(workingDir, item.path);
+      console.log(chalk.yellow(`⏸️  Deferred: ${relativePath} (can't delete while running from it)`));
+      
+      // Provide instructions for manual cleanup
+      console.log(chalk.gray(`   Run after this completes: rm -rf ${relativePath} && pnpm install`));
+    }
+  }
+
   // Final summary
   const duration = Date.now() - startTime;
   console.log(chalk.green(`\n✅ Cleanup completed in ${duration}ms`));
   console.log(chalk.gray(`   • ${deletedCount} items deleted`));
   console.log(chalk.gray(`   • ${formatBytes(freedSpace)} freed`));
+
+  if (deferredItems.length > 0) {
+    const deferredSize = deferredItems.reduce((sum, item) => sum + item.size, 0);
+    console.log(chalk.yellow(`   • ${deferredItems.length} items deferred (${formatBytes(deferredSize)})`));
+  }
 
   if (errorCount > 0) {
     console.log(chalk.yellow(`   • ${errorCount} errors encountered`));
