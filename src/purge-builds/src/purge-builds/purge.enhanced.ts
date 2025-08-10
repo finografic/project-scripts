@@ -42,7 +42,7 @@ async function scheduleDeferredDeletion(
       // Windows: Use timeout to delay execution
       spawn(
         "cmd",
-        ["/c", `timeout /t 2 /nobreak && rmdir /s /q "${itemPath}"`],
+        ["/c", `timeout /t 1 /nobreak && rmdir /s /q "${itemPath}"`],
         {
           detached: true,
           stdio: "ignore",
@@ -55,7 +55,7 @@ async function scheduleDeferredDeletion(
         "sh",
         [
           "-c",
-          `sleep 2 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`,
+          `sleep 1 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`,
         ],
         {
           detached: true,
@@ -79,6 +79,8 @@ async function executeFromMemory(originalPath: string): Promise<boolean> {
     // Create a temporary copy of the current script
     const tempDir = await fs.mkdtemp(path.join(tmpdir(), "purge-builds-"));
     const tempScript = path.join(tempDir, "purge-builds-detached.js");
+    const completionMarker = path.join(tempDir, "completed");
+    const errorMarker = path.join(tempDir, "error");
 
     // Create a minimal detached script that can delete the original node_modules
     const detachedScript = `
@@ -87,19 +89,19 @@ const fs = require('fs').promises;
 const path = require('path');
 const { spawn } = require('child_process');
 
+// Create a completion marker file
+const completionMarker = '${completionMarker}';
+const errorMarker = '${errorMarker}';
+
 async function cleanupNodeModules() {
   try {
-    console.log('🔄 Detached process cleaning up node_modules...');
-
     // Try multiple approaches for stubborn directories
     try {
       await fs.rm('${originalPath}', { recursive: true, force: true });
-      console.log('✅ Successfully deleted node_modules (fs.rm)');
+      await fs.writeFile(completionMarker, 'success');
     } catch (error) {
-      console.log('⚠️ fs.rm failed, trying shell command...');
-
       // Fallback to shell command for stubborn files like .pnpm
-      return new Promise((resolve) => {
+      await new Promise((resolve) => {
         const cmd = process.platform === 'win32'
           ? 'rmdir /s /q "${originalPath}"'
           : 'rm -rf "${originalPath}" && find "$(dirname "${originalPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true';
@@ -108,27 +110,31 @@ async function cleanupNodeModules() {
         const args = process.platform === 'win32' ? ['/c', cmd] : ['-c', cmd];
 
         const proc = spawn(shell, args, { stdio: 'pipe' });
-        proc.on('close', (code) => {
+        proc.on('close', async (code) => {
           if (code === 0) {
-            console.log('✅ Successfully deleted node_modules (shell command)');
+            await fs.writeFile(completionMarker, 'success');
           } else {
-            console.log('⚠️ Shell command completed with code:', code);
+            await fs.writeFile(errorMarker, \`Failed with code: \${code}\`);
           }
           resolve();
         });
       });
     }
 
-    // Clean up temp files
-    await fs.rm('${tempDir}', { recursive: true, force: true });
+    // Clean up temp files (except markers)
+    const files = await fs.readdir('${tempDir}');
+    for (const file of files) {
+      if (file !== 'completed' && file !== 'error') {
+        await fs.rm(path.join('${tempDir}', file));
+      }
+    }
   } catch (error) {
-    console.error('❌ Failed to delete node_modules:', error.message);
+    await fs.writeFile(errorMarker, error.message);
   }
 }
 
-// Wait a bit for parent process to exit, then cleanup
-setTimeout(cleanupNodeModules, 1000);
-`;
+// Wait a shorter time for parent process to exit, then cleanup
+setTimeout(cleanupNodeModules, 1000);`;
 
     await fs.writeFile(tempScript, detachedScript);
 
@@ -147,6 +153,25 @@ setTimeout(cleanupNodeModules, 1000);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       try {
+        // Check for completion marker
+        try {
+          await fs.access(completionMarker);
+          spinner.succeed('Successfully deleted node_modules');
+          return true;
+        } catch {
+          // Not completed yet
+        }
+
+        // Check for error marker
+        try {
+          await fs.access(errorMarker);
+          const error = await fs.readFile(errorMarker, 'utf8');
+          spinner.fail(`Failed to delete node_modules: ${error}`);
+          return false;
+        } catch {
+          // No error yet
+        }
+
         // Check if node_modules is gone
         try {
           await fs.access(originalPath);
@@ -287,7 +312,6 @@ async function getDirectorySize(dirPath: string): Promise<number> {
 /**
  * Find all items to delete in a directory
  */
-
 async function findItemsToDelete(
   dirPath: string,
   // biome-ignore lint/style/noInferrableTypes: is's fine
@@ -442,19 +466,6 @@ export async function purge({
   }
 
   const scanSpinner = ora('Scanning for build artifacts...').start();
-  console.log(chalk.gray(`Working Directory: ${workingDir}`));
-  console.log(
-    chalk.gray(`Mode: ${recursive ? "Recursive (deep)" : "Current level only"}`)
-  );
-  console.log(
-    chalk.gray(
-      `Operation: ${dryRun ? "DRY RUN (simulation)" : "LIVE (actual deletion)"}`
-    )
-  );
-
-  // Show self-preservation info
-  const currentScript = getCurrentExecutionPath();
-  console.log(chalk.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
@@ -471,8 +482,9 @@ export async function purge({
   ).length;
   const fileCount = itemsToDelete.filter((item) => item.type === "file").length;
 
+  scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
+
   // Show what will be deleted
-  console.log(chalk.white(`📋 Found ${itemsToDelete.length} items to clean:`));
   console.log(chalk.gray(`   • ${dirCount} directories`));
   console.log(chalk.gray(`   • ${fileCount} files`));
   console.log(chalk.gray(`   • ${formatBytes(totalSize)} total size\n`));
@@ -561,18 +573,9 @@ export async function purge({
       // Try different approaches based on flags and platform
       if (forceDetach) {
         // Try the memory-copy approach first when forced
-        console.log(
-          chalk.cyan(`🧠 Attempting memory detachment for ${relativePath}...`)
-        );
         deleted = await executeFromMemory(item.path);
 
-        if (deleted) {
-          console.log(
-            chalk.green(
-              `⏰ Memory-detached: ${relativePath} will be deleted after process exits`
-            )
-          );
-        } else {
+        if (!deleted) {
           // Fallback to timer approach
           console.log(chalk.cyan(`⏰ Falling back to timer approach...`));
           deleted = await scheduleDeferredDeletion(item.path, relativePath);

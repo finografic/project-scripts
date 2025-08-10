@@ -94,6 +94,7 @@
     "@inquirer/core": "10.1.10",
     "@inquirer/input": "4.1.9",
     "@inquirer/prompts": "7.5.0",
+    "ora": "8.2.0",
     "parse-gitignore": "^2.0.0",
     "yargs": "^17.7.2"
   },
