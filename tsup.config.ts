@@ -21,11 +21,7 @@ export default defineConfig([
     banner: {
       js: "#!/usr/bin/env node",
     },
-    external: [
-      "fs",
-      "path",
-      "child_process",
-    ],
+    external: ["fs", "path", "child_process"],
     treeshake: true,
   },
   // Build library entry points to dist/
