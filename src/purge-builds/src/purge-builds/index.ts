@@ -10,16 +10,18 @@ USAGE:
   purge-builds [OPTIONS]
 
 OPTIONS:
-  -d, --dry-run     Show what would be deleted without actually deleting
-  -v, --verbose     Show detailed progress and file lists
-  -r, --recursive   Deep recursive cleaning throughout the entire tree
-  -h, --help        Show this help message
+  -d, --dry-run       Show what would be deleted without actually deleting
+  -v, --verbose       Show detailed progress and file lists
+  -r, --recursive     Deep recursive cleaning throughout the entire tree
+  --detach            Force detached process deletion for node_modules
+  -h, --help          Show this help message
 
 EXAMPLES:
   purge-builds                    # Clean current directory level only
   purge-builds --dry-run          # Preview what would be deleted
   purge-builds -dv                # Dry run with verbose output
   purge-builds --recursive        # Deep clean entire monorepo tree
+  purge-builds --recursive --detach  # Force detached node_modules deletion
 
 WHAT IT DELETES:
   • Build directories (.turbo, .tsup, dist, node_modules, .pnpm)
@@ -56,6 +58,7 @@ async function main() {
       dryRun: args.includes("--dry-run") || args.includes("-d"),
       verbose: args.includes("--verbose") || args.includes("-v"),
       recursive: args.includes("--recursive") || args.includes("-r"),
+      forceDetach: args.includes("--detach"),
     });
   } catch (error) {
     console.error("Error:", error);
