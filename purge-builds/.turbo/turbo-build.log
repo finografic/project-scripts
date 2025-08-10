@@ -1,0 +1,18 @@
+
+
+> @workspace/purge-builds@0.0.1 prebuild /Users/justin/repos-finografic/touch-monorepo/packages/purge-builds
+> node -v | grep -q 'v20.15.0' || (echo 'ERROR: Node v20.15.0 required for build' && exit 1)
+
+
+> @workspace/purge-builds@0.0.1 build /Users/justin/repos-finografic/touch-monorepo/packages/purge-builds
+> rm -rf dist && tsup
+
+[34mCLI[39m Building entry: {"index":"src/purge-builds/index.ts"}
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.0
+[34mCLI[39m Using tsup config: /Users/justin/repos-finografic/touch-monorepo/packages/purge-builds/tsup.config.ts
+[34mCLI[39m Target: node20
+[34mCLI[39m Cleaning output folder
+[34mESM[39m Build start
+[32mESM[39m [1mdist/index.js [22m[32m8.26 KB[39m
+[32mESM[39m ⚡️ Build success in 7ms

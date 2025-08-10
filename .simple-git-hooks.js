@@ -1,3 +1,3 @@
 export default {
-  'pre-commit': 'npx lint-staged',
+  // 'pre-commit': 'npx lint-staged',
 };

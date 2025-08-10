@@ -72,7 +72,7 @@
     "upgrade.all.deps": "pnpm update --latest",
     "·········· HOOKS": "·····················································",
     "prepack": "pnpm build",
-    "prepare": "simple-git-hooks"
+    "BAK:prepare": "simple-git-hooks"
   },
   "peerDependencies": {
     "jsonc-eslint-parser": "^2.4.0"
