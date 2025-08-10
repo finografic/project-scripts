@@ -30,26 +30,32 @@ const DELETE_PATTERNS = {
 /**
  * Schedule deferred deletion using process detachment techniques
  */
-async function scheduleDeferredDeletion(itemPath: string, relativePath: string): Promise<boolean> {
+async function scheduleDeferredDeletion(
+  itemPath: string,
+  relativePath: string
+): Promise<boolean> {
   try {
     const platform = process.platform;
-    
+
     if (platform === "win32") {
       // Windows: Use timeout to delay execution
-      spawn("cmd", ["/c", `timeout /t 2 /nobreak && rmdir /s /q "${itemPath}"`], {
-        detached: true,
-        stdio: "ignore",
-        shell: true
-      }).unref();
-      
+      spawn(
+        "cmd",
+        ["/c", `timeout /t 2 /nobreak && rmdir /s /q "${itemPath}"`],
+        {
+          detached: true,
+          stdio: "ignore",
+          shell: true,
+        }
+      ).unref();
     } else {
       // Unix/macOS: Use sleep to delay execution
       spawn("sh", ["-c", `sleep 2 && rm -rf "${itemPath}"`], {
         detached: true,
-        stdio: "ignore"
+        stdio: "ignore",
       }).unref();
     }
-    
+
     return true;
   } catch (error) {
     // If process detachment fails, fall back to manual instructions
@@ -63,9 +69,9 @@ async function scheduleDeferredDeletion(itemPath: string, relativePath: string):
 async function executeFromMemory(originalPath: string): Promise<boolean> {
   try {
     // Create a temporary copy of the current script
-    const tempDir = await fs.mkdtemp(path.join(tmpdir(), 'purge-builds-'));
-    const tempScript = path.join(tempDir, 'purge-builds-detached.js');
-    
+    const tempDir = await fs.mkdtemp(path.join(tmpdir(), "purge-builds-"));
+    const tempScript = path.join(tempDir, "purge-builds-detached.js");
+
     // Create a minimal detached script that can delete the original node_modules
     const detachedScript = `
 // Detached purge script
@@ -77,7 +83,7 @@ async function cleanupNodeModules() {
     console.log('🔄 Detached process cleaning up node_modules...');
     await fs.rm('${originalPath}', { recursive: true, force: true });
     console.log('✅ Successfully deleted node_modules');
-    
+
     // Clean up temp files
     await fs.rm('${tempDir}', { recursive: true, force: true });
   } catch (error) {
@@ -88,15 +94,15 @@ async function cleanupNodeModules() {
 // Wait a bit for parent process to exit, then cleanup
 setTimeout(cleanupNodeModules, 3000);
 `;
-    
+
     await fs.writeFile(tempScript, detachedScript);
-    
+
     // Execute the detached script
     spawn(process.execPath, [tempScript], {
       detached: true,
-      stdio: "ignore"
+      stdio: "ignore",
     }).unref();
-    
+
     return true;
   } catch (error) {
     return false;
@@ -439,13 +445,15 @@ export async function purge({
     for (const item of deferredItems) {
       const relativePath = path.relative(workingDir, item.path);
       let deleted = false;
-      
+
       // Try different approaches based on flags and platform
       if (forceDetach) {
         // Try the memory-copy approach first when forced
-        console.log(chalk.cyan(`🧠 Attempting memory detachment for ${relativePath}...`));
+        console.log(
+          chalk.cyan(`🧠 Attempting memory detachment for ${relativePath}...`)
+        );
         deleted = await executeFromMemory(item.path);
-        
+
         if (deleted) {
           console.log(
             chalk.green(
@@ -456,7 +464,7 @@ export async function purge({
           // Fallback to timer approach
           console.log(chalk.cyan(`⏰ Falling back to timer approach...`));
           deleted = await scheduleDeferredDeletion(item.path, relativePath);
-          
+
           if (deleted) {
             console.log(
               chalk.green(
@@ -468,7 +476,7 @@ export async function purge({
       } else {
         // Try timer approach first (simpler)
         deleted = await scheduleDeferredDeletion(item.path, relativePath);
-        
+
         if (deleted) {
           console.log(
             chalk.green(
@@ -477,7 +485,7 @@ export async function purge({
           );
         }
       }
-      
+
       if (!deleted) {
         // Fallback to manual instructions
         console.log(
@@ -491,9 +499,7 @@ export async function purge({
           )
         );
         console.log(
-          chalk.gray(
-            `   Or try: pnpm clean --detach for automatic deletion`
-          )
+          chalk.gray(`   Or try: pnpm clean --detach for automatic deletion`)
         );
       }
     }
