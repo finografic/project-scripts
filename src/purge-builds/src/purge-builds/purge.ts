@@ -138,6 +138,14 @@ setTimeout(cleanupNodeModules, 1000);
       stdio: "ignore",
     }).unref();
 
+    // Check if node_modules exists before waiting
+    try {
+      await fs.access(originalPath);
+    } catch {
+      // If node_modules doesn't exist, no need to wait
+      return true;
+    }
+
     // Wait for completion
     const spinner = ora('Waiting for node_modules deletion...').start();
     let attempts = 0;
@@ -147,16 +155,12 @@ setTimeout(cleanupNodeModules, 1000);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       try {
-        // Check if node_modules is gone
-        try {
-          await fs.access(originalPath);
-          // Still exists
-        } catch {
-          spinner.succeed('Successfully deleted node_modules');
-          return true;
-        }
+        await fs.access(originalPath);
+        // Still exists
       } catch {
-        // Ignore access errors
+        // node_modules is gone
+        spinner.succeed('Successfully deleted node_modules');
+        return true;
       }
 
       attempts++;
@@ -441,7 +445,6 @@ export async function purge({
     );
   }
 
-  const scanSpinner = ora('Scanning for build artifacts...').start();
   console.log(chalk.gray(`Working Directory: ${workingDir}`));
   console.log(
     chalk.gray(`Mode: ${recursive ? "Recursive (deep)" : "Current level only"}`)
@@ -457,6 +460,7 @@ export async function purge({
   console.log(chalk.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
+  const scanSpinner = ora('Scanning for build artifacts...').start();
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
 
   if (itemsToDelete.length === 0) {
@@ -472,7 +476,7 @@ export async function purge({
   const fileCount = itemsToDelete.filter((item) => item.type === "file").length;
 
   // Show what will be deleted
-  console.log(chalk.white(`📋 Found ${itemsToDelete.length} items to clean:`));
+  scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
   console.log(chalk.gray(`   • ${dirCount} directories`));
   console.log(chalk.gray(`   • ${fileCount} files`));
   console.log(chalk.gray(`   • ${formatBytes(totalSize)} total size\n`));
