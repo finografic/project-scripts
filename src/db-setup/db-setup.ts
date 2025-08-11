@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { config } from "@dotenvx/dotenvx";
+import { config } from "dotenv";
 import { checkbox } from "@inquirer/prompts";
 import chalk from "chalk";
 import { execSync } from "node:child_process";
