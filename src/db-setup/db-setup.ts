@@ -67,6 +67,7 @@ async function generateMigrations() {
   console.log("[db-setup] Running generateMigrations...");
   execSync("pnpm --filter @workspace/server db.migrations.generate", {
     stdio: "inherit",
+    env: process.env,
   });
 }
 
@@ -74,6 +75,7 @@ async function runMigrations() {
   console.log("[db-setup] Running runMigrations...");
   execSync("pnpm --filter @workspace/server db.migrations.run", {
     stdio: "inherit",
+    env: process.env,
   });
 }
 
@@ -89,6 +91,7 @@ async function seedData(schemas: string[]) {
         `pnpm --filter @workspace/server db.migrations.seed ${seedName}`,
         {
           stdio: "inherit",
+          env: process.env,
         }
       );
       console.log(chalk.green(`✅ Seeded ${schema} successfully!`));
