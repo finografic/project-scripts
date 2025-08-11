@@ -26,23 +26,28 @@
   "exports": {
     "./clean-docs": {
       "types": "./dist/clean-docs/index.d.ts",
-      "import": "./dist/clean-docs/index.js"
+      "import": "./dist/clean-docs/index.js",
+      "require": "./dist/clean-docs/index.cjs"
     },
     "./db-setup": {
       "types": "./dist/db-setup/index.d.ts",
-      "import": "./dist/db-setup/index.js"
+      "import": "./dist/db-setup/index.js",
+      "require": "./dist/db-setup/index.cjs"
     },
     "./purge-builds": {
       "types": "./dist/purge-builds/src/purge-builds/index.d.ts",
-      "import": "./dist/purge-builds/src/purge-builds/index.js"
+      "import": "./dist/purge-builds/src/purge-builds/index.js",
+      "require": "./dist/purge-builds/src/purge-builds/index.cjs"
     },
     "./sqlite-rebuild": {
       "types": "./dist/sqlite-rebuild/index.d.ts",
-      "import": "./dist/sqlite-rebuild/index.js"
+      "import": "./dist/sqlite-rebuild/index.js",
+      "require": "./dist/sqlite-rebuild/index.cjs"
     },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js"
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs"
     }
   },
   "bin": {
