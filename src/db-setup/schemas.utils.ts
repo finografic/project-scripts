@@ -9,7 +9,7 @@ import { checkbox } from '@inquirer/prompts';
 
 export const loadSeedConfig = async ({
   configFileGlob = PATH_FILES_CONFIG,
-}: { configFileGlob?: string | string[] } = {}): Promise<{ seedOrder: SeedConfig[] }> => {
+}: { configFileGlob?: string | string[] } = {}): Promise<{ seedConfigs: SeedConfig[] }> => {
   const projectRoot = findProjectRoot();
   const configFileGlobArr = Array.isArray(configFileGlob) ? configFileGlob : [configFileGlob];
 
@@ -25,12 +25,12 @@ export const loadSeedConfig = async ({
   );
 
   if (!configPath) {
-    throw new Error('No config file found! Please create a seed.config.ts or seed.config.js file.');
+    throw new Error('No config file found! Please create a db-setup.config.ts or db-setup.config.js file.');
   }
 
   try {
     const configModule = await import(configPath);
-    return { seedOrder: configModule.seedOrder };
+    return { seedConfigs: configModule.seedConfigs };
   } catch (error: unknown) {
     if (
       error &&
@@ -50,18 +50,21 @@ export const loadSeedConfig = async ({
 };
 
 // Helper to get all available schemas
-export const getAllSchemas = ({ seedOrder }: { seedOrder: SeedConfig[] }) =>
-  seedOrder.map((config) => config.name);
+export const getAllSchemas = ({ seedConfigs }: { seedConfigs: SeedConfig[] }) =>
+  seedConfigs.map((config) => config.name);
 
 // Helper to validate dependencies
 export const validateDependencies = ({
-  seedOrder,
+  seedConfigs,
   selectedSchemas,
-}: { seedOrder: SeedConfig[]; selectedSchemas: string[] }) => {
+}: {
+  seedConfigs: SeedConfig[];
+  selectedSchemas: string[];
+}) => {
   const missing: { schema: string; dependencies: string[] }[] = [];
 
   selectedSchemas.forEach((schema) => {
-    const config = seedOrder.find((c) => c.name === schema);
+    const config = seedConfigs.find((c) => c.name === schema);
     if (config?.dependencies) {
       const missingDeps = config.dependencies.filter((dep) => !selectedSchemas.includes(dep));
       if (missingDeps.length > 0) {
@@ -75,16 +78,19 @@ export const validateDependencies = ({
 
 // Helper to sort schemas based on dependencies
 export const getSortedSchemas = ({
-  seedOrder,
+  seedConfigs,
   selectedSchemas,
-}: { seedOrder: SeedConfig[]; selectedSchemas: string[] }) => {
+}: {
+  seedConfigs: SeedConfig[];
+  selectedSchemas: string[];
+}) => {
   const result: string[] = [];
   const visited = new Set<string>();
 
   function visit(schema: string) {
     if (visited.has(schema)) return;
 
-    const config = seedOrder.find((c) => c.name === schema);
+    const config = seedConfigs.find((c) => c.name === schema);
     if (config?.dependencies) {
       config.dependencies.forEach((dep) => {
         if (selectedSchemas.includes(dep)) {
@@ -101,7 +107,7 @@ export const getSortedSchemas = ({
   return result;
 };
 
-export const getSchemaSelection = async ({ seedOrder }: { seedOrder: SeedConfig[] }) => {
+export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedConfig[] }) => {
   const schemasDir = path.join(process.cwd(), PATH_FOLDER_SCHEMAS);
 
   if (!fs.existsSync(schemasDir)) {
@@ -110,7 +116,7 @@ export const getSchemaSelection = async ({ seedOrder }: { seedOrder: SeedConfig[
   }
 
   // Get available schemas from config
-  const schemas = getAllSchemas({ seedOrder }).filter((schema) => !SCHEMAS_BLOCKLIST.includes(schema));
+  const schemas = getAllSchemas({ seedConfigs }).filter((schema) => !SCHEMAS_BLOCKLIST.includes(schema));
 
   if (schemas.length === 0) {
     console.warn(chalk.yellow('⚠️ No schema files found'));
@@ -122,12 +128,12 @@ export const getSchemaSelection = async ({ seedOrder }: { seedOrder: SeedConfig[
     choices: schemas.map((schema) => ({
       name: schema,
       value: schema,
-      checked: false,
+      checked: true,
     })),
   });
 
   // Validate dependencies
-  const missingDeps = validateDependencies({ seedOrder, selectedSchemas });
+  const missingDeps = validateDependencies({ seedConfigs, selectedSchemas });
   if (missingDeps.length > 0) {
     console.error(chalk.red('\n❌ Missing dependencies:'));
     missingDeps.forEach(({ schema, dependencies }) => {
@@ -137,5 +143,5 @@ export const getSchemaSelection = async ({ seedOrder }: { seedOrder: SeedConfig[
   }
 
   // Sort based on dependencies
-  return getSortedSchemas({ seedOrder, selectedSchemas });
+  return getSortedSchemas({ seedConfigs, selectedSchemas });
 };

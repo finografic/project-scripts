@@ -1,6 +1,8 @@
-import type { SeedConfig } from './db-setup.types';
+//NOTE: template for `db-setup.config.ts` file, located in `scripts/` folder
 
-export const seedOrder: SeedConfig[] = [
+import type { SeedConfig, ViewConfig } from './db-setup.types';
+
+export const seedConfigs: SeedConfig[] = [
   {
     name: 'example_schema',
     description: 'Example schema with no dependencies',
@@ -9,5 +11,17 @@ export const seedOrder: SeedConfig[] = [
     name: 'dependent_schema',
     description: 'Example schema with dependencies',
     dependencies: ['example_schema'],
+  },
+];
+
+export const viewsOrder: ViewConfig[] = [
+  {
+    name: 'example_readable',
+    description: 'Example view with no dependencies',
+  },
+  {
+    name: 'dependent_readable',
+    description: 'Example view with dependencies',
+    dependencies: ['example_readable'], // TODO: views dependencies local or based on `seedConfigs` ??
   },
 ];
