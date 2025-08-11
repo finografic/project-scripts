@@ -31,9 +31,9 @@ export async function loadSetupTemplate(
   variables: Record<string, string | number | boolean>
 ): Promise<string> {
   const templateFile = {
-    windows: "setup/windows.template.bat",
-    linux: "setup/linux.template.sh",
-    macos: "setup/macos.template.sh",
+    windows: "/setup/windows.template.bat",
+    linux: "/setup/linux.template.sh",
+    macos: "/setup/macos.template.sh",
   }[platform];
 
   return loadTemplate(templateFile, variables);
