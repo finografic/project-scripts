@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { config } from "dotenv";
 import { checkbox } from "@inquirer/prompts";
 import chalk from "chalk";
 import { execSync } from "node:child_process";
@@ -40,7 +39,22 @@ if (!fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-config({ path: envPath });
+// Load env file manually
+const envContent = fs.readFileSync(envPath, 'utf8');
+const envVars = envContent.split('\n').reduce((acc, line) => {
+  const match = line.match(/^([^=]+)=(.*)$/);
+  if (match) {
+    const [, key, value] = match;
+    acc[key.trim()] = value.trim();
+  }
+  return acc;
+}, {} as Record<string, string>);
+
+// Set environment variables
+Object.entries(envVars).forEach(([key, value]) => {
+  process.env[key] = value;
+});
+
 console.log("[db-setup] Loaded env config");
 
 // ======================================================================== //
