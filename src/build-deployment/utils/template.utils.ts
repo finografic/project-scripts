@@ -5,8 +5,8 @@ import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// const TEMPLATES_DIR = join(__dirname, "..", "templates");
-const TEMPLATES_DIR = join(__dirname, "templates");
+const TEMPLATES_DIR = join(__dirname, "..", "templates");
+// const TEMPLATES_DIR = join(__dirname, "templates");
 
 /**
  * Load and process a template file with variables
@@ -32,9 +32,9 @@ export async function loadSetupTemplate(
   variables: Record<string, string | number | boolean>
 ): Promise<string> {
   const templateFile = {
-    windows: "/setup/windows.template.bat",
-    linux: "/setup/linux.template.sh",
-    macos: "/setup/macos.template.sh",
+    windows: "setup/windows.template.bat",
+    linux: "setup/linux.template.sh",
+    macos: "setup/macos.template.sh",
   }[platform];
 
   return loadTemplate(templateFile, variables);
