@@ -1,7 +1,7 @@
 {
   "name": "@finografic/project-scripts",
   "type": "module",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "packageManager": "pnpm@10.14.0",
   "description": "Fingorafic Project Scripts",
   "author": {
