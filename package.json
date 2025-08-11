@@ -1,38 +1,7 @@
 {
   "name": "@finografic/project-scripts",
   "type": "module",
-  "version": "1.0.0",
-  "type": "module",
-  "exports": {
-    "./build-deployment": {
-      "types": "./dist/build-deployment/index.d.ts",
-      "import": "./dist/build-deployment/index.js"
-    }
-  },
-  "bin": {
-    "build-deployment": "./bin/build-deployment.js"
-  },
-  "packageManager": "pnpm@10.14.0",
-  "description": "Fingorafic Project Scripts",
-  "author": {
-    "name": "Justin",
-    "email": "justin.blair.rankin@gmail.com",
-    "url": "http://finografic.github.com/cv-justin-rankin"
-  },
-  "license": "MIT",
-  "keywords": [
-    "project-scripts",
-    "build-tools",
-    "monorepo",
-    "clean",
-    "purge",
-    "database-setup",
-    "sqlite",
-    "sqlite3",
-    "better-sqlite3",
-    "typescript",
-    "cli"
-  ],
+  "version": "2.0.0",
   "exports": {
     "./clean-docs": {
       "types": "./dist/clean-docs/index.d.ts",
@@ -66,6 +35,27 @@
     "purge-builds": "bin/purge-builds.js",
     "sqlite-rebuild": "bin/sqlite-rebuild.js"
   },
+  "packageManager": "pnpm@10.14.0",
+  "description": "Fingorafic Project Scripts",
+  "author": {
+    "name": "Justin",
+    "email": "justin.blair.rankin@gmail.com",
+    "url": "http://finografic.github.com/cv-justin-rankin"
+  },
+  "license": "MIT",
+  "keywords": [
+    "project-scripts",
+    "build-tools",
+    "monorepo",
+    "clean",
+    "purge",
+    "database-setup",
+    "sqlite",
+    "sqlite3",
+    "better-sqlite3",
+    "typescript",
+    "cli"
+  ],
   "files": [
     "bin",
     "dist"
