@@ -359,7 +359,7 @@ async function main(): Promise<void> {
 
 // Run the build if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  // main(); TODO: UNCOMMENT THIS !!
 }
 
 export { main as buildProduction };
