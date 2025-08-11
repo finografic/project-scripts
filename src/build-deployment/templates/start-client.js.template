@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+/**
+ * Touch Monorepo Production Client Server
+ * Serves the client application on port 3000 with API proxy
+ */
+
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { killPortIfOccupied } from './ports.utils.js';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const PORT = process.env.CLIENT_PORT || '{{CLIENT_PORT}}';
+const API_PORT = process.env.API_PORT || '4040';
+const CLIENT_DIR = path.join(__dirname, 'dist/client');
+
+console.log('🌐 Starting Touch Monorepo Client Server...');
+console.log('📍 Client directory:', CLIENT_DIR);
+console.log('🌐 Server will run on: http://localhost:' + PORT);
+console.log('🔗 API proxy will forward to: http://localhost:' + API_PORT);
+
+// Check for occupied ports
+console.log('🔧 Checking for occupied ports...');
+// killPortIfOccupied(PORT);
+
+// Create HTTP server
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url || '/', true);
+  let pathname = parsedUrl.pathname || '/';
+
+  // Check if this is an API request
+  if (pathname.startsWith('/api/') || pathname === '/api') {
+    // Proxy API requests to the backend server
+    const apiUrl = `http://localhost:${API_PORT}${pathname}`;
+    console.log('🔗 Proxying API request:', pathname, '->', apiUrl);
+
+    const apiReq = http.request(
+      apiUrl,
+      {
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: `localhost:${API_PORT}`,
+        },
+      },
+      (apiRes) => {
+        res.writeHead(apiRes.statusCode || 200, apiRes.headers);
+        apiRes.pipe(res);
+      },
+    );
+
+    apiReq.on('error', (err) => {
+      console.error('❌ API proxy error:', err.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'API server unavailable' }));
+    });
+
+    req.pipe(apiReq);
+    return;
+  }
+
+  // Default to index.html for root
+  if (pathname === '/') {
+    pathname = '/index.html';
+  }
+
+  // Remove leading slash for file system
+  const filePath = path.join(CLIENT_DIR, pathname);
+
+  // Security check - ensure file is within client directory
+  const resolvedPath = path.resolve(filePath);
+  const clientDirResolved = path.resolve(CLIENT_DIR);
+
+  if (!resolvedPath.startsWith(clientDirResolved)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('Forbidden');
+    return;
+  }
+
+  // Read and serve file
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      // File not found, try index.html for SPA routing
+      if (err.code === 'ENOENT') {
+        const indexPath = path.join(CLIENT_DIR, 'index.html');
+        fs.readFile(indexPath, (indexErr, indexData) => {
+          if (indexErr) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(indexData);
+          }
+        });
+      } else {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+      }
+      return;
+    }
+
+    // Determine content type based on file extension
+    const ext = path.extname(filePath).toLowerCase();
+    let contentType = 'text/plain';
+
+    switch (ext) {
+      case '.html':
+        contentType = 'text/html';
+        break;
+      case '.css':
+        contentType = 'text/css';
+        break;
+      case '.js':
+        contentType = 'application/javascript';
+        break;
+      case '.json':
+        contentType = 'application/json';
+        break;
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.gif':
+        contentType = 'image/gif';
+        break;
+      case '.svg':
+        contentType = 'image/svg+xml';
+        break;
+      case '.ico':
+        contentType = 'image/x-icon';
+        break;
+      case '.woff':
+        contentType = 'font/woff';
+        break;
+      case '.woff2':
+        contentType = 'font/woff2';
+        break;
+      case '.ttf':
+        contentType = 'font/ttf';
+        break;
+      case '.eot':
+        contentType = 'application/vnd.ms-fontobject';
+        break;
+    }
+
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(data);
+  });
+});
+
+// Start server
+server.listen(PORT, () => {
+  console.log('✅ Client server started successfully!');
+  console.log('🌐 Client: http://localhost:' + PORT);
+  console.log('🔗 API: http://localhost:' + API_PORT);
+  console.log('🎨 Touch Monorepo Client is now available');
+  console.log('');
+  console.log('Press Ctrl+C to stop');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Client server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 Received SIGINT, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Client server closed');
+    process.exit(0);
+  });
+});

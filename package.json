@@ -2,6 +2,16 @@
   "name": "@finografic/project-scripts",
   "type": "module",
   "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./build-deployment": {
+      "types": "./dist/build-deployment/index.d.ts",
+      "import": "./dist/build-deployment/index.js"
+    }
+  },
+  "bin": {
+    "build-deployment": "./bin/build-deployment.js"
+  },
   "packageManager": "pnpm@10.14.0",
   "description": "Fingorafic Project Scripts",
   "author": {
