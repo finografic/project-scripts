@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 import { join } from "path";
 import { select, checkbox, confirm } from "@inquirer/prompts";
 import chalk from "chalk";

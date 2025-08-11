@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 import { buildProduction } from "./build-deployment.js";
 
 buildProduction().catch((error) => {
