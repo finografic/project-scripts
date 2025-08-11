@@ -40,15 +40,18 @@ if (!fs.existsSync(envPath)) {
 }
 
 // Load env file manually
-const envContent = fs.readFileSync(envPath, 'utf8');
-const envVars = envContent.split('\n').reduce((acc, line) => {
-  const match = line.match(/^([^=]+)=(.*)$/);
-  if (match) {
-    const [, key, value] = match;
-    acc[key.trim()] = value.trim();
-  }
-  return acc;
-}, {} as Record<string, string>);
+const envContent = fs.readFileSync(envPath, "utf8");
+const envVars = envContent.split("\n").reduce(
+  (acc, line) => {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const [, key, value] = match;
+      acc[key.trim()] = value.trim();
+    }
+    return acc;
+  },
+  {} as Record<string, string>
+);
 
 // Set environment variables
 Object.entries(envVars).forEach(([key, value]) => {
