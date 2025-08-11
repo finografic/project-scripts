@@ -105,7 +105,7 @@ async function seedData(schemas: string[]) {
 // ======================================================================== //
 // NOTE: CREATE VIEWS FUNCTION
 
-async function createViews() {
+async function createViews__V2() {
   const { viewConfigs } = await loadConfig();
   const sqlite = await loadAdapter();
   const projectRoot = findProjectRoot();
@@ -128,6 +128,38 @@ async function createViews() {
       sqlite.exec(sql);
       console.log(chalk.green(`✅ Created view: ${view.name}`));
     } catch (err) {
+      console.error(chalk.red(`❌ Error creating view ${view.name}:`), err);
+    }
+  }
+}
+
+async function createViews() {
+  const { viewConfigs } = await loadConfig();
+  const sqlite = await loadAdapter();
+  const projectRoot = findProjectRoot();
+  for (const view of viewConfigs) {
+    console.log(">>>>>", 1, { projectRoot });
+    const sqlPath = path.resolve(
+      process.cwd(),
+      "apps/server/src/db/views",
+      `${view.name}.sql`
+    );
+    if (!fs.existsSync(sqlPath)) {
+      console.warn(chalk.yellow(`View SQL file not found: ${sqlPath}`));
+      continue;
+    }
+    console.log(">>>>>", 2);
+    const sql = fs.readFileSync(sqlPath, "utf-8");
+    try {
+      console.log(">>>>>", 3);
+      console.log(chalk.blue(`Dropping view if exists: ${view.name}`));
+      sqlite.exec(`DROP VIEW IF EXISTS ${view.name};`);
+      console.log(chalk.blue(`Creating view: ${view.name}`));
+      sqlite.exec(sql);
+      console.log(chalk.green(`✅ Created view: ${view.name}`));
+      console.log(">>>>>", 4);
+    } catch (err) {
+      console.log(">>>>>", 5);
       console.error(chalk.red(`❌ Error creating view ${view.name}:`), err);
     }
   }
