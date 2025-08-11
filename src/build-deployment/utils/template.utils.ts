@@ -5,7 +5,7 @@ import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const TEMPLATES_DIR = join(__dirname, "..", "templates");
+const TEMPLATES_DIR = join(__dirname, "..", "build-deployment", "templates");
 
 /**
  * Load and process a template file with variables
@@ -14,7 +14,7 @@ export async function loadTemplate(
   templatePath: string,
   variables: Record<string, string | number | boolean>
 ): Promise<string> {
-  const fullPath = join(TEMPLATES_DIR, "build-deployment", templatePath);
+  const fullPath = join(TEMPLATES_DIR, templatePath);
   const content = await readFile(fullPath, "utf-8");
 
   return content.replace(/\{\{([^}]+)\}\}/g, (_, key) => {
