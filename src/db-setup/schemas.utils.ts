@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import chalk from "chalk";
 import { findScriptConfigFile } from "../utils/config.utils";
 import { findProjectRoot } from "../utils/project.utils";
@@ -39,7 +40,7 @@ export const loadSeedConfig = async ({
   }
 
   try {
-    const configModule = await import(configPath);
+    const configModule = await import(pathToFileURL(configPath).href);
     return { seedConfigs: configModule.seedConfigs };
   } catch (error: unknown) {
     if (
@@ -94,7 +95,7 @@ export const loadViewConfig = async ({
   }
 
   try {
-    const configModule = await import(configPath);
+    const configModule = await import(pathToFileURL(configPath).href);
     return { viewConfigs: configModule.viewConfigs || [] };
   } catch (error: unknown) {
     if (
