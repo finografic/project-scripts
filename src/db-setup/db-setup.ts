@@ -49,7 +49,7 @@ const envVars = envContent.split("\n").reduce(
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       const [, key, value] = match;
-      acc[key.trim()] = value.trim().replace(/^["']|["']$/g, '');
+      acc[key.trim()] = value.trim().replace(/^["']|["']$/g, "");
     }
     return acc;
   },
