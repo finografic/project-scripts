@@ -27,7 +27,7 @@ export default defineConfig([
       "build-deployment": "src/build-deployment/cli.ts",
     },
     outDir: "bin",
-    format: ["cjs", "esm"],
+    format: ["esm"], // CLI only needs ESM
     target: "node18",
     platform: "node",
     shims: true,
