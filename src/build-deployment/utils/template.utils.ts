@@ -14,7 +14,7 @@ export async function loadTemplate(
   templatePath: string,
   variables: Record<string, string | number | boolean>
 ): Promise<string> {
-  const fullPath = join(TEMPLATES_DIR, templatePath);
+  const fullPath = join(TEMPLATES_DIR, "build-deployment", templatePath);
   const content = await readFile(fullPath, "utf-8");
 
   return content.replace(/\{\{([^}]+)\}\}/g, (_, key) => {
