@@ -1,4 +1,5 @@
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 
 /**
  * Helper function to load a module in both CommonJS and ESM environments
@@ -8,6 +9,7 @@ import { pathToFileURL } from "node:url";
 export async function loadModule<T>(filePath: string): Promise<T> {
   try {
     // Try require first (for CommonJS)
+    const require = createRequire(import.meta.url);
     const required = require(filePath);
     return Promise.resolve(required.default || required);
   } catch (err) {

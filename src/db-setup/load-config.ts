@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { findProjectRoot } from "../utils/project.utils.js";
 import type { ViewConfig, DbSetupConfig } from "./db-setup.types";
 
