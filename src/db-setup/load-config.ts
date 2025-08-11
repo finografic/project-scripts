@@ -12,8 +12,6 @@ const CONFIG_PATHS = [
 ];
 
 const ADAPTER_PATHS = [
-  "apps/server/src/db/db.adapter.external.ts",
-  "apps/server/src/db/db.adapter.external.js",
   "apps/server/src/db/db.adapter.ts",
   "apps/server/src/db/db.adapter.js",
 ];
