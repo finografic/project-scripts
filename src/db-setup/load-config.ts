@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
-import { createRequire } from "node:module";
 import { findProjectRoot } from "../utils/project.utils.js";
 import type { ViewConfig, DbSetupConfig } from "./db-setup.types";
+import { loadModule } from "../utils/module.utils";
 
 const CONFIG_PATHS = [
   "scripts/db-setup.config.ts",
@@ -16,8 +15,6 @@ const ADAPTER_PATHS = [
   "apps/server/src/db/db.adapter.ts",
   "apps/server/src/db/db.adapter.js",
 ];
-
-import { loadModule } from "../utils/module.utils";
 
 export async function loadConfig(): Promise<DbSetupConfig> {
   const projectRoot = findProjectRoot();
@@ -47,9 +44,13 @@ export async function loadAdapter() {
   // Try to find the adapter file
   for (const adapterPath of ADAPTER_PATHS) {
     const fullPath = path.join(projectRoot, adapterPath);
+    console.log("[db-setup] Looking for adapter at:", fullPath);
     if (fs.existsSync(fullPath)) {
       try {
         const adapter = await loadModule<{ sqliteAny: any }>(fullPath);
+        if (!adapter.sqliteAny) {
+          throw new Error(`Adapter at ${fullPath} does not export 'sqliteAny'`);
+        }
         return adapter.sqliteAny;
       } catch (error) {
         console.error(`Failed to load adapter from ${fullPath}:`, error);
