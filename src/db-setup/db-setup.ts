@@ -135,8 +135,11 @@ async function createViews__V2() {
 
 async function createViews() {
   const { viewConfigs } = await loadConfig();
-  const sqlite = await loadAdapter();
   const projectRoot = findProjectRoot();
+  console.log(">>>>>", 0, { projectRoot });
+  const sqlite = await loadAdapter();
+
+  console.log(">>>>> SQL", !!sqlite);
   for (const view of viewConfigs) {
     console.log(">>>>>", 1, { projectRoot });
     const sqlPath = path.resolve(
