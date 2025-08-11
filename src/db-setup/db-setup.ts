@@ -8,7 +8,6 @@ import { getSchemaSelection, loadSeedConfig } from "./schemas.utils";
 import { PATH_FOLDER_ENV } from "./schemas.config";
 import { loadConfig, loadAdapter } from "./load-config";
 import { findProjectRoot } from "../utils/project.utils.js";
-import { loadModule } from "utils/module.utils";
 
 // Add autoConfirm flag for -y/--yes
 const autoConfirm =
@@ -106,14 +105,16 @@ async function seedData(schemas: string[]) {
 // ======================================================================== //
 // NOTE: CREATE VIEWS FUNCTION
 
-async function createViews__V2() {
+async function createViews() {
   const { viewConfigs } = await loadConfig();
-  const sqlite = await loadAdapter();
   const projectRoot = findProjectRoot();
+  console.log(">>>>>", 0, { projectRoot });
+  const sqlite = await loadAdapter();
 
   for (const view of viewConfigs) {
+    console.log(">>>>>", 1, { projectRoot });
     const sqlPath = path.resolve(
-      projectRoot,
+      process.cwd(),
       "apps/server/src/db/views",
       `${view.name}.sql`
     );
@@ -121,57 +122,21 @@ async function createViews__V2() {
       console.warn(chalk.yellow(`View SQL file not found: ${sqlPath}`));
       continue;
     }
+    console.log(">>>>>", 2);
     const sql = fs.readFileSync(sqlPath, "utf-8");
     try {
+      console.log(">>>>>", 3);
       console.log(chalk.blue(`Dropping view if exists: ${view.name}`));
       sqlite.exec(`DROP VIEW IF EXISTS ${view.name};`);
       console.log(chalk.blue(`Creating view: ${view.name}`));
       sqlite.exec(sql);
       console.log(chalk.green(`✅ Created view: ${view.name}`));
+      console.log(">>>>>", 4);
     } catch (err) {
+      console.log(">>>>>", 5);
       console.error(chalk.red(`❌ Error creating view ${view.name}:`), err);
     }
   }
-}
-
-async function createViews() {
-  // const { viewConfigs } = await loadConfig();
-  const projectRoot = findProjectRoot();
-  console.log(">>>>>", 0, { projectRoot });
-
-  const fullPath = path.join(projectRoot, "apps/server/src/db/db.adapter.ts");
-  console.log("[db-setup] Looking for adapter at:", fullPath);
-  if (fs.existsSync(fullPath)) {
-    const sqlite = await loadModule<{ sqliteAny: any }>(fullPath);
-
-    console.log(">>>>> SQL", !!sqlite);
-  }
-  // for (const view of viewConfigs) {
-  //   console.log(">>>>>", 1, { projectRoot });
-  //   const sqlPath = path.resolve(
-  //     process.cwd(),
-  //     "apps/server/src/db/views",
-  //     `${view.name}.sql`
-  //   );
-  //   if (!fs.existsSync(sqlPath)) {
-  //     console.warn(chalk.yellow(`View SQL file not found: ${sqlPath}`));
-  //     continue;
-  //   }
-  //   console.log(">>>>>", 2);
-  //   const sql = fs.readFileSync(sqlPath, "utf-8");
-  //   try {
-  //     console.log(">>>>>", 3);
-  //     console.log(chalk.blue(`Dropping view if exists: ${view.name}`));
-  //     sqlite.exec(`DROP VIEW IF EXISTS ${view.name};`);
-  //     console.log(chalk.blue(`Creating view: ${view.name}`));
-  //     sqlite.exec(sql);
-  //     console.log(chalk.green(`✅ Created view: ${view.name}`));
-  //     console.log(">>>>>", 4);
-  //   } catch (err) {
-  //     console.log(">>>>>", 5);
-  //     console.error(chalk.red(`❌ Error creating view ${view.name}:`), err);
-  //   }
-  // }
 }
 
 // ======================================================================== //
