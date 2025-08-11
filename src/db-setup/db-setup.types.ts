@@ -9,3 +9,7 @@ export interface ViewConfig {
   description?: string;
   dependencies?: string[];
 }
+
+export interface DbSetupConfig {
+  viewConfigs: ViewConfig[];
+}

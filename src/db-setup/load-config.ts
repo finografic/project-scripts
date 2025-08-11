@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { findProjectRoot } from "../utils/project.utils.js";
-import type { ViewConfig } from "./types";
+import type { ViewConfig, DbSetupConfig } from "./db-setup.types";
 
 const CONFIG_PATHS = [
   "scripts/db-setup.config.ts",
@@ -16,7 +16,9 @@ const ADAPTER_PATHS = [
   "apps/server/src/db/db.adapter.js",
 ];
 
-export async function loadConfig(): Promise<{ viewConfigs: ViewConfig[] }> {
+import { loadModule } from "../utils/module.utils";
+
+export async function loadConfig(): Promise<DbSetupConfig> {
   const projectRoot = findProjectRoot();
 
   // Try to find the config file
@@ -24,9 +26,8 @@ export async function loadConfig(): Promise<{ viewConfigs: ViewConfig[] }> {
     const fullPath = path.join(projectRoot, configPath);
     if (fs.existsSync(fullPath)) {
       try {
-        const configUrl = pathToFileURL(fullPath).href;
-        const config = await import(configUrl);
-        return config.default || config;
+        const config = await loadModule<DbSetupConfig>(fullPath);
+        return config;
       } catch (error) {
         console.error(`Failed to load config from ${fullPath}:`, error);
         throw error;
@@ -47,8 +48,7 @@ export async function loadAdapter() {
     const fullPath = path.join(projectRoot, adapterPath);
     if (fs.existsSync(fullPath)) {
       try {
-        const adapterUrl = pathToFileURL(fullPath).href;
-        const adapter = await import(adapterUrl);
+        const adapter = await loadModule<{ sqliteAny: any }>(fullPath);
         return adapter.sqliteAny;
       } catch (error) {
         console.error(`Failed to load adapter from ${fullPath}:`, error);
