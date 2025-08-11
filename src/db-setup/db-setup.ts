@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { config } from "@dotenvx/dotenvx";
 import { checkbox } from "@inquirer/prompts";
 import chalk from "chalk";
 import { execSync } from "node:child_process";
@@ -10,8 +11,6 @@ import {
   loadViewConfig,
 } from "./schemas.utils";
 import { PATH_FOLDER_ENV } from "./schemas.config";
-import { loadConfig, loadAdapter } from "./load-config";
-import { findProjectRoot } from "../utils/project.utils.js";
 
 // Add autoConfirm flag for -y/--yes
 const autoConfirm =
@@ -43,25 +42,7 @@ if (!fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-// Load env file manually
-const envContent = fs.readFileSync(envPath, "utf8");
-const envVars = envContent.split("\n").reduce(
-  (acc, line) => {
-    const match = line.match(/^([^=]+)=(.*)$/);
-    if (match) {
-      const [, key, value] = match;
-      acc[key.trim()] = value.trim();
-    }
-    return acc;
-  },
-  {} as Record<string, string>
-);
-
-// Set environment variables
-Object.entries(envVars).forEach(([key, value]) => {
-  process.env[key] = value;
-});
-
+config({ path: envPath });
 console.log("[db-setup] Loaded env config");
 
 // ======================================================================== //
@@ -140,6 +121,7 @@ async function createViews() {
     throw error;
   }
 }
+
 // ======================================================================== //
 // NOTE: MAIN FUNCTION
 
@@ -206,7 +188,7 @@ export async function main() {
     }
 
     if (operations.includes("views")) {
-      console.log(chalk.blue("\n4. (XX) Creating views..."));
+      console.log(chalk.blue("\n4. Creating views..."));
       await createViews();
     }
 

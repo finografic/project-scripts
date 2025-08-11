@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import { loadModule } from "../utils/module.utils";
 import path from "node:path";
 import chalk from "chalk";
 import { findScriptConfigFile } from "../utils/config.utils";
@@ -40,9 +39,7 @@ export const loadSeedConfig = async ({
   }
 
   try {
-    const configModule = await loadModule<{ seedConfigs: SeedConfig[] }>(
-      configPath
-    );
+    const configModule = await import(configPath);
     return { seedConfigs: configModule.seedConfigs };
   } catch (error: unknown) {
     if (
@@ -97,9 +94,7 @@ export const loadViewConfig = async ({
   }
 
   try {
-    const configModule = await loadModule<{ viewConfigs: ViewConfig[] }>(
-      configPath
-    );
+    const configModule = await import(configPath);
     return { viewConfigs: configModule.viewConfigs || [] };
   } catch (error: unknown) {
     if (
