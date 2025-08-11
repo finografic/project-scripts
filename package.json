@@ -27,13 +27,19 @@
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js",
       "require": "./dist/utils/index.cjs"
+    },
+    "./build-deployment": {
+      "types": "./dist/build-deployment/index.d.ts",
+      "import": "./dist/build-deployment/index.js",
+      "require": "./dist/build-deployment/index.cjs"
     }
   },
   "bin": {
     "clean-docs": "bin/clean-docs.js",
     "db-setup": "bin/db-setup.js",
     "purge-builds": "bin/purge-builds.js",
-    "sqlite-rebuild": "bin/sqlite-rebuild.js"
+    "sqlite-rebuild": "bin/sqlite-rebuild.js",
+    "build-deployment": "bin/build-deployment.js"
   },
   "packageManager": "pnpm@10.14.0",
   "description": "Fingorafic Project Scripts",
@@ -46,6 +52,8 @@
   "keywords": [
     "project-scripts",
     "build-tools",
+    "deployment",
+    "cross-platform",
     "monorepo",
     "clean",
     "purge",
