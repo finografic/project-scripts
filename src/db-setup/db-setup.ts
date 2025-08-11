@@ -231,7 +231,7 @@ export async function main() {
     }
 
     if (operations.includes("views")) {
-      console.log(chalk.blue("\n4. Creating views..."));
+      console.log(chalk.blue("\n4. (XX) Creating views..."));
       await createViews();
     }
 
