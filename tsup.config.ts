@@ -16,7 +16,7 @@ export default defineConfig([
     banner: {
       js: "#!/usr/bin/env node",
     },
-    external: ["fs", "path", "child_process"],
+    external: ["fs", "path", "child_process", "@dotenvx/dotenvx"],
   },
   // Build CLI scripts to bin/
   {
@@ -38,7 +38,7 @@ export default defineConfig([
     banner: {
       js: "#!/usr/bin/env node",
     },
-    external: ["fs", "path", "child_process"],
+    external: ["fs", "path", "child_process", "@dotenvx/dotenvx"],
     treeshake: true,
   },
   // Build library entry points to dist/
