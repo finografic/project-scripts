@@ -4,7 +4,11 @@ import { pathToFileURL } from "node:url";
 import { checkbox } from "@inquirer/prompts";
 import chalk from "chalk";
 import { execSync } from "node:child_process";
-import { getSchemaSelection, loadSeedConfig } from "./schemas.utils";
+import {
+  getSchemaSelection,
+  loadSeedConfig,
+  loadViewConfig,
+} from "./schemas.utils";
 import { PATH_FOLDER_ENV } from "./schemas.config";
 import { loadConfig, loadAdapter } from "./load-config";
 import { findProjectRoot } from "../utils/project.utils.js";
@@ -106,27 +110,36 @@ async function seedData(schemas: string[]) {
 // NOTE: CREATE VIEWS FUNCTION
 
 async function createViews() {
-  /*
-  for (const view of viewConfigs) {
-    const sqlPath = path.resolve(process.cwd(), 'apps/server/src/db/views', `${view.name}.sql`);
-    if (!fs.existsSync(sqlPath)) {
-      console.warn(chalk.yellow(`View SQL file not found: ${sqlPath}`));
-      continue;
-    }
-    const sql = fs.readFileSync(sqlPath, 'utf-8');
-    try {
-      console.log(chalk.blue(`Dropping view if exists: ${view.name}`));
-      sqlite.exec(`DROP VIEW IF EXISTS ${view.name};`);
-      console.log(chalk.blue(`Creating view: ${view.name}`));
-      sqlite.exec(sql);
-      console.log(chalk.green(`✅ Created view: ${view.name}`));
-    } catch (err) {
-      console.error(chalk.red(`❌ Error creating view ${view.name}:`), err);
-    }
-  }
-    */
-}
+  try {
+    console.log("[db-setup] Loading view config...");
+    const { viewConfigs } = await loadViewConfig();
 
+    if (!viewConfigs || viewConfigs.length === 0) {
+      console.log(chalk.yellow("⚠️ No views configured to create"));
+      return;
+    }
+
+    for (const view of viewConfigs) {
+      try {
+        console.log(chalk.blue(`Creating view: ${view.name}...`));
+        execSync(
+          `pnpm --filter @workspace/server db.views.create.single ${view.name}`,
+          {
+            stdio: "inherit",
+            env: process.env,
+          }
+        );
+        console.log(chalk.green(`✅ Created view: ${view.name}`));
+      } catch (error) {
+        console.error(chalk.red(`❌ Error creating view ${view.name}:`), error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error(chalk.red("❌ Error loading view configuration:"), error);
+    throw error;
+  }
+}
 // ======================================================================== //
 // NOTE: MAIN FUNCTION
 
