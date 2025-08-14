@@ -5,6 +5,284 @@ import { dirname } from "path";
 
 // Template content embedded in code to avoid file system issues
 const TEMPLATES = {
+  "start-client.js.template": `#!/usr/bin/env node
+/**
+ * Touch Monorepo Production Client Server
+ * Serves the client application on port 3000 with API proxy
+ */
+
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { killPortIfOccupied } from './ports.utils.js';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const PORT = process.env.CLIENT_PORT || '{{CLIENT_PORT}}';
+const API_PORT = process.env.API_PORT || '4040';
+const CLIENT_DIR = path.join(__dirname, 'dist/client');
+
+console.log('🌐 Starting Touch Monorepo Client Server...');
+console.log('📍 Client directory:', CLIENT_DIR);
+console.log('🌐 Server will run on: http://localhost:' + PORT);
+console.log('🔗 API proxy will forward to: http://localhost:' + API_PORT);
+
+// Check for occupied ports
+console.log('🔧 Checking for occupied ports...');
+// killPortIfOccupied(PORT);
+
+// Create HTTP server
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url || '/', true);
+  let pathname = parsedUrl.pathname || '/';
+
+  // Check if this is an API request
+  if (pathname.startsWith('/api/') || pathname === '/api') {
+    // Proxy API requests to the backend server
+    const apiUrl = \`http://localhost:\${API_PORT}\${pathname}\`;
+    console.log('🔗 Proxying API request:', pathname, '->', apiUrl);
+
+    const apiReq = http.request(
+      apiUrl,
+      {
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: \`localhost:\${API_PORT}\`,
+        },
+      },
+      (apiRes) => {
+        res.writeHead(apiRes.statusCode || 200, apiRes.headers);
+        apiRes.pipe(res);
+      },
+    );
+
+    apiReq.on('error', (err) => {
+      console.error('❌ API proxy error:', err.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'API server unavailable' }));
+    });
+
+    req.pipe(apiReq);
+    return;
+  }
+
+  // Default to index.html for root
+  if (pathname === '/') {
+    pathname = '/index.html';
+  }
+
+  // Remove leading slash for file system
+  const filePath = path.join(CLIENT_DIR, pathname);
+
+  // Security check - ensure file is within client directory
+  const resolvedPath = path.resolve(filePath);
+  const clientDirResolved = path.resolve(CLIENT_DIR);
+
+  if (!resolvedPath.startsWith(clientDirResolved)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('Forbidden');
+    return;
+  }
+
+  // Read and serve file
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      // File not found, try index.html for SPA routing
+      if (err.code === 'ENOENT') {
+        const indexPath = path.join(CLIENT_DIR, 'index.html');
+        fs.readFile(indexPath, (indexErr, indexData) => {
+          if (indexErr) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Not Found');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(indexData);
+          }
+        });
+      } else {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal Server Error');
+      }
+      return;
+    }
+
+    // Determine content type based on file extension
+    const ext = path.extname(filePath).toLowerCase();
+    let contentType = 'text/plain';
+
+    switch (ext) {
+      case '.html':
+        contentType = 'text/html';
+        break;
+      case '.css':
+        contentType = 'text/css';
+        break;
+      case '.js':
+        contentType = 'application/javascript';
+        break;
+      case '.json':
+        contentType = 'application/json';
+        break;
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.gif':
+        contentType = 'image/gif';
+        break;
+      case '.svg':
+        contentType = 'image/svg+xml';
+        break;
+      case '.ico':
+        contentType = 'image/x-icon';
+        break;
+      case '.woff':
+        contentType = 'font/woff';
+        break;
+      case '.woff2':
+        contentType = 'font/woff2';
+        break;
+      case '.ttf':
+        contentType = 'font/ttf';
+        break;
+      case '.eot':
+        contentType = 'application/vnd.ms-fontobject';
+        break;
+    }
+
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(data);
+  });
+});
+
+// Start server
+server.listen(PORT, () => {
+  console.log('\n  🚀 Touch Monorepo Client ready!');
+  console.log('  ✨ Server started successfully\n');
+  console.log('  \x1b[33mTip:\x1b[0m Click the Local URL below to open in your browser');
+  console.log('      Press Ctrl+C to stop\n');
+  console.log('  \x1b[1mAvailable URLs:\x1b[0m');
+  console.log('  \x1b[36mhttp://localhost:' + PORT + '\x1b[0m     \x1b[2m(Client)\x1b[0m');
+  console.log('  \x1b[36mhttp://localhost:' + API_PORT + '\x1b[0m     \x1b[2m(API)\x1b[0m\n');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Client server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 Received SIGINT, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Client server closed');
+    process.exit(0);
+  });
+});`,
+
+  "start-server.js.template": `#!/usr/bin/env node
+/**
+ * Touch Monorepo Production Server
+ * Serves the API on port 4040
+ */
+
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
+import { killPortIfOccupied } from './ports.utils.js';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables
+const envPath = join(__dirname, '.env.production');
+try {
+  console.log('✅ Loaded environment from:', envPath);
+} catch (error) {
+  console.error('❌ Failed to load environment:', error);
+  process.exit(1);
+}
+
+console.log('🚀 Starting Touch Monorepo Production Server...');
+console.log('📍 Working directory:', __dirname);
+
+// Check for occupied ports
+console.log('🔧 Checking for occupied ports...');
+killPortIfOccupied(4040);
+
+// Check required files
+console.log('🔍 Checking required files...');
+const requiredFiles = [
+  'dist/server/index.js',
+  'dist/data/db/production.sqlite.db',
+];
+
+for (const file of requiredFiles) {
+  try {
+    const filePath = join(__dirname, file);
+    readFileSync(filePath);
+  } catch (error) {
+    console.error('❌ Required file not found:', file);
+    process.exit(1);
+  }
+}
+
+console.log('✅ All required files found');
+
+// Start server process
+console.log('🏗️  Starting server process...');
+const server = spawn('node', ['dist/server/index.js'], {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    NODE_ENV: 'production',
+  },
+});
+
+// Handle server process events
+server.on('error', (error) => {
+  console.error('❌ Server process error:', error);
+  process.exit(1);
+});
+
+server.on('exit', (code) => {
+  if (code !== 0) {
+    console.error('❌ Server process exited with code:', code);
+    process.exit(code);
+  }
+});
+
+// Handle process signals
+process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  server.kill('SIGTERM');
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 Received SIGINT, shutting down gracefully...');
+  server.kill('SIGINT');
+});
+
+console.log('\n  🚀 Touch Monorepo Server ready!');
+console.log('  ✨ Server started successfully\n');
+console.log('  \x1b[33mTip:\x1b[0m Run \x1b[1mnode start-client.js\x1b[0m to start the client');
+console.log('      Press Ctrl+C to stop\n');
+console.log('  \x1b[1mAvailable URLs:\x1b[0m');
+console.log('  \x1b[36mhttp://localhost:{{SERVER_PORT}}\x1b[0m     \x1b[2m(API)\x1b[0m\n');`,
   "setup/windows.template.bat": `@echo off
 setlocal ENABLEDELAYEDEXPANSION
 echo ========================================
