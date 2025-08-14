@@ -1,4 +1,5 @@
 import { readFile } from "fs/promises";
+import { existsSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -8,35 +9,48 @@ import { createRequire } from "module";
 // When running via pnpm dlx, we need to resolve the template directory
 // relative to the package installation, not the compiled JS file
 function getTemplateDir(): string {
+  // First, try to find templates relative to the current JS file location
+  // This works when the templates are properly installed alongside the JS
+  const currentDir = dirname(fileURLToPath(import.meta.url));
+  
+  // When running via pnpm dlx, the file structure should be:
+  // node_modules/@finografic/project-scripts/bin/build-deployment.js
+  // node_modules/@finografic/project-scripts/src/build-deployment/templates/
+  
+  const candidatePaths = [
+    // Try src templates (included in package files)
+    join(currentDir, "..", "..", "src", "build-deployment", "templates"),
+    // Try bin templates (development/local)  
+    join(currentDir, "..", "..", "bin", "build-deployment", "templates"),
+    // Direct relative (fallback)
+    join(currentDir, "..", "templates"),
+  ];
+  
+  // Use require.resolve as backup to find package root
   try {
-    // Try to resolve the package.json to find the package root
     const require = createRequire(import.meta.url);
-    const packagePath = require.resolve(
-      "@finografic/project-scripts/package.json"
-    );
+    const packagePath = require.resolve("@finografic/project-scripts/package.json");
     const packageDir = dirname(packagePath);
-
-    // Templates are included in the package files array
-    return join(packageDir, "src", "build-deployment", "templates");
+    candidatePaths.unshift(join(packageDir, "src", "build-deployment", "templates"));
   } catch {
-    // Fallback: try bin directory (for local development)
+    // Ignore if can't resolve package
+  }
+  
+  // Try each candidate path and return the first one that exists
+  for (const templatePath of candidatePaths) {
     try {
-      const currentDir = dirname(fileURLToPath(import.meta.url));
-      return join(
-        currentDir,
-        "..",
-        "..",
-        "..",
-        "bin",
-        "build-deployment",
-        "templates"
-      );
+      // Try to read a known template file to verify the path exists
+      const testFile = join(templatePath, "setup", "macos.template.sh");
+      if (existsSync(testFile)) {
+        return templatePath;
+      }
     } catch {
-      // Last fallback: relative to current file in dev
-      const currentDir = dirname(fileURLToPath(import.meta.url));
-      return join(currentDir, "..", "templates");
+      // Continue to next candidate
     }
   }
+  
+  // If nothing works, return the first candidate (will fail gracefully)
+  return candidatePaths[0] || join(currentDir, "..", "templates");
 }
 
 const TEMPLATE_DIR = getTemplateDir();
