@@ -1,6 +1,10 @@
 # Monorepo Deployment Builder
 
-A powerful tool for creating cross-platform, standalone distributions of monorepo applications.
+A powerful tool for creating cross-platform, standalone distributions of monorepo applications. Designed for monorepos using a modern TypeScript stack with:
+
+- Client: Vite, React, TypeScript
+- Server: Node.js, Hono, Drizzle ORM (SQLite)
+- Structure: `apps/client`, `apps/server`, `data/` layout
 
 ## 🎯 Features
 
@@ -71,6 +75,8 @@ buildProduction(config);
 ```
 
 ## ⚙️ Configuration
+
+The build system is highly configurable to support different monorepo structures and requirements. While it provides sensible defaults for the recommended structure, you can customize almost every aspect through configuration.
 
 ### Build Options
 
@@ -220,8 +226,38 @@ pnpm build-deployment --platform universal --zip
 4. **Database Issues**
    - SQLite database is included in deployment
    - Automatic migration on first run
+-
 
 ## 📝 Notes
+
+### Monorepo Compatibility
+
+This tool is designed to work with monorepos that follow these patterns:
+
+- **Structure**:
+
+  ```
+  monorepo/
+  ├── apps/
+  │   ├── client/          # Frontend application (Vite + React)
+  │   └── server/          # Backend application (Node.js + Hono)
+  ├── data/                # Database, migrations, uploads
+  ├── package.json         # Root workspace config
+  └── .env                 # Environment configuration
+  ```
+
+- **Tech Stack**:
+  - **Client**: Vite, React, TypeScript
+  - **Server**: Node.js, Hono, Drizzle ORM
+  - **Database**: SQLite (with Drizzle migrations)
+  - **Package Manager**: pnpm (workspace support)
+
+- **Build System**:
+  - Client: Vite build system
+  - Server: TypeScript compilation (tsup recommended)
+  - Database: Drizzle migrations
+
+### General Notes
 
 - **Standalone mode**: Creates minimal package.json with only essential dependencies
 - **Universal mode**: Includes scripts for all platforms
