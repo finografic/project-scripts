@@ -51,7 +51,7 @@ export default defineConfig([
       // Copy templates to bin/templates
       await cp(
         join(__dirname, "src/build-deployment/templates"),
-        join(__dirname, "bin/templates"),
+        join(__dirname, "bin/build-deployment/templates"),
         { recursive: true }
       ).catch(console.error);
 
