@@ -19,17 +19,23 @@ function getTemplateDir(): string {
     // Templates are included in the package files array
     return join(packageDir, "src", "build-deployment", "templates");
   } catch {
-    // Fallback to relative path (for development)
-    const currentDir = dirname(fileURLToPath(import.meta.url));
-    return join(
-      currentDir,
-      "..",
-      "..",
-      "..",
-      "bin",
-      "build-deployment",
-      "templates"
-    );
+    // Fallback: try bin directory (for local development)
+    try {
+      const currentDir = dirname(fileURLToPath(import.meta.url));
+      return join(
+        currentDir,
+        "..",
+        "..",
+        "..",
+        "bin",
+        "build-deployment",
+        "templates"
+      );
+    } catch {
+      // Last fallback: relative to current file in dev
+      const currentDir = dirname(fileURLToPath(import.meta.url));
+      return join(currentDir, "..", "templates");
+    }
   }
 }
 
