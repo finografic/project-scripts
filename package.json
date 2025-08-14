@@ -1,7 +1,7 @@
 {
   "name": "@finografic/project-scripts",
   "type": "module",
-  "version": "4.2.43",
+  "version": "4.2.44",
   "exports": {
     "./clean-docs": {
       "types": "./dist/clean-docs/index.d.ts",
