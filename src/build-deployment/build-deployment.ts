@@ -25,6 +25,7 @@ import {
   killPortIfOccupied,
 } from "./utils/build.utils.js";
 import {
+  loadTemplate,
   loadSetupTemplate,
   loadUserGuideTemplate,
   formatDate,
