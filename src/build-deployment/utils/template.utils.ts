@@ -59,7 +59,8 @@ function getTemplateDir(): string {
             return binTemplates;
           }
         }
-      } catch {
+      } catch (error) {
+        console.log(`[DEBUG] Error reading package.json: ${error.message}`);
         // Continue searching if package.json is malformed
       }
     }
@@ -93,8 +94,8 @@ function getTemplateDir(): string {
 
   // Fallback to relative paths from current location
   const fallbackPaths = [
-    join(currentDir, "..", "..", "src", "build-deployment", "templates"),
-    join(currentDir, "..", "..", "bin", "build-deployment", "templates"),
+    join(currentDir, "..", "src", "build-deployment", "templates"),
+    join(currentDir, "..", "bin", "build-deployment", "templates"),
     join(currentDir, "..", "templates"),
   ];
 
