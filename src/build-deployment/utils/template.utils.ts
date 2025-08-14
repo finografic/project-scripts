@@ -2,9 +2,38 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { createRequire } from "module";
 
 // Load templates from files
-const TEMPLATE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "bin", "build-deployment", "templates");
+// When running via pnpm dlx, we need to resolve the template directory
+// relative to the package installation, not the compiled JS file
+function getTemplateDir(): string {
+  try {
+    // Try to resolve the package.json to find the package root
+    const require = createRequire(import.meta.url);
+    const packagePath = require.resolve(
+      "@finografic/project-scripts/package.json"
+    );
+    const packageDir = dirname(packagePath);
+
+    // Templates are included in the package files array
+    return join(packageDir, "src", "build-deployment", "templates");
+  } catch {
+    // Fallback to relative path (for development)
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    return join(
+      currentDir,
+      "..",
+      "..",
+      "..",
+      "bin",
+      "build-deployment",
+      "templates"
+    );
+  }
+}
+
+const TEMPLATE_DIR = getTemplateDir();
 
 async function loadTemplateFile(templatePath: string): Promise<string> {
   const fullPath = join(TEMPLATE_DIR, templatePath);
