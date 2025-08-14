@@ -19,7 +19,7 @@ function getTemplateDir(): string {
 
   for (let i = 0; i < maxLevels; i++) {
     console.log(`[DEBUG] Level ${i}: Checking directory: ${searchDir}`);
-    
+
     // Look for our package.json to identify the package root
     const packageJsonPath = join(searchDir, "package.json");
     if (existsSync(packageJsonPath)) {
@@ -64,16 +64,29 @@ function getTemplateDir(): string {
         // Continue searching if package.json is malformed
       }
     }
-    
+
     // Special check for pnpm directory structure
     // In pnpm dlx, the path might be: .../node_modules/@finografic/project-scripts/...
     // Let's check if we're in a scoped package directory structure
-    if (searchDir.includes("@finografic") && !searchDir.includes("project-scripts")) {
+    if (
+      searchDir.includes("@finografic") &&
+      !searchDir.includes("project-scripts")
+    ) {
       const projectScriptsDir = join(searchDir, "project-scripts");
       if (existsSync(projectScriptsDir)) {
-        const srcTemplates = join(projectScriptsDir, "src", "build-deployment", "templates");
-        const binTemplates = join(projectScriptsDir, "bin", "build-deployment", "templates");
-        
+        const srcTemplates = join(
+          projectScriptsDir,
+          "src",
+          "build-deployment",
+          "templates"
+        );
+        const binTemplates = join(
+          projectScriptsDir,
+          "bin",
+          "build-deployment",
+          "templates"
+        );
+
         if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
           return srcTemplates;
         }
@@ -106,7 +119,9 @@ function getTemplateDir(): string {
   }
 
   // Final fallback
-  console.log(`[DEBUG] No templates found, using fallback: ${fallbackPaths[0]}`);
+  console.log(
+    `[DEBUG] No templates found, using fallback: ${fallbackPaths[0]}`
+  );
   return fallbackPaths[0];
 }
 
