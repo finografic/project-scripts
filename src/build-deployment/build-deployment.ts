@@ -222,6 +222,20 @@ async function createPlatformFiles(
     );
   }
 
+  // Create start scripts
+  const startClient = await loadTemplate("start-client.js.template", vars);
+  const startServer = await loadTemplate("start-server.js.template", vars);
+  await writeExecutableFile(
+    join(config.paths.output, "start-client.js"),
+    startClient,
+    true
+  );
+  await writeExecutableFile(
+    join(config.paths.output, "start-server.js"),
+    startServer,
+    true
+  );
+
   // Create user guides
   const platformSuffix =
     platform === "universal" ? "UNIVERSAL" : platform.toUpperCase();
