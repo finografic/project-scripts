@@ -10,7 +10,6 @@ import { createRequire } from "module";
 // relative to the package installation, not the compiled JS file
 function getTemplateDir(): string {
   const currentDir = dirname(fileURLToPath(import.meta.url));
-  console.log(`[DEBUG] Template resolution starting from: ${currentDir}`);
 
   // For pnpm dlx execution, we need to find the actual package directory
   // The file path structure in pnpm dlx is complex, so we search upward
@@ -18,20 +17,15 @@ function getTemplateDir(): string {
   const maxLevels = 10; // Prevent infinite loops
 
   for (let i = 0; i < maxLevels; i++) {
-    console.log(`[DEBUG] Level ${i}: Checking directory: ${searchDir}`);
-
     // Look for our package.json to identify the package root
     const packageJsonPath = join(searchDir, "package.json");
     if (existsSync(packageJsonPath)) {
-      console.log(`[DEBUG] Found package.json at: ${packageJsonPath}`);
       try {
         const fs = require("fs");
         const packageJson = JSON.parse(
           fs.readFileSync(packageJsonPath, "utf-8")
         );
-        console.log(`[DEBUG] Package name: ${packageJson.name}`);
         if (packageJson.name === "@finografic/project-scripts") {
-          console.log(`[DEBUG] Found our package! Root: ${searchDir}`);
           // Found our package root! Now look for templates
           const srcTemplates = join(
             searchDir,
@@ -46,21 +40,15 @@ function getTemplateDir(): string {
             "templates"
           );
 
-          console.log(`[DEBUG] Checking srcTemplates: ${srcTemplates}`);
-          console.log(`[DEBUG] Checking binTemplates: ${binTemplates}`);
-
           // Check which one has our test file
           if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
-            console.log(`[DEBUG] Found templates in src: ${srcTemplates}`);
             return srcTemplates;
           }
           if (existsSync(join(binTemplates, "setup", "macos.template.sh"))) {
-            console.log(`[DEBUG] Found templates in bin: ${binTemplates}`);
             return binTemplates;
           }
         }
       } catch (error) {
-        console.log(`[DEBUG] Error reading package.json: ${error.message}`);
         // Continue searching if package.json is malformed
       }
     }
@@ -119,9 +107,6 @@ function getTemplateDir(): string {
   }
 
   // Final fallback
-  console.log(
-    `[DEBUG] No templates found, using fallback: ${fallbackPaths[0]}`
-  );
   return fallbackPaths[0];
 }
 
