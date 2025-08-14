@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 // Load templates from files
-const TEMPLATE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "bin", "build-deployment", "templates");
+const TEMPLATE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "templates");
 
 async function loadTemplateFile(templatePath: string): Promise<string> {
   const fullPath = join(TEMPLATE_DIR, templatePath);
