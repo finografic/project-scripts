@@ -10,24 +10,36 @@ import { createRequire } from "module";
 // relative to the package installation, not the compiled JS file
 function getTemplateDir(): string {
   const currentDir = dirname(fileURLToPath(import.meta.url));
-  
+
   // For pnpm dlx execution, we need to find the actual package directory
   // The file path structure in pnpm dlx is complex, so we search upward
   let searchDir = currentDir;
   const maxLevels = 10; // Prevent infinite loops
-  
+
   for (let i = 0; i < maxLevels; i++) {
     // Look for our package.json to identify the package root
     const packageJsonPath = join(searchDir, "package.json");
     if (existsSync(packageJsonPath)) {
       try {
         const fs = require("fs");
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8")
+        );
         if (packageJson.name === "@finografic/project-scripts") {
           // Found our package root! Now look for templates
-          const srcTemplates = join(searchDir, "src", "build-deployment", "templates");
-          const binTemplates = join(searchDir, "bin", "build-deployment", "templates");
-          
+          const srcTemplates = join(
+            searchDir,
+            "src",
+            "build-deployment",
+            "templates"
+          );
+          const binTemplates = join(
+            searchDir,
+            "bin",
+            "build-deployment",
+            "templates"
+          );
+
           // Check which one has our test file
           if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
             return srcTemplates;
@@ -40,7 +52,7 @@ function getTemplateDir(): string {
         // Continue searching if package.json is malformed
       }
     }
-    
+
     // Move up one directory
     const parentDir = dirname(searchDir);
     if (parentDir === searchDir) {
@@ -49,20 +61,20 @@ function getTemplateDir(): string {
     }
     searchDir = parentDir;
   }
-  
+
   // Fallback to relative paths from current location
   const fallbackPaths = [
     join(currentDir, "..", "..", "src", "build-deployment", "templates"),
     join(currentDir, "..", "..", "bin", "build-deployment", "templates"),
     join(currentDir, "..", "templates"),
   ];
-  
+
   for (const templatePath of fallbackPaths) {
     if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
       return templatePath;
     }
   }
-  
+
   // Final fallback
   return fallbackPaths[0];
 }
