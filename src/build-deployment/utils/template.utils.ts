@@ -9,56 +9,62 @@ import { createRequire } from "module";
 // When running via pnpm dlx, we need to resolve the template directory
 // relative to the package installation, not the compiled JS file
 function getTemplateDir(): string {
-  // First, try to find templates relative to the current JS file location
-  // This works when the templates are properly installed alongside the JS
   const currentDir = dirname(fileURLToPath(import.meta.url));
   
-  // When running via pnpm dlx, the file structure should be:
-  // node_modules/@finografic/project-scripts/bin/build-deployment.js
-  // node_modules/@finografic/project-scripts/src/build-deployment/templates/
+  // For pnpm dlx execution, we need to find the actual package directory
+  // The file path structure in pnpm dlx is complex, so we search upward
+  let searchDir = currentDir;
+  const maxLevels = 10; // Prevent infinite loops
   
-  const candidatePaths = [
-    // Try src templates (included in package files)
+  for (let i = 0; i < maxLevels; i++) {
+    // Look for our package.json to identify the package root
+    const packageJsonPath = join(searchDir, "package.json");
+    if (existsSync(packageJsonPath)) {
+      try {
+        const fs = require("fs");
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+        if (packageJson.name === "@finografic/project-scripts") {
+          // Found our package root! Now look for templates
+          const srcTemplates = join(searchDir, "src", "build-deployment", "templates");
+          const binTemplates = join(searchDir, "bin", "build-deployment", "templates");
+          
+          // Check which one has our test file
+          if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
+            return srcTemplates;
+          }
+          if (existsSync(join(binTemplates, "setup", "macos.template.sh"))) {
+            return binTemplates;
+          }
+        }
+      } catch {
+        // Continue searching if package.json is malformed
+      }
+    }
+    
+    // Move up one directory
+    const parentDir = dirname(searchDir);
+    if (parentDir === searchDir) {
+      // Reached filesystem root
+      break;
+    }
+    searchDir = parentDir;
+  }
+  
+  // Fallback to relative paths from current location
+  const fallbackPaths = [
     join(currentDir, "..", "..", "src", "build-deployment", "templates"),
-    // Try bin templates (development/local)  
     join(currentDir, "..", "..", "bin", "build-deployment", "templates"),
-    // Direct relative (fallback)
     join(currentDir, "..", "templates"),
   ];
   
-  // Use require.resolve as backup to find package root
-  try {
-    const require = createRequire(import.meta.url);
-    // Try multiple ways to resolve the package
-    let packagePath;
-    try {
-      packagePath = require.resolve("@finografic/project-scripts/package.json");
-    } catch {
-      // Fallback: try resolving just the package
-      packagePath = require.resolve("@finografic/project-scripts");
-      packagePath = join(dirname(packagePath), "package.json");
-    }
-    const packageDir = dirname(packagePath);
-    candidatePaths.unshift(join(packageDir, "src", "build-deployment", "templates"));
-  } catch {
-    // Ignore if can't resolve package
-  }
-  
-  // Try each candidate path and return the first one that exists
-  for (const templatePath of candidatePaths) {
-    try {
-      // Try to read a known template file to verify the path exists
-      const testFile = join(templatePath, "setup", "macos.template.sh");
-      if (existsSync(testFile)) {
-        return templatePath;
-      }
-    } catch {
-      // Continue to next candidate
+  for (const templatePath of fallbackPaths) {
+    if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
+      return templatePath;
     }
   }
   
-  // If nothing works, return the first candidate (will fail gracefully)
-  return candidatePaths[0] || join(currentDir, "..", "templates");
+  // Final fallback
+  return fallbackPaths[0];
 }
 
 const TEMPLATE_DIR = getTemplateDir();
