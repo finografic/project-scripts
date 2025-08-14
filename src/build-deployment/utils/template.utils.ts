@@ -52,6 +52,24 @@ function getTemplateDir(): string {
         // Continue searching if package.json is malformed
       }
     }
+    
+    // Special check for pnpm directory structure
+    // In pnpm dlx, the path might be: .../node_modules/@finografic/project-scripts/...
+    // Let's check if we're in a scoped package directory structure
+    if (searchDir.includes("@finografic") && !searchDir.includes("project-scripts")) {
+      const projectScriptsDir = join(searchDir, "project-scripts");
+      if (existsSync(projectScriptsDir)) {
+        const srcTemplates = join(projectScriptsDir, "src", "build-deployment", "templates");
+        const binTemplates = join(projectScriptsDir, "bin", "build-deployment", "templates");
+        
+        if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
+          return srcTemplates;
+        }
+        if (existsSync(join(binTemplates, "setup", "macos.template.sh"))) {
+          return binTemplates;
+        }
+      }
+    }
 
     // Move up one directory
     const parentDir = dirname(searchDir);
