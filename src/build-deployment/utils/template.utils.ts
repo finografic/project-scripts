@@ -29,7 +29,15 @@ function getTemplateDir(): string {
   // Use require.resolve as backup to find package root
   try {
     const require = createRequire(import.meta.url);
-    const packagePath = require.resolve("@finografic/project-scripts/package.json");
+    // Try multiple ways to resolve the package
+    let packagePath;
+    try {
+      packagePath = require.resolve("@finografic/project-scripts/package.json");
+    } catch {
+      // Fallback: try resolving just the package
+      packagePath = require.resolve("@finografic/project-scripts");
+      packagePath = join(dirname(packagePath), "package.json");
+    }
     const packageDir = dirname(packagePath);
     candidatePaths.unshift(join(packageDir, "src", "build-deployment", "templates"));
   } catch {
