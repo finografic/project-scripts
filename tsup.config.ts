@@ -41,6 +41,27 @@ export default defineConfig([
     },
     external: ["fs", "path", "child_process"],
     treeshake: true,
+    // Copy templates to output
+    async onSuccess() {
+      const { cp } = await import("fs/promises");
+      const { join } = await import("path");
+      const { fileURLToPath } = await import("url");
+      const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
+      // Copy templates to bin/templates
+      await cp(
+        join(__dirname, "src/build-deployment/templates"),
+        join(__dirname, "bin/templates"),
+        { recursive: true }
+      ).catch(console.error);
+
+      // Also copy to dist for library usage
+      await cp(
+        join(__dirname, "src/build-deployment/templates"),
+        join(__dirname, "dist/build-deployment/templates"),
+        { recursive: true }
+      ).catch(console.error);
+    },
   },
   // Build library entry points to dist/
   {
