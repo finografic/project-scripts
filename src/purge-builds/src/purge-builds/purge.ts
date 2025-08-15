@@ -167,7 +167,7 @@ setTimeout(cleanupNodeModules, 1000);
       spinner.text = `Waiting for node_modules deletion... (${attempts}/${maxAttempts})`;
     }
 
-    // spinner.warn("Deletion process started but completion unconfirmed");
+    spinner.warn("Deletion process started but completion unconfirmed");
     return true;
   } catch (error) {
     return false;
