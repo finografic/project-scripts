@@ -116,6 +116,8 @@
     "@inquirer/core": "10.1.10",
     "@inquirer/input": "4.1.9",
     "@inquirer/prompts": "7.5.0",
+    "chalk": "5.4.1",
+    "del": "8.0.0",
     "ora": "8.2.0",
     "parse-gitignore": "^2.0.0",
     "yargs": "^17.7.2"
@@ -128,8 +130,6 @@
     "@types/node": "20.15.0",
     "@types/prompts": "^2.4.9",
     "@types/yargs": "^17.0.33",
-    "chalk": "5.4.1",
-    "del": "8.0.0",
     "dotenv": "^16.5.0",
     "env-cmd": "^10.1.0",
     "eslint": "^9.26.0",
