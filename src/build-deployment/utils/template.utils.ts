@@ -6,108 +6,64 @@ import { dirname } from "path";
 import { createRequire } from "module";
 
 // Load templates from files
-// When running via pnpm dlx, we need to resolve the template directory
-// relative to the package installation, not the compiled JS file
+// Use createRequire to reliably find the package directory
 function getTemplateDir(): string {
-  const currentDir = dirname(fileURLToPath(import.meta.url));
-
-  // For pnpm dlx execution, we need to find the actual package directory
-  // The file path structure in pnpm dlx is complex, so we search upward
-  let searchDir = currentDir;
-  const maxLevels = 10; // Prevent infinite loops
-
-  for (let i = 0; i < maxLevels; i++) {
-    // Look for our package.json to identify the package root
-    const packageJsonPath = join(searchDir, "package.json");
-    if (existsSync(packageJsonPath)) {
-      try {
-        const fs = require("fs");
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, "utf-8")
-        );
-        if (packageJson.name === "@finografic/project-scripts") {
-          // Found our package root! Now look for templates
-          const srcTemplates = join(
-            searchDir,
-            "src",
-            "build-deployment",
-            "templates"
-          );
-          const binTemplates = join(
-            searchDir,
-            "bin",
-            "build-deployment",
-            "templates"
-          );
-
-          // Check which one has our test file
-          if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
-            return srcTemplates;
-          }
-          if (existsSync(join(binTemplates, "setup", "macos.template.sh"))) {
-            return binTemplates;
-          }
-        }
-      } catch (error) {
-        // Continue searching if package.json is malformed
+  try {
+    // Create a require function that can resolve from the current module
+    const require = createRequire(import.meta.url);
+    
+    // Resolve the package.json to find the package root
+    const packageJsonPath = require.resolve("@finografic/project-scripts/package.json");
+    const packageRoot = dirname(packageJsonPath);
+    
+    // Check for templates in the expected locations
+    const possiblePaths = [
+      join(packageRoot, "src", "build-deployment", "templates"),
+      join(packageRoot, "bin", "build-deployment", "templates"),
+      join(packageRoot, "dist", "build-deployment", "templates"),
+      join(packageRoot, "templates"),
+    ];
+    
+    for (const templatePath of possiblePaths) {
+      if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
+        return templatePath;
       }
     }
-
-    // Special check for pnpm directory structure
-    // In pnpm dlx, the path might be: .../node_modules/@finografic/project-scripts/...
-    // Let's check if we're in a scoped package directory structure
-    if (
-      searchDir.includes("@finografic") &&
-      !searchDir.includes("project-scripts")
-    ) {
-      const projectScriptsDir = join(searchDir, "project-scripts");
-      if (existsSync(projectScriptsDir)) {
-        const srcTemplates = join(
-          projectScriptsDir,
-          "src",
-          "build-deployment",
-          "templates"
-        );
-        const binTemplates = join(
-          projectScriptsDir,
-          "bin",
-          "build-deployment",
-          "templates"
-        );
-
-        if (existsSync(join(srcTemplates, "setup", "macos.template.sh"))) {
-          return srcTemplates;
-        }
-        if (existsSync(join(binTemplates, "setup", "macos.template.sh"))) {
-          return binTemplates;
-        }
+    
+    // If we can't find templates in the package, fall back to relative paths
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    const fallbackPaths = [
+      join(currentDir, "..", "src", "build-deployment", "templates"),
+      join(currentDir, "..", "bin", "build-deployment", "templates"),
+      join(currentDir, "..", "templates"),
+    ];
+    
+    for (const templatePath of fallbackPaths) {
+      if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
+        return templatePath;
       }
     }
-
-    // Move up one directory
-    const parentDir = dirname(searchDir);
-    if (parentDir === searchDir) {
-      // Reached filesystem root
-      break;
+    
+    // Final fallback
+    return possiblePaths[0];
+  } catch (error) {
+    // If require.resolve fails, fall back to relative paths
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    const fallbackPaths = [
+      join(currentDir, "..", "src", "build-deployment", "templates"),
+      join(currentDir, "..", "bin", "build-deployment", "templates"),
+      join(currentDir, "..", "templates"),
+    ];
+    
+    for (const templatePath of fallbackPaths) {
+      if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
+        return templatePath;
+      }
     }
-    searchDir = parentDir;
+    
+    // Last resort fallback
+    return fallbackPaths[0];
   }
-
-  // Fallback to relative paths from current location
-  const fallbackPaths = [
-    join(currentDir, "..", "src", "build-deployment", "templates"),
-    join(currentDir, "..", "bin", "build-deployment", "templates"),
-    join(currentDir, "..", "templates"),
-  ];
-
-  for (const templatePath of fallbackPaths) {
-    if (existsSync(join(templatePath, "setup", "macos.template.sh"))) {
-      return templatePath;
-    }
-  }
-
-  // Final fallback
-  return fallbackPaths[0];
 }
 
 const TEMPLATE_DIR = getTemplateDir();

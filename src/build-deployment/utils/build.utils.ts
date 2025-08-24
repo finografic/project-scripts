@@ -106,7 +106,8 @@ export async function createStandalonePackage(
 export async function installDependencies(
   config: BuildDeploymentConfig
 ): Promise<void> {
-  execSync("npm install --production", {
+  // Use pnpm for more reliable dependency resolution
+  execSync("pnpm install --prod", {
     cwd: config.paths.output,
     stdio: "inherit",
   });
