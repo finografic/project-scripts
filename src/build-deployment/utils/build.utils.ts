@@ -127,11 +127,23 @@ export async function installDependencies(
         "⚠️  Force install failed, trying with no-frozen-lockfile..."
       );
 
-      // Third attempt: allow lockfile updates
-      execSync("pnpm install --prod --no-frozen-lockfile", {
-        cwd: config.paths.output,
-        stdio: "inherit",
-      });
+      try {
+        // Third attempt: allow lockfile updates
+        execSync("pnpm install --prod --no-frozen-lockfile", {
+          cwd: config.paths.output,
+          stdio: "inherit",
+        });
+      } catch (lockfileError) {
+        console.log(
+          "⚠️  Lockfile install failed, trying with ignore-scripts..."
+        );
+
+        // Fourth attempt: skip problematic postinstall scripts
+        execSync("pnpm install --prod --ignore-scripts", {
+          cwd: config.paths.output,
+          stdio: "inherit",
+        });
+      }
     }
   }
 }
