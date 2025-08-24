@@ -112,6 +112,7 @@ export async function installDependencies(
     execSync("pnpm install --prod", {
       cwd: config.paths.output,
       stdio: "inherit",
+      env: { ...process.env, NODE_ENV: "production" },
     });
   } catch (error) {
     console.log("⚠️  Standard install failed, trying with force flag...");
@@ -121,6 +122,7 @@ export async function installDependencies(
       execSync("pnpm install --prod --force", {
         cwd: config.paths.output,
         stdio: "inherit",
+        env: { ...process.env, NODE_ENV: "production" },
       });
     } catch (forceError) {
       console.log(
@@ -132,6 +134,7 @@ export async function installDependencies(
         execSync("pnpm install --prod --no-frozen-lockfile", {
           cwd: config.paths.output,
           stdio: "inherit",
+          env: { ...process.env, NODE_ENV: "production" },
         });
       } catch (lockfileError) {
         console.log(
@@ -142,6 +145,7 @@ export async function installDependencies(
         execSync("pnpm install --prod --ignore-scripts", {
           cwd: config.paths.output,
           stdio: "inherit",
+          env: { ...process.env, NODE_ENV: "production" },
         });
       }
     }
