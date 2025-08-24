@@ -107,7 +107,7 @@ export async function installDependencies(
   config: BuildDeploymentConfig
 ): Promise<void> {
   // Use pnpm for more reliable dependency resolution
-  execSync("pnpm install --prod", {
+  execSync("pnpm install --production", {
     cwd: config.paths.output,
     stdio: "inherit",
   });
