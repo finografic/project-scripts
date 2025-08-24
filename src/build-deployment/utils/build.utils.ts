@@ -106,11 +106,34 @@ export async function createStandalonePackage(
 export async function installDependencies(
   config: BuildDeploymentConfig
 ): Promise<void> {
-  // Use pnpm for more reliable dependency resolution
-  execSync("pnpm install --prod", {
-    cwd: config.paths.output,
-    stdio: "inherit",
-  });
+  try {
+    // First attempt: standard production install
+    console.log("📦 Installing production dependencies with pnpm...");
+    execSync("pnpm install --prod", {
+      cwd: config.paths.output,
+      stdio: "inherit",
+    });
+  } catch (error) {
+    console.log("⚠️  Standard install failed, trying with force flag...");
+
+    try {
+      // Second attempt: force reinstall (handles corrupted cache/modules)
+      execSync("pnpm install --prod --force", {
+        cwd: config.paths.output,
+        stdio: "inherit",
+      });
+    } catch (forceError) {
+      console.log(
+        "⚠️  Force install failed, trying with no-frozen-lockfile..."
+      );
+
+      // Third attempt: allow lockfile updates
+      execSync("pnpm install --prod --no-frozen-lockfile", {
+        cwd: config.paths.output,
+        stdio: "inherit",
+      });
+    }
+  }
 }
 
 /**
