@@ -32,10 +32,6 @@ async function fastCopy(
       "-a", // archive mode (preserves permissions, timestamps, etc.)
       options.recursive ? "-r" : "",
       "-q", // quiet mode (silent)
-      "--inplace", // optimize for many small files
-      "--no-whole-file", // don't copy unchanged files
-      "--partial", // keep partial transfers
-      "--delay-updates", // batch updates for better performance
       src,
       dest,
     ].filter(Boolean);
