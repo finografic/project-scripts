@@ -6,9 +6,9 @@ import type { BuildDeploymentConfig } from "./types";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Try to resolve workspace root (3 levels up from config/build-deployment/config/)
-// This will work when the package is installed in a monorepo
-const WORKSPACE_ROOT = resolve(__dirname, "../../../..");
+// Use process.cwd() to get the current working directory where the script is run
+// This ensures we're working in the actual monorepo, not the package location
+const WORKSPACE_ROOT = process.cwd();
 
 export const defaultConfig: BuildDeploymentConfig = {
   appName: "Touch Monorepo",
