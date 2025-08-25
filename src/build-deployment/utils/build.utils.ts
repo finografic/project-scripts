@@ -11,17 +11,17 @@ export async function buildApp(
   type: "client" | "server"
 ): Promise<void> {
   const command = `pnpm --filter ${config.packageNames[type]} ${config.buildCommands[type]}`;
-  
+
   // Use the isolated build workspace for builds
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
-  
+
   console.log(`🔒 Building from isolated workspace: ${buildWorkspace}`);
   console.log(`  📦 Command: ${command}`);
-  
+
   execSync(command, {
     cwd: buildWorkspace, // Use isolated build workspace
     stdio: "inherit",
@@ -138,7 +138,9 @@ export async function installDependencies(
 
   // Safety check: ensure we're working in the isolated .temp directory
   if (!buildWorkspace.includes(config.paths.temp)) {
-    throw new Error(`Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`);
+    throw new Error(
+      `Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`
+    );
   }
 
   try {

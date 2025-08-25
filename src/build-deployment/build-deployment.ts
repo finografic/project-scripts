@@ -233,7 +233,11 @@ async function createPlatformFiles(
   }
   if (isMacOS) {
     const script = await loadSetupTemplate("macos", vars);
-    await writeExecutableFile(join(buildWorkspace, "setup-macos.sh"), script, true);
+    await writeExecutableFile(
+      join(buildWorkspace, "setup-macos.sh"),
+      script,
+      true
+    );
   }
 
   // Create start scripts

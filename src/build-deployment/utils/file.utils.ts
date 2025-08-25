@@ -26,19 +26,20 @@ async function fastCopy(
   options: { recursive?: boolean } = {}
 ): Promise<void> {
   if (isRsyncAvailable()) {
+    // TODO: Add spinner here for better UX
     console.log("  🚀 Using rsync for fast copy...");
     const rsyncArgs = [
-      "-av", // archive mode, verbose
-      "--progress", // show progress
+      "-a", // archive mode (preserves permissions, timestamps, etc.)
       options.recursive ? "-r" : "",
+      "-q", // quiet mode (silent)
       src,
-      dest
+      dest,
     ].filter(Boolean);
-    
+
     execSync(`rsync ${rsyncArgs.join(" ")}`, { stdio: "inherit" });
   } else {
-    console.log("  📦 Using standard cp (rsync not available)...");
-    await cp(src, dest, { recursive: options.recursive });
+    console.log("  📁 Using fallback cp...");
+    await cp(src, dest, options);
   }
 }
 
@@ -120,7 +121,11 @@ export async function copyDataFiles(
     config.paths.data,
     config.database.development
   );
-  const dbDest = join(buildWorkspace, "dist/data/db", config.database.production);
+  const dbDest = join(
+    buildWorkspace,
+    "dist/data/db",
+    config.database.production
+  );
   if (existsSync(dbSrc)) {
     await fastCopy(dbSrc, dbDest);
   }
@@ -132,9 +137,13 @@ export async function copyDataFiles(
     "migrations"
   );
   if (existsSync(migrationsDir)) {
-    await fastCopy(migrationsDir, join(buildWorkspace, "dist/data/migrations"), {
-      recursive: true,
-    });
+    await fastCopy(
+      migrationsDir,
+      join(buildWorkspace, "dist/data/migrations"),
+      {
+        recursive: true,
+      }
+    );
   }
 
   // Copy uploads
@@ -708,38 +717,41 @@ export async function prepareIsolatedBuildWorkspace(
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, "workspace-isolation");
   const buildWorkspace = join(tempDir, "deployment");
-  
+
   console.log("🏗️  Preparing isolated build workspace...");
-  
+
   try {
     // Create build workspace structure
     await mkdir(buildWorkspace, { recursive: true });
-    
+
     // Copy necessary dependencies to build workspace
     const nodeModulesSrc = join(isolationDir, "node_modules");
     const nodeModulesDest = join(buildWorkspace, "node_modules");
-    
+
     if (existsSync(nodeModulesSrc)) {
       console.log("📦 Copying dependencies to build workspace...");
       await fastCopy(nodeModulesSrc, nodeModulesDest, { recursive: true });
       console.log("✅ Dependencies copied to build workspace");
     }
-    
+
     // Copy package files to build workspace
-    const packageFiles = ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"];
-    
+    const packageFiles = [
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+    ];
+
     for (const file of packageFiles) {
       const srcFile = join(isolationDir, file);
       const destFile = join(buildWorkspace, file);
-      
+
       if (existsSync(srcFile)) {
         await fastCopy(srcFile, destFile);
         console.log(`  📄 ${file} copied to build workspace`);
       }
     }
-    
+
     console.log("✅ Isolated build workspace prepared");
-    
   } catch (error) {
     console.error("❌ Failed to prepare isolated build workspace:", error);
     throw error;
