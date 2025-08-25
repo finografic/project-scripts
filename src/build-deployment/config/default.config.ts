@@ -1,9 +1,22 @@
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 import type { BuildDeploymentConfig } from "./types";
 
+// Get the current file's directory and resolve workspace root
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Try to resolve workspace root (3 levels up from config/build-deployment/config/)
+// This will work when the package is installed in a monorepo
+const WORKSPACE_ROOT = resolve(__dirname, "../../../..");
+
 export const defaultConfig: BuildDeploymentConfig = {
-  appName: "My Monorepo App",
-  appDescription: "Monorepo Application Production Distribution",
+  appName: "Touch Monorepo",
+  appDescription: "Touch Monorepo Production Distribution",
   version: "1.0.0",
+
+  // Workspace root for absolute path resolution
+  workspaceRoot: WORKSPACE_ROOT,
 
   packageNames: {
     client: "@workspace/client",
@@ -15,6 +28,8 @@ export const defaultConfig: BuildDeploymentConfig = {
     server: "apps/server",
     data: "data",
     output: "deployment",
+    temp: ".temp", // Build isolation - gets cleaned up after each run
+    deployments: "deployments", // Organized output - gitignored, multiple versions
   },
 
   ports: {
@@ -44,6 +59,7 @@ export const defaultConfig: BuildDeploymentConfig = {
       CLIENT_HOST: "localhost",
       CLIENT_PORT: "3000",
       CLIENT_ORIGIN: "http://localhost:3000",
+      VITE_APP_NAME: "Touch Monorepo",
 
       // Database Configuration
       DB_DIALECT: "sqlite",

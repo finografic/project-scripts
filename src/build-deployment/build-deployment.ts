@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join, resolve } from "path";
 import { select, checkbox, confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import {
@@ -16,6 +16,9 @@ import {
   createZipArchive,
   cleanPlatformArtifacts,
   writeExecutableFile,
+  cleanupTempDirectory,
+  isolateWorkspace,
+  verifyWorkspaceIsolation,
 } from "./utils/file.utils.js";
 import {
   buildApp,
@@ -34,6 +37,10 @@ import {
 // Add auto-confirm flag for -y/--yes
 const autoConfirm =
   process.argv.includes("-y") || process.argv.includes("--yes");
+
+// Add emergency restoration flag
+const emergencyRestore =
+  process.argv.includes("--restore") || process.argv.includes("-r");
 
 interface BuildOptions {
   platform?: "windows" | "linux" | "macos" | "universal";
@@ -148,6 +155,10 @@ function parseArguments(): BuildOptions {
       case "-o":
         options.outputDir = args[++i];
         break;
+      case "--restore":
+      case "-r":
+        // Emergency restoration is handled in main() function
+        break;
       case "--help":
       case "-h":
         console.log(
@@ -168,12 +179,14 @@ Legacy CLI Mode:
   --zip, -z                      Create zip archive
   --output-dir, -o <dir>         Output directory for zip
   --yes, -y                      Auto-confirm with defaults
+  --restore, -r                  Emergency workspace restoration
   --help, -h                     Show this help
 
 Examples:
   pnpm build.deployment                    # Interactive mode
   pnpm build.deployment -y                 # Quick build with host platform
   pnpm build.deployment -p macos -z        # Legacy: macOS with zip
+  pnpm build.deployment --restore          # Emergency workspace restoration
         `)
         );
         process.exit(0);
@@ -201,38 +214,37 @@ async function createPlatformFiles(
     GENERATED_DATE_ES: formatDate("es-ES"),
   };
 
+  // Use .temp directory for file creation (build workspace)
+  const tempOutput = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "deployment"
+  );
+
   // Create setup scripts
   if (isWindows) {
     const script = await loadSetupTemplate("windows", vars);
-    await writeExecutableFile(join(config.paths.output, "setup.bat"), script);
+    await writeExecutableFile(join(tempOutput, "setup.bat"), script);
   }
   if (isLinux) {
     const script = await loadSetupTemplate("linux", vars);
-    await writeExecutableFile(
-      join(config.paths.output, "setup.sh"),
-      script,
-      true
-    );
+    await writeExecutableFile(join(tempOutput, "setup.sh"), script, true);
   }
   if (isMacOS) {
     const script = await loadSetupTemplate("macos", vars);
-    await writeExecutableFile(
-      join(config.paths.output, "setup-macos.sh"),
-      script,
-      true
-    );
+    await writeExecutableFile(join(tempOutput, "setup-macos.sh"), script, true);
   }
 
   // Create start scripts
   const startClient = await loadTemplate("start-client.js.template", vars);
   const startServer = await loadTemplate("start-server.js.template", vars);
   await writeExecutableFile(
-    join(config.paths.output, "start-client.js"),
+    join(tempOutput, "start-client.js"),
     startClient,
     true
   );
   await writeExecutableFile(
-    join(config.paths.output, "start-server.js"),
+    join(tempOutput, "start-server.js"),
     startServer,
     true
   );
@@ -243,16 +255,34 @@ async function createPlatformFiles(
   const enGuide = await loadUserGuideTemplate("en", vars);
   const esGuide = await loadUserGuideTemplate("es", vars);
   await writeExecutableFile(
-    join(config.paths.output, `USER_GUIDE_${platformSuffix}_EN.md`),
+    join(tempOutput, `USER_GUIDE_${platformSuffix}_EN.md`),
     enGuide
   );
   await writeExecutableFile(
-    join(config.paths.output, `GUIA_USUARIO_${platformSuffix}_ES.md`),
+    join(tempOutput, `GUIA_USUARIO_${platformSuffix}_ES.md`),
     esGuide
   );
 }
 
 async function main(): Promise<void> {
+  // Handle emergency workspace restoration
+  if (emergencyRestore) {
+    console.log(chalk.red("🚨 Emergency workspace restoration mode"));
+    console.log(chalk.gray("═".repeat(60)));
+
+    try {
+      const { emergencyRestoreWorkspace } = await import(
+        "./utils/file.utils.js"
+      );
+      await emergencyRestoreWorkspace(defaultConfig.workspaceRoot);
+      console.log(chalk.green("✅ Emergency restoration completed"));
+      process.exit(0);
+    } catch (error) {
+      console.error(chalk.red("❌ Emergency restoration failed:"), error);
+      process.exit(1);
+    }
+  }
+
   let options = parseArguments();
 
   // If no CLI arguments provided (except possibly -y), use interactive mode
@@ -300,6 +330,15 @@ async function main(): Promise<void> {
     `${chalk.bold("Include Node:")} ${options.includeNode ? "Yes" : "No"}`
   );
   console.log(`${chalk.bold("Create Zip:")} ${options.zip ? "Yes" : "No"}`);
+  console.log(
+    `${chalk.bold("Workspace Root:")} ${defaultConfig.workspaceRoot}`
+  );
+  console.log(
+    `${chalk.bold("Build Workspace:")} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`
+  );
+  console.log(
+    `${chalk.bold("Zip Destination:")} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`
+  );
   console.log(chalk.gray("═".repeat(60)));
 
   try {
@@ -307,7 +346,31 @@ async function main(): Promise<void> {
     killPortIfOccupied(defaultConfig.ports.client);
     killPortIfOccupied(defaultConfig.ports.server);
 
-    // Create directory structure
+    // Isolate workspace to prevent pnpm interference
+    console.log(chalk.blue("🔒 Starting workspace isolation..."));
+    await isolateWorkspace(defaultConfig);
+    await verifyWorkspaceIsolation(defaultConfig);
+
+    // Additional safety check before proceeding
+    const { canProceedWithBuild } = await import("./utils/file.utils.js");
+    const canProceed = await canProceedWithBuild(defaultConfig);
+    if (!canProceed) {
+      throw new Error(
+        "Build safety check failed - cannot proceed with deployment"
+      );
+    }
+
+    console.log(
+      chalk.green(
+        "🔒 Workspace isolation complete - safe to proceed with build"
+      )
+    );
+    console.log(chalk.gray("   - pnpm workspace files moved to isolation"));
+    console.log(chalk.gray("   - node_modules moved to isolation"));
+    console.log(chalk.gray("   - backup created for safety"));
+    console.log(chalk.gray("═".repeat(60)));
+
+    // Create directory structure in .temp (build isolation)
     await cleanPlatformArtifacts(defaultConfig);
     await createDirectoryStructure(defaultConfig);
 
@@ -332,12 +395,16 @@ async function main(): Promise<void> {
     } else {
       await createPackageJson(
         defaultConfig,
-        join(defaultConfig.paths.server, "package.json")
+        join(
+          defaultConfig.workspaceRoot,
+          defaultConfig.paths.server,
+          "package.json"
+        )
       );
       await installDependencies(defaultConfig);
     }
 
-    // Create zip archive if requested
+    // Create zip archive if requested (saves to deployments folder)
     if (options.zip) {
       const zipName = await createZipArchive(
         defaultConfig,
@@ -345,15 +412,27 @@ async function main(): Promise<void> {
         options.arch || "universal"
       );
       console.log("📦 Zip archive created:", zipName);
+      console.log(
+        `📁 Saved to: ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`
+      );
     }
+
+    // Clean up .temp build directory and restore workspace
+    console.log(chalk.blue("🔓 Restoring workspace from isolation..."));
+    await cleanupTempDirectory(defaultConfig);
 
     // Success message
     console.log("");
     console.log("🎉 Deployment build completed successfully!");
-    console.log("📦 Deployment created at:", defaultConfig.paths.output);
+    console.log(
+      "📦 Deployment created and zipped from isolated build workspace"
+    );
+    console.log("🔒 Workspace restored to original state");
     console.log("");
     console.log("🚀 Next steps:");
-    console.log("  1. Extract the deployment folder");
+    console.log(
+      "  1. Extract the deployment zip file from deployments/ folder"
+    );
     console.log("  2. Run the setup script for your platform:");
     if (options.platform === "windows" || options.platform === "universal") {
       console.log("     Windows: Double-click setup.bat");
@@ -368,6 +447,17 @@ async function main(): Promise<void> {
     console.log("");
   } catch (error) {
     console.error("❌ Deployment build failed:", error);
+
+    // Clean up .temp directory and restore workspace even on failure
+    try {
+      await cleanupTempDirectory(defaultConfig);
+    } catch (cleanupError) {
+      console.error(
+        "⚠️  Failed to cleanup .temp build directory:",
+        cleanupError
+      );
+    }
+
     process.exit(1);
   }
 }

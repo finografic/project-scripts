@@ -4,6 +4,9 @@ export interface BuildDeploymentConfig {
   appDescription: string;
   version: string;
 
+  // Workspace root for absolute path resolution
+  workspaceRoot: string;
+
   // Package Names
   packageNames: {
     client: string; // e.g., "@workspace/client"
@@ -16,6 +19,8 @@ export interface BuildDeploymentConfig {
     server: string; // e.g., "apps/server"
     data: string; // e.g., "data"
     output: string; // e.g., "deployment"
+    temp: string; // e.g., ".temp" - build isolation workspace
+    deployments: string; // e.g., "deployments" - final zip file destination
   };
 
   // Server Configuration

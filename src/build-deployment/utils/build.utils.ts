@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { join, resolve } from "path";
 import type { BuildDeploymentConfig } from "../config/types";
 
 /**
@@ -11,7 +11,17 @@ export async function buildApp(
   type: "client" | "server"
 ): Promise<void> {
   const command = `pnpm --filter ${config.packageNames[type]} ${config.buildCommands[type]}`;
-  execSync(command, { stdio: "inherit" });
+  
+  // Safety check: ensure we're building from the main workspace, not from .temp
+  if (process.cwd().includes(config.paths.temp)) {
+    throw new Error(`Safety check failed: Attempting to run pnpm build from ${config.paths.temp} directory. Must run from main workspace.`);
+  }
+  
+  console.log(`🔒 Building from workspace root: ${config.workspaceRoot}`);
+  execSync(command, {
+    cwd: config.workspaceRoot, // Use workspace root for pnpm commands
+    stdio: "inherit",
+  });
 }
 
 /**
@@ -57,8 +67,13 @@ export async function createPackageJson(
     },
   };
 
+  const tempOutput = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "deployment"
+  );
   await writeFile(
-    join(config.paths.output, "package.json"),
+    join(tempOutput, "package.json"),
     JSON.stringify(packageJson, null, 2)
   );
 }
@@ -94,8 +109,13 @@ export async function createStandalonePackage(
     },
   };
 
+  const tempOutput = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "deployment"
+  );
   await writeFile(
-    join(config.paths.output, "package.json"),
+    join(tempOutput, "package.json"),
     JSON.stringify(packageJson, null, 2)
   );
 }
@@ -106,11 +126,23 @@ export async function createStandalonePackage(
 export async function installDependencies(
   config: BuildDeploymentConfig
 ): Promise<void> {
+  const tempOutput = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "deployment"
+  );
+
+  // Safety check: ensure we're working in the isolated .temp directory
+  if (!tempOutput.includes(config.paths.temp)) {
+    throw new Error(`Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`);
+  }
+
   try {
-    // First attempt: standard production install
-    console.log("📦 Installing production dependencies with pnpm...");
-    execSync("pnpm install --prod", {
-      cwd: config.paths.output,
+    // Use npm instead of pnpm to avoid workspace conflicts
+    console.log("📦 Installing production dependencies with npm...");
+    console.log(`🔒 Working in isolated directory: ${tempOutput}`);
+    execSync("npm install --production", {
+      cwd: tempOutput,
       stdio: "inherit",
       env: { ...process.env, NODE_ENV: "production" },
     });
@@ -119,8 +151,8 @@ export async function installDependencies(
 
     try {
       // Second attempt: force reinstall (handles corrupted cache/modules)
-      execSync("pnpm install --prod --force", {
-        cwd: config.paths.output,
+      execSync("npm install --production --force", {
+        cwd: tempOutput,
         stdio: "inherit",
         env: { ...process.env, NODE_ENV: "production" },
       });
@@ -131,8 +163,8 @@ export async function installDependencies(
 
       try {
         // Third attempt: allow lockfile updates
-        execSync("pnpm install --prod --no-frozen-lockfile", {
-          cwd: config.paths.output,
+        execSync("npm install --production", {
+          cwd: tempOutput,
           stdio: "inherit",
           env: { ...process.env, NODE_ENV: "production" },
         });
@@ -142,8 +174,8 @@ export async function installDependencies(
         );
 
         // Fourth attempt: skip problematic postinstall scripts
-        execSync("pnpm install --prod --ignore-scripts", {
-          cwd: config.paths.output,
+        execSync("npm install --production --ignore-scripts", {
+          cwd: tempOutput,
           stdio: "inherit",
           env: { ...process.env, NODE_ENV: "production" },
         });
