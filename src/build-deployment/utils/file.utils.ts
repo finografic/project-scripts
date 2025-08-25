@@ -286,10 +286,10 @@ export async function isolateWorkspace(
     }
 
     if (existsSync(pnpmLockPath)) {
-      console.log("🔐 Moving pnpm-lock.yaml to isolation...");
-      await copyFile(pnpmLockPath, join(isolationDir, "pnpm-lock.yaml"));
+      console.log("🔐 Removing pnpm-lock.yaml for fresh npm install...");
+      console.log("  🚀 This prevents external linking issues in isolation");
       await rm(pnpmLockPath, { force: true });
-      console.log("  ✅ pnpm-lock.yaml moved to isolation");
+      console.log("  ✅ pnpm-lock.yaml removed - npm will create fresh lock file");
     }
 
     if (existsSync(pnpmWorkspacePath)) {
@@ -731,7 +731,7 @@ export async function prepareIsolatedBuildWorkspace(
     // Copy only essential package files to build workspace
     const packageFiles = [
       "package.json",
-      "pnpm-lock.yaml",
+      // 🚀 Skip pnpm-lock.yaml - npm will create fresh one without external links
       "pnpm-workspace.yaml",
     ];
 
