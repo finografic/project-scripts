@@ -19,6 +19,7 @@ import {
   cleanupTempDirectory,
   isolateWorkspace,
   verifyWorkspaceIsolation,
+  prepareIsolatedBuildWorkspace,
 } from "./utils/file.utils.js";
 import {
   buildApp,
@@ -215,7 +216,7 @@ async function createPlatformFiles(
   };
 
   // Use .temp directory for file creation (build workspace)
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
@@ -224,27 +225,27 @@ async function createPlatformFiles(
   // Create setup scripts
   if (isWindows) {
     const script = await loadSetupTemplate("windows", vars);
-    await writeExecutableFile(join(tempOutput, "setup.bat"), script);
+    await writeExecutableFile(join(buildWorkspace, "setup.bat"), script);
   }
   if (isLinux) {
     const script = await loadSetupTemplate("linux", vars);
-    await writeExecutableFile(join(tempOutput, "setup.sh"), script, true);
+    await writeExecutableFile(join(buildWorkspace, "setup.sh"), script, true);
   }
   if (isMacOS) {
     const script = await loadSetupTemplate("macos", vars);
-    await writeExecutableFile(join(tempOutput, "setup-macos.sh"), script, true);
+    await writeExecutableFile(join(buildWorkspace, "setup-macos.sh"), script, true);
   }
 
   // Create start scripts
   const startClient = await loadTemplate("start-client.js.template", vars);
   const startServer = await loadTemplate("start-server.js.template", vars);
   await writeExecutableFile(
-    join(tempOutput, "start-client.js"),
+    join(buildWorkspace, "start-client.js"),
     startClient,
     true
   );
   await writeExecutableFile(
-    join(tempOutput, "start-server.js"),
+    join(buildWorkspace, "start-server.js"),
     startServer,
     true
   );
@@ -255,11 +256,11 @@ async function createPlatformFiles(
   const enGuide = await loadUserGuideTemplate("en", vars);
   const esGuide = await loadUserGuideTemplate("es", vars);
   await writeExecutableFile(
-    join(tempOutput, `USER_GUIDE_${platformSuffix}_EN.md`),
+    join(buildWorkspace, `USER_GUIDE_${platformSuffix}_EN.md`),
     enGuide
   );
   await writeExecutableFile(
-    join(tempOutput, `GUIA_USUARIO_${platformSuffix}_ES.md`),
+    join(buildWorkspace, `GUIA_USUARIO_${platformSuffix}_ES.md`),
     esGuide
   );
 }
@@ -369,6 +370,9 @@ async function main(): Promise<void> {
     console.log(chalk.gray("   - node_modules moved to isolation"));
     console.log(chalk.gray("   - backup created for safety"));
     console.log(chalk.gray("═".repeat(60)));
+
+    // Prepare isolated build workspace with dependencies
+    await prepareIsolatedBuildWorkspace(defaultConfig);
 
     // Create directory structure in .temp (build isolation)
     await cleanPlatformArtifacts(defaultConfig);

@@ -12,14 +12,18 @@ export async function buildApp(
 ): Promise<void> {
   const command = `pnpm --filter ${config.packageNames[type]} ${config.buildCommands[type]}`;
   
-  // Safety check: ensure we're building from the main workspace, not from .temp
-  if (process.cwd().includes(config.paths.temp)) {
-    throw new Error(`Safety check failed: Attempting to run pnpm build from ${config.paths.temp} directory. Must run from main workspace.`);
-  }
+  // Use the isolated build workspace for builds
+  const buildWorkspace = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "deployment"
+  );
   
-  console.log(`🔒 Building from workspace root: ${config.workspaceRoot}`);
+  console.log(`🔒 Building from isolated workspace: ${buildWorkspace}`);
+  console.log(`  📦 Command: ${command}`);
+  
   execSync(command, {
-    cwd: config.workspaceRoot, // Use workspace root for pnpm commands
+    cwd: buildWorkspace, // Use isolated build workspace
     stdio: "inherit",
   });
 }
@@ -67,13 +71,13 @@ export async function createPackageJson(
     },
   };
 
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
   await writeFile(
-    join(tempOutput, "package.json"),
+    join(buildWorkspace, "package.json"),
     JSON.stringify(packageJson, null, 2)
   );
 }
@@ -109,13 +113,13 @@ export async function createStandalonePackage(
     },
   };
 
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
   await writeFile(
-    join(tempOutput, "package.json"),
+    join(buildWorkspace, "package.json"),
     JSON.stringify(packageJson, null, 2)
   );
 }
@@ -126,23 +130,23 @@ export async function createStandalonePackage(
 export async function installDependencies(
   config: BuildDeploymentConfig
 ): Promise<void> {
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
 
   // Safety check: ensure we're working in the isolated .temp directory
-  if (!tempOutput.includes(config.paths.temp)) {
+  if (!buildWorkspace.includes(config.paths.temp)) {
     throw new Error(`Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`);
   }
 
   try {
     // Use npm instead of pnpm to avoid workspace conflicts
     console.log("📦 Installing production dependencies with npm...");
-    console.log(`🔒 Working in isolated directory: ${tempOutput}`);
+    console.log(`🔒 Working in isolated directory: ${buildWorkspace}`);
     execSync("npm install --production", {
-      cwd: tempOutput,
+      cwd: buildWorkspace,
       stdio: "inherit",
       env: { ...process.env, NODE_ENV: "production" },
     });
@@ -152,7 +156,7 @@ export async function installDependencies(
     try {
       // Second attempt: force reinstall (handles corrupted cache/modules)
       execSync("npm install --production --force", {
-        cwd: tempOutput,
+        cwd: buildWorkspace,
         stdio: "inherit",
         env: { ...process.env, NODE_ENV: "production" },
       });
@@ -164,7 +168,7 @@ export async function installDependencies(
       try {
         // Third attempt: allow lockfile updates
         execSync("npm install --production", {
-          cwd: tempOutput,
+          cwd: buildWorkspace,
           stdio: "inherit",
           env: { ...process.env, NODE_ENV: "production" },
         });
@@ -175,7 +179,7 @@ export async function installDependencies(
 
         // Fourth attempt: skip problematic postinstall scripts
         execSync("npm install --production --ignore-scripts", {
-          cwd: tempOutput,
+          cwd: buildWorkspace,
           stdio: "inherit",
           env: { ...process.env, NODE_ENV: "production" },
         });

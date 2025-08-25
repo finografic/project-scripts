@@ -6,27 +6,64 @@ import type { BuildDeploymentConfig } from "../config/types";
 import { readdir } from "fs/promises";
 
 /**
+ * Check if rsync is available on the system
+ */
+function isRsyncAvailable(): boolean {
+  try {
+    execSync("rsync --version", { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fast copy using rsync if available, fallback to cp
+ */
+async function fastCopy(
+  src: string,
+  dest: string,
+  options: { recursive?: boolean } = {}
+): Promise<void> {
+  if (isRsyncAvailable()) {
+    console.log("  🚀 Using rsync for fast copy...");
+    const rsyncArgs = [
+      "-av", // archive mode, verbose
+      "--progress", // show progress
+      options.recursive ? "-r" : "",
+      src,
+      dest
+    ].filter(Boolean);
+    
+    execSync(`rsync ${rsyncArgs.join(" ")}`, { stdio: "inherit" });
+  } else {
+    console.log("  📦 Using standard cp (rsync not available)...");
+    await cp(src, dest, { recursive: options.recursive });
+  }
+}
+
+/**
  * Create deployment directory structure in .temp folder for build isolation
  */
 export async function createDirectoryStructure(
   config: BuildDeploymentConfig
 ): Promise<void> {
   // Use .temp directory for build isolation
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
   const directories = [
-    tempOutput,
-    join(tempOutput, "dist"),
-    join(tempOutput, "dist/client"),
-    join(tempOutput, "dist/server"),
-    join(tempOutput, "dist/data"),
-    join(tempOutput, "dist/data/db"),
-    join(tempOutput, "dist/data/uploads"),
-    join(tempOutput, "dist/data/logs"),
-    join(tempOutput, "dist/data/migrations"),
+    buildWorkspace,
+    join(buildWorkspace, "dist"),
+    join(buildWorkspace, "dist/client"),
+    join(buildWorkspace, "dist/server"),
+    join(buildWorkspace, "dist/data"),
+    join(buildWorkspace, "dist/data/db"),
+    join(buildWorkspace, "dist/data/uploads"),
+    join(buildWorkspace, "dist/data/logs"),
+    join(buildWorkspace, "dist/data/migrations"),
   ];
 
   for (const dir of directories) {
@@ -42,18 +79,18 @@ export async function copyBuildArtifacts(
   type: "client" | "server"
 ): Promise<void> {
   const srcDir = resolve(config.workspaceRoot, config.paths[type], "dist");
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
-  const destDir = join(tempOutput, "dist", type);
+  const destDir = join(buildWorkspace, "dist", type);
 
   console.log(`🔍 Debug paths for ${type}:`);
   console.log(`  Workspace root: ${config.workspaceRoot}`);
   console.log(`  Type path: ${config.paths[type]}`);
   console.log(`  Source dir: ${srcDir}`);
-  console.log(`  Temp output: ${tempOutput}`);
+  console.log(`  Build workspace: ${buildWorkspace}`);
   console.log(`  Dest dir: ${destDir}`);
 
   if (!existsSync(srcDir)) {
@@ -61,7 +98,7 @@ export async function copyBuildArtifacts(
   }
 
   console.log(`✅ Source directory exists, copying...`);
-  await cp(srcDir, destDir, { recursive: true });
+  await fastCopy(srcDir, destDir, { recursive: true });
   console.log(`✅ Copied ${type} build artifacts`);
 }
 
@@ -71,7 +108,7 @@ export async function copyBuildArtifacts(
 export async function copyDataFiles(
   config: BuildDeploymentConfig
 ): Promise<void> {
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
@@ -83,9 +120,9 @@ export async function copyDataFiles(
     config.paths.data,
     config.database.development
   );
-  const dbDest = join(tempOutput, "dist/data/db", config.database.production);
+  const dbDest = join(buildWorkspace, "dist/data/db", config.database.production);
   if (existsSync(dbSrc)) {
-    await copyFile(dbSrc, dbDest);
+    await fastCopy(dbSrc, dbDest);
   }
 
   // Copy migrations
@@ -95,7 +132,7 @@ export async function copyDataFiles(
     "migrations"
   );
   if (existsSync(migrationsDir)) {
-    await cp(migrationsDir, join(tempOutput, "dist/data/migrations"), {
+    await fastCopy(migrationsDir, join(buildWorkspace, "dist/data/migrations"), {
       recursive: true,
     });
   }
@@ -107,7 +144,7 @@ export async function copyDataFiles(
     "uploads"
   );
   if (existsSync(uploadsDir)) {
-    await cp(uploadsDir, join(tempOutput, "dist/data/uploads"), {
+    await fastCopy(uploadsDir, join(buildWorkspace, "dist/data/uploads"), {
       recursive: true,
     });
   }
@@ -135,13 +172,13 @@ export async function createZipArchive(
   await mkdir(deploymentsDir, { recursive: true });
 
   // Build workspace is in .temp
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
 
-  const zipCommand = `cd "${tempOutput}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
+  const zipCommand = `cd "${buildWorkspace}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
   execSync(zipCommand, { stdio: "inherit" });
 
   return zipName;
@@ -153,14 +190,14 @@ export async function createZipArchive(
 export async function cleanPlatformArtifacts(
   config: BuildDeploymentConfig
 ): Promise<void> {
-  const tempOutput = resolve(
+  const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
 
   const cmd = [
-    `cd "${tempOutput}"`,
+    `cd "${buildWorkspace}"`,
     "rm -f setup.bat setup.sh setup-macos.sh",
     "rm -f start-*.bat start-*.sh",
     "rm -f USER_GUIDE*.md GUIA_USUARIO*.md",
@@ -231,7 +268,7 @@ export async function isolateWorkspace(
     if (existsSync(nodeModulesPath)) {
       console.log("📦 Moving node_modules to isolation...");
       console.log("  ⏳ Copying node_modules (this may take a moment)...");
-      await cp(nodeModulesPath, join(isolationDir, "node_modules"), {
+      await fastCopy(nodeModulesPath, join(isolationDir, "node_modules"), {
         recursive: true,
       });
       console.log("  ✅ node_modules copied, removing from workspace...");
@@ -303,7 +340,7 @@ export async function restoreWorkspace(
     if (existsSync(join(isolationDir, "node_modules"))) {
       console.log("📦 Restoring node_modules...");
       console.log("  ⏳ Copying node_modules back to workspace...");
-      await cp(
+      await fastCopy(
         join(isolationDir, "node_modules"),
         join(workspaceRoot, "node_modules"),
         { recursive: true }
@@ -659,6 +696,54 @@ export async function canProceedWithBuild(
 
   console.log("✅ Build safety verified - workspace is properly isolated");
   return true;
+}
+
+/**
+ * Prepare isolated build workspace with necessary dependencies
+ */
+export async function prepareIsolatedBuildWorkspace(
+  config: BuildDeploymentConfig
+): Promise<void> {
+  const workspaceRoot = config.workspaceRoot;
+  const tempDir = resolve(workspaceRoot, config.paths.temp);
+  const isolationDir = join(tempDir, "workspace-isolation");
+  const buildWorkspace = join(tempDir, "deployment");
+  
+  console.log("🏗️  Preparing isolated build workspace...");
+  
+  try {
+    // Create build workspace structure
+    await mkdir(buildWorkspace, { recursive: true });
+    
+    // Copy necessary dependencies to build workspace
+    const nodeModulesSrc = join(isolationDir, "node_modules");
+    const nodeModulesDest = join(buildWorkspace, "node_modules");
+    
+    if (existsSync(nodeModulesSrc)) {
+      console.log("📦 Copying dependencies to build workspace...");
+      await fastCopy(nodeModulesSrc, nodeModulesDest, { recursive: true });
+      console.log("✅ Dependencies copied to build workspace");
+    }
+    
+    // Copy package files to build workspace
+    const packageFiles = ["package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"];
+    
+    for (const file of packageFiles) {
+      const srcFile = join(isolationDir, file);
+      const destFile = join(buildWorkspace, file);
+      
+      if (existsSync(srcFile)) {
+        await fastCopy(srcFile, destFile);
+        console.log(`  📄 ${file} copied to build workspace`);
+      }
+    }
+    
+    console.log("✅ Isolated build workspace prepared");
+    
+  } catch (error) {
+    console.error("❌ Failed to prepare isolated build workspace:", error);
+    throw error;
+  }
 }
 
 /**
