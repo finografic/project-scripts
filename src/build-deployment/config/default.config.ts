@@ -1,14 +1,15 @@
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import type { BuildDeploymentConfig } from "./types";
+import { findProjectRoot } from "../../utils/project.utils.js";
 
 // Get the current file's directory and resolve workspace root
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Use process.cwd() to get the current working directory where the script is run
-// This ensures we're working in the actual monorepo, not the package location
-const WORKSPACE_ROOT = process.cwd();
+// Use the smart findProjectRoot function to find the actual monorepo root
+// This works regardless of where the script is run from!
+const WORKSPACE_ROOT = findProjectRoot();
 
 export const defaultConfig: BuildDeploymentConfig = {
   appName: "Touch Monorepo",

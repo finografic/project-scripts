@@ -20,6 +20,12 @@ importers:
       '@inquirer/prompts':
         specifier: 7.5.0
         version: 7.5.0(@types/node@20.15.0)
+      chalk:
+        specifier: 5.4.1
+        version: 5.4.1
+      del:
+        specifier: 8.0.0
+        version: 8.0.0
       jsonc-eslint-parser:
         specifier: ^2.4.0
         version: 2.4.0
@@ -54,12 +60,6 @@ importers:
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.33
-      chalk:
-        specifier: 5.4.1
-        version: 5.4.1
-      del:
-        specifier: 8.0.0
-        version: 8.0.0
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
