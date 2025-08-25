@@ -678,7 +678,7 @@ export async function canProceedWithBuild(
   // Check if critical files are in isolation
   const criticalFiles = [
     join(isolationDir, "node_modules"),
-    join(isolationDir, "pnpm-lock.yaml"),
+    // 🚀 Skip pnpm-lock.yaml check - we intentionally delete it for fresh npm install
     join(isolationDir, "pnpm-workspace.yaml"),
   ];
 
