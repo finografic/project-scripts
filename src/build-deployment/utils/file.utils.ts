@@ -32,6 +32,10 @@ async function fastCopy(
       "-a", // archive mode (preserves permissions, timestamps, etc.)
       options.recursive ? "-r" : "",
       "-q", // quiet mode (silent)
+      "--inplace", // optimize for many small files
+      "--no-whole-file", // don't copy unchanged files
+      "--partial", // keep partial transfers
+      "--delay-updates", // batch updates for better performance
       src,
       dest,
     ].filter(Boolean);
@@ -724,17 +728,11 @@ export async function prepareIsolatedBuildWorkspace(
     // Create build workspace structure
     await mkdir(buildWorkspace, { recursive: true });
 
-    // Copy necessary dependencies to build workspace
-    const nodeModulesSrc = join(isolationDir, "node_modules");
-    const nodeModulesDest = join(buildWorkspace, "node_modules");
+    // 🚀 OPTIMIZATION: Skip copying node_modules - let npm install handle it fresh!
+    // This saves massive time and avoids dependency conflicts
+    console.log("📦 Skipping node_modules copy - will install fresh dependencies");
 
-    if (existsSync(nodeModulesSrc)) {
-      console.log("📦 Copying dependencies to build workspace...");
-      await fastCopy(nodeModulesSrc, nodeModulesDest, { recursive: true });
-      console.log("✅ Dependencies copied to build workspace");
-    }
-
-    // Copy package files to build workspace
+    // Copy only essential package files to build workspace
     const packageFiles = [
       "package.json",
       "pnpm-lock.yaml",
@@ -751,7 +749,25 @@ export async function prepareIsolatedBuildWorkspace(
       }
     }
 
-    console.log("✅ Isolated build workspace prepared");
+    // Copy source code directories (needed for builds)
+    const sourceDirs = [
+      "apps/client",
+      "apps/server",
+      "packages",
+    ];
+
+    for (const dir of sourceDirs) {
+      const srcDir = join(workspaceRoot, dir);
+      const destDir = join(buildWorkspace, dir);
+
+      if (existsSync(srcDir)) {
+        console.log(`📁 Copying ${dir} to build workspace...`);
+        await fastCopy(srcDir, destDir, { recursive: true });
+        console.log(`  ✅ ${dir} copied`);
+      }
+    }
+
+    console.log("✅ Isolated build workspace prepared (optimized - no node_modules copy)");
   } catch (error) {
     console.error("❌ Failed to prepare isolated build workspace:", error);
     throw error;
