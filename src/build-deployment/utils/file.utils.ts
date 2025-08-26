@@ -776,7 +776,6 @@ export async function prepareIsolatedBuildWorkspace(
     const packageFiles = [
       "package.json",
       // 🚀 Skip pnpm-lock.yaml - npm will create fresh one without external links
-      "pnpm-workspace.yaml",
     ];
 
     for (const file of packageFiles) {
@@ -788,6 +787,15 @@ export async function prepareIsolatedBuildWorkspace(
         console.log(`  📄 ${file} copied to build workspace`);
       }
     }
+
+    // Create a minimal pnpm-workspace.yaml for the build workspace
+    const buildWorkspaceYaml = join(buildWorkspace, "pnpm-workspace.yaml");
+    const workspaceContent = `packages:
+  - 'apps/*'
+  - 'packages/*'
+`;
+    await writeFile(buildWorkspaceYaml, workspaceContent, 'utf8');
+    console.log(`  📄 pnpm-workspace.yaml created for build workspace`);
 
     // Copy source code directories (needed for builds)
     const sourceDirs = ["apps/client", "apps/server", "packages"];
