@@ -49,14 +49,32 @@ async function fastCopy(
   if (isRsyncAvailable()) {
     // TODO: Add spinner here for better UX
     console.log("  🚀 Using rsync for fast copy...");
+    
+    // Ensure proper rsync behavior for directory copying
+    let rsyncSrc = src;
+    let rsyncDest = dest;
+    
+    // If copying a directory, ensure proper trailing slash behavior
+    if (options.recursive && existsSync(src) && (await readdir(src)).length > 0) {
+      // Add trailing slash to source to copy contents, not the directory itself
+      if (!src.endsWith('/')) {
+        rsyncSrc = src + '/';
+      }
+      // Ensure destination doesn't have trailing slash
+      if (dest.endsWith('/')) {
+        rsyncDest = dest.slice(0, -1);
+      }
+    }
+    
     const rsyncArgs = [
       "-a", // archive mode (preserves permissions, timestamps, etc.)
       options.recursive ? "-r" : "",
-      "-q", // quiet mode (silent)
-      src,
-      dest,
+      "-v", // verbose to see what's happening
+      rsyncSrc,
+      rsyncDest,
     ].filter(Boolean);
 
+    console.log(`  🔍 rsync command: rsync ${rsyncArgs.join(" ")}`);
     execSync(`rsync ${rsyncArgs.join(" ")}`, { stdio: "inherit" });
   } else {
     console.log("  📁 Using fallback cp...");
