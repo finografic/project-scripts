@@ -10,19 +10,19 @@ import { readdir } from "fs/promises";
  */
 export function killPortIfOccupied(port: string): void {
   try {
-    const result = execSync('lsof -ti:' + port, { stdio: 'pipe' })
+    const result = execSync("lsof -ti:" + port, { stdio: "pipe" })
       .toString()
       .trim();
     if (result) {
-      console.log('⚠️  Port ' + port + ' is occupied, killing process...');
-      execSync('lsof -ti:' + port + ' | xargs kill -9', { stdio: 'inherit' });
-      console.log('✅ Killed process on port ' + port);
+      console.log("⚠️  Port " + port + " is occupied, killing process...");
+      execSync("lsof -ti:" + port + " | xargs kill -9", { stdio: "inherit" });
+      console.log("✅ Killed process on port " + port);
     } else {
-      console.log('✅ Port ' + port + ' is available');
+      console.log("✅ Port " + port + " is available");
     }
   } catch (error) {
     // Port is not in use
-    console.log('✅ Port ' + port + ' is available');
+    console.log("✅ Port " + port + " is available");
   }
 }
 
@@ -49,23 +49,27 @@ async function fastCopy(
   if (isRsyncAvailable()) {
     // TODO: Add spinner here for better UX
     console.log("  🚀 Using rsync for fast copy...");
-    
+
     // Ensure proper rsync behavior for directory copying
     let rsyncSrc = src;
     let rsyncDest = dest;
-    
+
     // If copying a directory, ensure proper trailing slash behavior
-    if (options.recursive && existsSync(src) && (await readdir(src)).length > 0) {
+    if (
+      options.recursive &&
+      existsSync(src) &&
+      (await readdir(src)).length > 0
+    ) {
       // Add trailing slash to source to copy contents, not the directory itself
-      if (!src.endsWith('/')) {
-        rsyncSrc = src + '/';
+      if (!src.endsWith("/")) {
+        rsyncSrc = src + "/";
       }
       // Ensure destination doesn't have trailing slash
-      if (dest.endsWith('/')) {
+      if (dest.endsWith("/")) {
         rsyncDest = dest.slice(0, -1);
       }
     }
-    
+
     const rsyncArgs = [
       "-a", // archive mode (preserves permissions, timestamps, etc.)
       options.recursive ? "-r" : "",
@@ -139,8 +143,21 @@ export async function copyBuildArtifacts(
   }
 
   console.log(`✅ Source directory exists, copying...`);
-  await fastCopy(srcDir, destDir, { recursive: true });
-  console.log(`✅ Copied ${type} build artifacts`);
+  
+  // 🚀 FIX: Copy contents of dist directory, not the dist directory itself
+  // This prevents the double nesting: dist/apps/client/dist/* → dist/client/*
+  const srcContents = await readdir(srcDir);
+  for (const item of srcContents) {
+    const srcItem = join(srcDir, item);
+    const destItem = join(destDir, item);
+    
+    if (existsSync(srcItem)) {
+      await fastCopy(srcItem, destItem, { recursive: true });
+      console.log(`  📁 Copied: ${item}`);
+    }
+  }
+  
+  console.log(`✅ Copied ${type} build artifacts to ${destDir}`);
 }
 
 /**
@@ -794,11 +811,12 @@ export async function prepareIsolatedBuildWorkspace(
   - 'apps/*'
   - 'packages/*'
 `;
-    await writeFile(buildWorkspaceYaml, workspaceContent, 'utf8');
+    await writeFile(buildWorkspaceYaml, workspaceContent, "utf8");
     console.log(`  📄 pnpm-workspace.yaml created for build workspace`);
 
     // Copy source code directories (needed for builds)
-    const sourceDirs = ["apps/client", "apps/server", "packages"];
+    // 🚀 FIX: Only copy apps/client and apps/server - NOT packages or other directories
+    const sourceDirs = ["apps/client", "apps/server"];
 
     for (const dir of sourceDirs) {
       const srcDir = join(workspaceRoot, dir);
@@ -808,11 +826,11 @@ export async function prepareIsolatedBuildWorkspace(
         console.log(`📁 Copying ${dir} to build workspace...`);
         console.log(`  📁 Source: ${srcDir}`);
         console.log(`  📁 Destination: ${destDir}`);
-        
+
         // Check what's in the source directory before copying
         const srcContents = await readdir(srcDir);
         console.log(`  📋 Source contents: ${srcContents.join(", ")}`);
-        
+
         // Check if package.json exists in source
         const srcPackageJson = join(srcDir, "package.json");
         if (existsSync(srcPackageJson)) {
@@ -820,22 +838,26 @@ export async function prepareIsolatedBuildWorkspace(
         } else {
           console.log(`  ❌ Source package.json NOT found: ${srcPackageJson}`);
         }
-        
+
         console.log(`  📁 Starting copy from ${srcDir} to ${destDir}...`);
         await fastCopy(srcDir, destDir, { recursive: true });
         console.log(`  ✅ ${dir} copy completed`);
-        
+
         // Verify what was copied
         if (existsSync(destDir)) {
           const destContents = await readdir(destDir);
           console.log(`  📋 Destination contents: ${destContents.join(", ")}`);
-          
+
           // Check if package.json was copied
           const destPackageJson = join(destDir, "package.json");
           if (existsSync(destPackageJson)) {
-            console.log(`  ✅ Destination package.json found: ${destPackageJson}`);
+            console.log(
+              `  ✅ Destination package.json found: ${destPackageJson}`
+            );
           } else {
-            console.log(`  ❌ Destination package.json NOT found: ${destPackageJson}`);
+            console.log(
+              `  ❌ Destination package.json NOT found: ${destPackageJson}`
+            );
           }
         } else {
           console.log(`  ❌ Destination directory not created: ${destDir}`);
@@ -870,18 +892,9 @@ export async function prepareIsolatedBuildWorkspace(
       }
     }
 
-    // Copy any other config directories
-    const configDirs = ["config", "deployment/config"];
-    for (const dir of configDirs) {
-      const srcDir = join(workspaceRoot, dir);
-      const destDir = join(buildWorkspace, dir);
-
-      if (existsSync(srcDir)) {
-        console.log(`📁 Copying ${dir} configuration...`);
-        await fastCopy(srcDir, destDir, { recursive: true });
-        console.log(`  ✅ ${dir} copied`);
-      }
-    }
+    // 🚀 FIX: Skip copying config and deployment directories - they don't belong in deployment
+    // const configDirs = ["config", "deployment/config"];
+    // These directories are NOT needed in the final deployment and cause path confusion
 
     console.log(
       "✅ Isolated build workspace prepared (optimized - no node_modules copy)"
