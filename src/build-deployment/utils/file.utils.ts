@@ -143,20 +143,20 @@ export async function copyBuildArtifacts(
   }
 
   console.log(`✅ Source directory exists, copying...`);
-  
+
   // 🚀 FIX: Copy contents of dist directory, not the dist directory itself
   // This prevents the double nesting: dist/apps/client/dist/* → dist/client/*
   const srcContents = await readdir(srcDir);
   for (const item of srcContents) {
     const srcItem = join(srcDir, item);
     const destItem = join(destDir, item);
-    
+
     if (existsSync(srcItem)) {
       await fastCopy(srcItem, destItem, { recursive: true });
       console.log(`  📁 Copied: ${item}`);
     }
   }
-  
+
   console.log(`✅ Copied ${type} build artifacts to ${destDir}`);
 }
 
