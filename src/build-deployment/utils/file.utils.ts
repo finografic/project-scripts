@@ -6,6 +6,27 @@ import type { BuildDeploymentConfig } from "../config/types";
 import { readdir } from "fs/promises";
 
 /**
+ * Function to kill processes on specific ports
+ */
+export function killPortIfOccupied(port: string): void {
+  try {
+    const result = execSync('lsof -ti:' + port, { stdio: 'pipe' })
+      .toString()
+      .trim();
+    if (result) {
+      console.log('⚠️  Port ' + port + ' is occupied, killing process...');
+      execSync('lsof -ti:' + port + ' | xargs kill -9', { stdio: 'inherit' });
+      console.log('✅ Killed process on port ' + port);
+    } else {
+      console.log('✅ Port ' + port + ' is available');
+    }
+  } catch (error) {
+    // Port is not in use
+    console.log('✅ Port ' + port + ' is available');
+  }
+}
+
+/**
  * Check if rsync is available on the system
  */
 function isRsyncAvailable(): boolean {
@@ -79,19 +100,20 @@ export async function copyBuildArtifacts(
   config: BuildDeploymentConfig,
   type: "client" | "server"
 ): Promise<void> {
-  const srcDir = resolve(config.workspaceRoot, config.paths[type], "dist");
+  // The build process creates dist/ directories in the isolated build workspace
+  // We need to copy from there to the final deployment structure
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
     "deployment"
   );
+  const srcDir = join(buildWorkspace, config.paths[type], "dist");
   const destDir = join(buildWorkspace, "dist", type);
 
   console.log(`🔍 Debug paths for ${type}:`);
-  console.log(`  Workspace root: ${config.workspaceRoot}`);
+  console.log(`  Build workspace: ${buildWorkspace}`);
   console.log(`  Type path: ${config.paths[type]}`);
   console.log(`  Source dir: ${srcDir}`);
-  console.log(`  Build workspace: ${buildWorkspace}`);
   console.log(`  Dest dir: ${destDir}`);
 
   if (!existsSync(srcDir)) {
