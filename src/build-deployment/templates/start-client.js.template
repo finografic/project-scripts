@@ -18,9 +18,11 @@ const __dirname = dirname(__filename);
 
 const PORT = process.env.CLIENT_PORT || '{{CLIENT_PORT}}';
 const API_PORT = process.env.API_PORT || '4040';
-const CLIENT_DIR = path.join(__dirname, 'dist/client');
+const CLIENT_DIR = path.resolve(__dirname, 'dist/client');
 
 console.log('🌐 Starting Touch Monorepo Client Server...');
+console.log('📍 Current directory:', process.cwd());
+console.log('📍 Script directory:', __dirname);
 console.log('📍 Client directory:', CLIENT_DIR);
 console.log('🌐 Server will run on: http://localhost:' + PORT);
 console.log('🔗 API proxy will forward to: http://localhost:' + API_PORT);

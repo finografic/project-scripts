@@ -40,13 +40,23 @@ killPortIfOccupied('{{SERVER_PORT}}');
 // killPortIfOccupied('{{CLIENT_PORT}}');
 
 // Verify required files exist
-const serverPath = path.join(__dirname_resolved, 'dist/server/index.js');
-const clientPath = path.join(__dirname_resolved, 'dist/client/index.html');
-const dbPath = path.join(__dirname_resolved, 'dist/data/db/production.sqlite.db');
+const serverPath = path.resolve(__dirname_resolved, 'dist/server/index.js');
+const clientPath = path.resolve(__dirname_resolved, 'dist/client/index.html');
+const dbPath = path.resolve(__dirname_resolved, 'dist/data/db/production.sqlite.db');
 
 console.log('🔍 Checking required files...');
+console.log('📍 Current directory:', process.cwd());
+console.log('📍 Script directory:', __dirname_resolved);
+console.log('📍 Server path:', serverPath);
+console.log('📍 Client path:', clientPath);
+console.log('📍 DB path:', dbPath);
+
 if (!existsSync(serverPath)) {
   console.error('❌ Server file not found:', serverPath);
+  console.error('📍 Checking if dist directory exists:', path.dirname(serverPath));
+  if (existsSync(path.dirname(serverPath))) {
+    console.error('📍 dist/server directory exists, contents:', require('fs').readdirSync(path.dirname(serverPath)));
+  }
   process.exit(1);
 }
 if (!existsSync(clientPath)) {
@@ -75,6 +85,8 @@ const serverEnv = {
 console.log('🏗️  Starting server process...');
 
 // Start server (using .js extension for ESM bundle)
+console.log('📍 Starting server from working directory:', __dirname_resolved);
+console.log('📍 Server script path:', path.resolve(__dirname_resolved, 'dist/server/index.js'));
 const server = spawn('node', ['dist/server/index.js'], {
   cwd: __dirname_resolved,
   stdio: 'inherit',
