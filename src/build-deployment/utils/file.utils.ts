@@ -787,13 +787,32 @@ export async function prepareIsolatedBuildWorkspace(
         const srcContents = await readdir(srcDir);
         console.log(`  📋 Source contents: ${srcContents.join(", ")}`);
         
+        // Check if package.json exists in source
+        const srcPackageJson = join(srcDir, "package.json");
+        if (existsSync(srcPackageJson)) {
+          console.log(`  ✅ Source package.json found: ${srcPackageJson}`);
+        } else {
+          console.log(`  ❌ Source package.json NOT found: ${srcPackageJson}`);
+        }
+        
+        console.log(`  📁 Starting copy from ${srcDir} to ${destDir}...`);
         await fastCopy(srcDir, destDir, { recursive: true });
-        console.log(`  ✅ ${dir} copied`);
+        console.log(`  ✅ ${dir} copy completed`);
         
         // Verify what was copied
         if (existsSync(destDir)) {
           const destContents = await readdir(destDir);
           console.log(`  📋 Destination contents: ${destContents.join(", ")}`);
+          
+          // Check if package.json was copied
+          const destPackageJson = join(destDir, "package.json");
+          if (existsSync(destPackageJson)) {
+            console.log(`  ✅ Destination package.json found: ${destPackageJson}`);
+          } else {
+            console.log(`  ❌ Destination package.json NOT found: ${destPackageJson}`);
+          }
+        } else {
+          console.log(`  ❌ Destination directory not created: ${destDir}`);
         }
       } else {
         console.log(`❌ Source directory not found: ${srcDir}`);
