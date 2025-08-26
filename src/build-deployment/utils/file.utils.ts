@@ -780,8 +780,23 @@ export async function prepareIsolatedBuildWorkspace(
 
       if (existsSync(srcDir)) {
         console.log(`📁 Copying ${dir} to build workspace...`);
+        console.log(`  📁 Source: ${srcDir}`);
+        console.log(`  📁 Destination: ${destDir}`);
+        
+        // Check what's in the source directory before copying
+        const srcContents = await readdir(srcDir);
+        console.log(`  📋 Source contents: ${srcContents.join(", ")}`);
+        
         await fastCopy(srcDir, destDir, { recursive: true });
         console.log(`  ✅ ${dir} copied`);
+        
+        // Verify what was copied
+        if (existsSync(destDir)) {
+          const destContents = await readdir(destDir);
+          console.log(`  📋 Destination contents: ${destContents.join(", ")}`);
+        }
+      } else {
+        console.log(`❌ Source directory not found: ${srcDir}`);
       }
     }
 
