@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, writeFile, readdir } from "fs/promises";
 import { join, resolve } from "path";
+import { existsSync } from "fs";
 import type { BuildDeploymentConfig } from "../config/types";
 
 /**
@@ -21,11 +22,39 @@ export async function buildApp(
 
   console.log(`🔒 Building from isolated workspace: ${buildWorkspace}`);
   console.log(`  📦 Command: ${command}`);
+  console.log(`  📁 Working directory: ${buildWorkspace}`);
+  console.log(`  📁 Package path: ${config.paths[type]}`);
+  console.log(`  📁 Expected dist location: ${join(buildWorkspace, config.paths[type], "dist")}`);
+
+  // Check if the package directory exists before building
+  const packageDir = join(buildWorkspace, config.paths[type]);
+  if (!existsSync(packageDir)) {
+    throw new Error(`Package directory not found: ${packageDir}`);
+  }
+  console.log(`  ✅ Package directory exists: ${packageDir}`);
+
+  // Check if package.json exists
+  const packageJsonPath = join(packageDir, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    throw new Error(`Package.json not found: ${packageJsonPath}`);
+  }
+  console.log(`  ✅ Package.json exists: ${packageJsonPath}`);
 
   execSync(command, {
     cwd: buildWorkspace, // Use isolated build workspace
     stdio: "inherit",
   });
+
+  // Check if dist directory was created after build
+  const distDir = join(packageDir, "dist");
+  if (existsSync(distDir)) {
+    console.log(`  ✅ Build successful - dist directory created: ${distDir}`);
+    const distContents = await readdir(distDir);
+    console.log(`  📁 Dist contents: ${distContents.join(", ")}`);
+  } else {
+    console.log(`  ❌ Build failed - dist directory not created: ${distDir}`);
+    throw new Error(`Build failed - dist directory not created: ${distDir}`);
+  }
 }
 
 /**
