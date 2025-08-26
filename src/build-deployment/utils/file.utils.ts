@@ -289,7 +289,9 @@ export async function isolateWorkspace(
       console.log("🔐 Removing pnpm-lock.yaml for fresh npm install...");
       console.log("  🚀 This prevents external linking issues in isolation");
       await rm(pnpmLockPath, { force: true });
-      console.log("  ✅ pnpm-lock.yaml removed - npm will create fresh lock file");
+      console.log(
+        "  ✅ pnpm-lock.yaml removed - npm will create fresh lock file"
+      );
     }
 
     if (existsSync(pnpmWorkspacePath)) {
@@ -726,7 +728,9 @@ export async function prepareIsolatedBuildWorkspace(
 
     // 🚀 OPTIMIZATION: Skip copying node_modules - let npm install handle it fresh!
     // This saves massive time and avoids dependency conflicts
-    console.log("📦 Skipping node_modules copy - will install fresh dependencies");
+    console.log(
+      "📦 Skipping node_modules copy - will install fresh dependencies"
+    );
 
     // Copy only essential package files to build workspace
     const packageFiles = [
@@ -746,11 +750,7 @@ export async function prepareIsolatedBuildWorkspace(
     }
 
     // Copy source code directories (needed for builds)
-    const sourceDirs = [
-      "apps/client",
-      "apps/server",
-      "packages",
-    ];
+    const sourceDirs = ["apps/client", "apps/server", "packages"];
 
     for (const dir of sourceDirs) {
       const srcDir = join(workspaceRoot, dir);
@@ -763,7 +763,47 @@ export async function prepareIsolatedBuildWorkspace(
       }
     }
 
-    console.log("✅ Isolated build workspace prepared (optimized - no node_modules copy)");
+    // Copy essential configuration files
+    console.log("📋 Copying essential configuration files...");
+    const configFiles = [
+      ".env",
+      ".env.local",
+      ".env.production",
+      ".env.shared.ts",
+      "env.example",
+      "drizzle.config.ts",
+      "tsconfig.json",
+      "vite.config.ts",
+      "tailwind.config.js",
+      "postcss.config.js",
+    ];
+
+    for (const file of configFiles) {
+      const srcFile = join(workspaceRoot, file);
+      const destFile = join(buildWorkspace, file);
+
+      if (existsSync(srcFile)) {
+        await copyFile(srcFile, destFile);
+        console.log(`  📄 ${file} copied`);
+      }
+    }
+
+    // Copy any other config directories
+    const configDirs = ["config", "deployment/config"];
+    for (const dir of configDirs) {
+      const srcDir = join(workspaceRoot, dir);
+      const destDir = join(buildWorkspace, dir);
+
+      if (existsSync(srcDir)) {
+        console.log(`📁 Copying ${dir} configuration...`);
+        await fastCopy(srcDir, destDir, { recursive: true });
+        console.log(`  ✅ ${dir} copied`);
+      }
+    }
+
+    console.log(
+      "✅ Isolated build workspace prepared (optimized - no node_modules copy)"
+    );
   } catch (error) {
     console.error("❌ Failed to prepare isolated build workspace:", error);
     throw error;

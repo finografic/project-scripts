@@ -56,13 +56,36 @@ npm --version
 
 echo.
 echo 📦 Installing dependencies (production)...
-npm install --production
-if %errorlevel% NEQ 0 (
-    echo ❌ Failed to install dependencies
-    pause
-    exit /b 1
+
+REM Try multiple npm install strategies to handle peer dependency conflicts
+echo 🔧 Attempting with --legacy-peer-deps...
+npm install --production --legacy-peer-deps
+if %errorlevel% EQU 0 (
+    echo ✅ Dependencies installed successfully with --legacy-peer-deps
+    goto :start_app
 )
 
+echo ⚠️  Legacy peer deps failed, trying with force flag...
+npm install --production --force
+if %errorlevel% EQU 0 (
+    echo ✅ Dependencies installed successfully with --force
+    goto :start_app
+)
+
+echo ⚠️  Force install failed, trying with both flags...
+npm install --production --force --legacy-peer-deps
+if %errorlevel% EQU 0 (
+    echo ✅ Dependencies installed successfully with --force --legacy-peer-deps
+    goto :start_app
+)
+
+echo ❌ All npm install strategies failed. Please check the error messages above.
+echo 💡 You may need to manually resolve peer dependency conflicts.
+echo 💡 Try running: npm install --production --force --legacy-peer-deps
+pause
+exit /b 1
+
+:start_app
 echo.
 echo 🚀 Starting application (server + client)...
 start "server" cmd /c start-server.bat

@@ -55,6 +55,11 @@ Esta guía te ayudará a configurar y ejecutar la aplicación {{APP_NAME}} en tu
 - Verifica que estés en la carpeta correcta
 - Intenta reiniciar tu computadora
 
+**"Conflictos de dependencias npm" o "errores ERESOLVE"**
+- El script de configuración intenta automáticamente múltiples estrategias para resolver conflictos
+- Si ves errores de dependencias, intenta ejecutar manualmente: `npm install --production --force --legacy-peer-deps`
+- Esto es común con aplicaciones complejas y generalmente se resuelve automáticamente
+
 ### Obtener Ayuda
 
 Si aún tienes problemas:

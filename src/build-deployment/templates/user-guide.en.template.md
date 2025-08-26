@@ -55,6 +55,11 @@ This guide will help you set up and run the {{APP_NAME}} application on your com
 - Check that you're in the correct folder
 - Try restarting your computer
 
+**"npm dependency conflicts" or "ERESOLVE errors"**
+- The setup script automatically tries multiple strategies to resolve conflicts
+- If you see dependency errors, try running manually: `npm install --production --force --legacy-peer-deps`
+- This is common with complex applications and usually resolves automatically
+
 ### Getting Help
 
 If you're still having trouble:

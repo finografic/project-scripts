@@ -24,7 +24,21 @@ echo "✅ Node.js: $(node -v)"
 echo "✅ npm: $(npm -v)"
 
 echo "📦 Installing dependencies (production)..."
-npm install --production
+
+# Try multiple npm install strategies to handle peer dependency conflicts
+echo "🔧 Attempting with --legacy-peer-deps..."
+if npm install --production --legacy-peer-deps; then
+    echo "✅ Dependencies installed successfully with --legacy-peer-deps"
+elif npm install --production --force; then
+    echo "✅ Dependencies installed successfully with --force"
+elif npm install --production --force --legacy-peer-deps; then
+    echo "✅ Dependencies installed successfully with --force --legacy-peer-deps"
+else
+    echo "❌ All npm install strategies failed. Please check the error messages above."
+    echo "💡 You may need to manually resolve peer dependency conflicts."
+    echo "💡 Try running: npm install --production --force --legacy-peer-deps"
+    exit 1
+fi
 
 echo "🚀 Starting application (server + client)..."
 chmod +x start-server.sh start-client.sh || true
