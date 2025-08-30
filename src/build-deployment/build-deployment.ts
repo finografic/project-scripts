@@ -670,6 +670,12 @@ async function main(): Promise<void> {
       
       const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, "deployment");
       
+      // Copy build artifacts to expected structure (apps/client/dist -> dist/client, etc.)
+      console.log(chalk.blue("📁 Copying build artifacts to deployment structure..."));
+      await copyBuildArtifacts(defaultConfig, "client");
+      await copyBuildArtifacts(defaultConfig, "server");
+      await copyDataFiles(defaultConfig);
+      
       // Create platform-specific files (start scripts, etc.)
       await createPlatformFiles(defaultConfig, options);
       
