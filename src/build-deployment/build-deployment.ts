@@ -1,6 +1,7 @@
 import { join, resolve } from "path";
 import { execSync } from "child_process";
 import { rm } from "fs/promises";
+import { existsSync } from "fs";
 import { select, checkbox, confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import {
@@ -23,6 +24,12 @@ import {
   verifyWorkspaceIsolation,
   prepareIsolatedBuildWorkspace,
 } from "./utils/file.utils.js";
+import {
+  optimizedIsolateWorkspace,
+  optimizedRestoreWorkspace,
+  createMinimalPackageJson,
+  installProductionDependencies,
+} from "./utils/optimized-isolation.utils.js";
 import {
   buildApp,
   createPackageJson,
@@ -529,10 +536,9 @@ async function main(): Promise<void> {
     killPortIfOccupied(defaultConfig.ports.client);
     killPortIfOccupied(defaultConfig.ports.server);
 
-    // Isolate workspace to prevent pnpm interference
-    console.log(chalk.blue("🔒 Starting workspace isolation..."));
-    await isolateWorkspace(defaultConfig);
-    await verifyWorkspaceIsolation(defaultConfig);
+    // Optimized workspace isolation - avoids copying 30GB+ of node_modules
+    console.log(chalk.blue("🚀 Starting optimized workspace isolation..."));
+    await optimizedIsolateWorkspace(defaultConfig);
 
     // Additional safety check before proceeding
     const { canProceedWithBuild } = await import("./utils/file.utils.js");
@@ -566,12 +572,21 @@ async function main(): Promise<void> {
     console.log(chalk.gray("   - backup created for safety"));
     console.log(chalk.gray("═".repeat(60)));
 
-    // Prepare isolated build workspace with dependencies
-    await prepareIsolatedBuildWorkspace(defaultConfig);
-
     // Create directory structure in .temp (build isolation)
     await cleanPlatformArtifacts(defaultConfig);
     await createDirectoryStructure(defaultConfig);
+
+    // Create minimal package.json with only production dependencies
+    const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, "deployment");
+    await createMinimalPackageJson(defaultConfig, buildWorkspace);
+
+    // Install only production dependencies (much faster than copying 30GB+)
+    await installProductionDependencies(buildWorkspace);
+
+    // Copy source files only (no massive node_modules copying)
+    console.log("📁 Copying source files to build workspace...");
+    const { copyOptimizedSources } = await import("./utils/optimized-isolation.utils.js");
+    await copyOptimizedSources(defaultConfig, buildWorkspace);
 
     // Build applications
     await buildApp(defaultConfig, "client");
@@ -619,6 +634,7 @@ async function main(): Promise<void> {
     // Clean up .temp build directory and restore workspace
     console.log(chalk.blue("🔓 Restoring workspace from isolation..."));
     await cleanupTempDirectory(defaultConfig);
+    await optimizedRestoreWorkspace(defaultConfig);
 
     // Success message
     console.log("");
