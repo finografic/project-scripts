@@ -54,8 +54,7 @@ async function generateAndDeployBuildAgent(
   console.log(chalk.blue("🤖 Generating Deployment Agent..."));
 
   // Create the build agent script content
-  const buildAgentScript = `
-#!/usr/bin/env node
+  const buildAgentScript = `#!/usr/bin/env node
 
 import { join, resolve } from "path";
 import { execSync } from "child_process";
@@ -96,7 +95,7 @@ async function executeBuild() {
 
       if (existsSync(srcFile)) {
         await copyFile(srcFile, destFile);
-        console.log(\`  📄 \${file} copied\`);
+        console.log("  📄 " + file + " copied");
       }
     }
 
@@ -107,9 +106,9 @@ async function executeBuild() {
       const destDir = join(buildWorkspace, dir);
 
       if (existsSync(srcDir)) {
-        console.log(\`📁 Copying \${dir} configuration...\`);
-        execSync(\`cp -r "\${srcDir}" "\${destDir}"\`, { stdio: "inherit" });
-        console.log(\`  ✅ \${dir} copied\`);
+        console.log("📁 Copying " + dir + " configuration...");
+        execSync("cp -r \\"" + srcDir + "\\" \\"" + destDir + "\\"", { stdio: "inherit" });
+        console.log("  ✅ " + dir + " copied");
       }
     }
 
@@ -121,9 +120,9 @@ async function executeBuild() {
       const destDir = join(buildWorkspace, dir);
 
       if (existsSync(srcDir)) {
-        console.log(\`📁 Copying \${dir} to build workspace...\`);
-        execSync(\`cp -r "\${srcDir}" "\${destDir}"\`, { stdio: "inherit" });
-        console.log(\`  ✅ \${dir} copied\`);
+        console.log("📁 Copying " + dir + " to build workspace...");
+        execSync("cp -r \\"" + srcDir + "\\" \\"" + destDir + "\\"", { stdio: "inherit" });
+        console.log("  ✅ " + dir + " copied");
       }
     }
 
@@ -136,9 +135,9 @@ async function executeBuild() {
       const destDist = join(buildWorkspace, distDir);
 
       if (existsSync(srcDist)) {
-        console.log(\`  📁 Copying \${distDir}...\`);
-        execSync(\`cp -r "\${srcDist}" "\${destDist}"\`, { stdio: "inherit" });
-        console.log(\`    ✅ \${distDir} copied\`);
+        console.log("  📁 Copying " + distDir + "...");
+        execSync("cp -r \\"" + srcDist + "\\" \\"" + destDist + "\\"", { stdio: "inherit" });
+        console.log("    ✅ " + distDir + " copied");
       }
     }
 
