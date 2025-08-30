@@ -22,11 +22,18 @@ export async function createMinimalPackageJson(
 
   // Read the original root package.json
   const rootPackageJsonPath = join(config.workspaceRoot, "package.json");
-  const rootPackageJson = JSON.parse(await readFile(rootPackageJsonPath, "utf8"));
+  const rootPackageJson = JSON.parse(
+    await readFile(rootPackageJsonPath, "utf8")
+  );
 
   // Read server package.json for production dependencies
-  const serverPackageJsonPath = join(config.workspaceRoot, "apps/server/package.json");
-  const serverPackageJson = JSON.parse(await readFile(serverPackageJsonPath, "utf8"));
+  const serverPackageJsonPath = join(
+    config.workspaceRoot,
+    "apps/server/package.json"
+  );
+  const serverPackageJson = JSON.parse(
+    await readFile(serverPackageJsonPath, "utf8")
+  );
 
   // Extract only production dependencies from server
   const productionDependencies = {
@@ -34,9 +41,15 @@ export async function createMinimalPackageJson(
     ...serverPackageJson.dependencies,
     // Essential build tools that are needed for production
     "cross-env": rootPackageJson.devDependencies["cross-env"],
-    "tsx": rootPackageJson.devDependencies["tsx"],
+    tsx: rootPackageJson.devDependencies["tsx"],
     "better-sqlite3": rootPackageJson.devDependencies["better-sqlite3"],
     // Remove workspace dependencies that will be built
+  };
+
+  // Define optional dependencies for the deployment
+  const optionalDependencies = {
+    "npm-run-all": "^4.1.5",
+    serve: "^14.0.0",
   };
 
   // Remove all workspace dependencies as they'll be built locally
@@ -44,10 +57,13 @@ export async function createMinimalPackageJson(
   delete productionDependencies["@workspace/i18n"];
   delete productionDependencies["@workspace/server"];
   delete productionDependencies["@workspace/scripts"];
-  
+
   // Filter out any remaining workspace: dependencies
-  Object.keys(productionDependencies).forEach(key => {
-    if (productionDependencies[key] && productionDependencies[key].includes('workspace:')) {
+  Object.keys(productionDependencies).forEach((key) => {
+    if (
+      productionDependencies[key] &&
+      productionDependencies[key].includes("workspace:")
+    ) {
       delete productionDependencies[key];
       console.log(`  🧹 Removed workspace dependency: ${key}`);
     }
@@ -61,16 +77,16 @@ export async function createMinimalPackageJson(
     private: true,
     engines: {
       node: ">=18.0.0", // More flexible than v22 requirement
-      npm: ">=8.0.0"
+      npm: ">=8.0.0",
     },
     scripts: {
-      start: "npm run start:both",
-      "start:server": "node dist/server/index.js",
+      start: "run-p start:server start:client",
+      "start:server": "node start-server.js",
       "start:client": "node start-client.js",
-      "start:both": "node start-both.js",
-      postinstall: "echo 'Touch Monorepo deployed successfully!'"
+      postinstall: "echo 'Touch Monorepo deployed successfully!'",
     },
-    dependencies: productionDependencies
+    dependencies: productionDependencies,
+    optionalDependencies,
   };
 
   // Write the minimal package.json
@@ -82,7 +98,9 @@ export async function createMinimalPackageJson(
   );
 
   console.log("✅ Minimal package.json created");
-  console.log(`   Dependencies: ${Object.keys(productionDependencies).length} (vs ${Object.keys(rootPackageJson.dependencies || {}).length + Object.keys(rootPackageJson.devDependencies || {}).length} in original)`);
+  console.log(
+    `   Dependencies: ${Object.keys(productionDependencies).length} (vs ${Object.keys(rootPackageJson.dependencies || {}).length + Object.keys(rootPackageJson.devDependencies || {}).length} in original)`
+  );
   console.log(`   Size reduction: ~90% fewer dependencies`);
 }
 
@@ -93,10 +111,12 @@ export async function createMinimalPackageJson(
 export async function installProductionDependencies(
   buildWorkspace: string
 ): Promise<void> {
-  console.log("🚀 Installing production dependencies (this will be much faster)...");
+  console.log(
+    "🚀 Installing production dependencies (this will be much faster)..."
+  );
 
   const startTime = Date.now();
-  
+
   try {
     // Use npm instead of pnpm to avoid workspace linking issues
     execSync("npm install --production --no-optional --no-audit --no-fund", {
@@ -107,13 +127,14 @@ export async function installProductionDependencies(
         NODE_ENV: "production",
         // Prevent npm from trying to use pnpm features
         PNPM_HOME: undefined,
-      }
+      },
     });
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`✅ Production dependencies installed in ${duration}s`);
-    console.log("   This is dramatically faster than copying 30GB+ of node_modules!");
-    
+    console.log(
+      "   This is dramatically faster than copying 30GB+ of node_modules!"
+    );
   } catch (error) {
     console.error("❌ Failed to install production dependencies:", error);
     throw error;
@@ -134,7 +155,9 @@ export async function optimizedIsolateWorkspace(
 
   // Safety check
   if (workspaceRoot.includes(config.paths.temp)) {
-    throw new Error("Safety check failed: Cannot isolate workspace from within temp directory");
+    throw new Error(
+      "Safety check failed: Cannot isolate workspace from within temp directory"
+    );
   }
 
   // Create temp directory
@@ -157,7 +180,10 @@ export async function optimizedIsolateWorkspace(
 
   if (existsSync(pnpmWorkspacePath)) {
     console.log("🏢 Moving pnpm-workspace.yaml to isolation...");
-    await copyFile(pnpmWorkspacePath, join(isolationDir, "pnpm-workspace.yaml"));
+    await copyFile(
+      pnpmWorkspacePath,
+      join(isolationDir, "pnpm-workspace.yaml")
+    );
     // Don't remove it yet
   }
 
@@ -214,12 +240,17 @@ export async function copyOptimizedSources(
   const workspaceRoot = config.workspaceRoot;
 
   // Copy source directories only
-  const sourceDirs = ["apps/client", "apps/server", "packages/core", "packages/i18n"];
-  
+  const sourceDirs = [
+    "apps/client",
+    "apps/server",
+    "packages/core",
+    "packages/i18n",
+  ];
+
   for (const dir of sourceDirs) {
     const srcDir = join(workspaceRoot, dir);
     const destDir = join(buildWorkspace, dir);
-    
+
     if (existsSync(srcDir)) {
       console.log(`  📁 Copying ${dir}...`);
       await cp(srcDir, destDir, { recursive: true });
@@ -229,16 +260,16 @@ export async function copyOptimizedSources(
 
   // Copy essential config files
   const configFiles = [
-    ".env", 
-    ".env.local", 
-    ".env.production", 
-    "env.shared.ts", 
+    ".env",
+    ".env.local",
+    ".env.production",
+    "env.shared.ts",
     "tsconfig.json",
     "vite.config.ts",
     "tailwind.config.js",
-    "postcss.config.js"
+    "postcss.config.js",
   ];
-  
+
   for (const file of configFiles) {
     const srcFile = join(workspaceRoot, file);
     const destFile = join(buildWorkspace, file);

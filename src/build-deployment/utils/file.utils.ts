@@ -1,9 +1,8 @@
-import { mkdir, cp, copyFile, writeFile, rm } from "fs/promises";
+import { mkdir, cp, copyFile, writeFile, rm, readdir, stat } from "fs/promises";
 import { existsSync, statSync } from "fs";
 import { join, resolve } from "path";
 import { execSync } from "child_process";
 import type { BuildDeploymentConfig } from "../config/types";
-import { readdir } from "fs/promises";
 
 /**
  * Function to kill processes on specific ports
@@ -145,6 +144,9 @@ export async function copyBuildArtifacts(
 
   console.log(`✅ Source directory exists, copying...`);
 
+  // Ensure destination directory exists
+  await mkdir(destDir, { recursive: true });
+
   // 🚀 FIX: Copy contents of dist directory, not the dist directory itself
   // This prevents the double nesting: dist/apps/client/dist/* → dist/client/*
   const srcContents = await readdir(srcDir);
@@ -185,6 +187,8 @@ export async function copyDataFiles(
     config.database.production
   );
   if (existsSync(dbSrc)) {
+    // Ensure destination directory exists
+    await mkdir(join(buildWorkspace, "dist/data/db"), { recursive: true });
     await fastCopy(dbSrc, dbDest);
   }
 
@@ -245,7 +249,73 @@ export async function createZipArchive(
     "deployment"
   );
 
-  const zipCommand = `cd "${buildWorkspace}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
+  // Create final deployment directory with correct structure
+  const finalDeployment = resolve(
+    config.workspaceRoot,
+    config.paths.temp,
+    "final-deployment"
+  );
+
+  // Clean and create final deployment directory
+  if (existsSync(finalDeployment)) {
+    execSync(`rm -rf "${finalDeployment}"`, { stdio: "inherit" });
+  }
+  await mkdir(finalDeployment, { recursive: true });
+
+  console.log("🎯 Creating final deployment structure...");
+
+  // Copy only essential root files (not apps/, packages/, config/)
+  const rootFiles = [
+    "package.json",
+    "package-lock.json",
+    "start-client.js",
+    "start-server.js",
+    "ports.utils.js",
+    "test-production.js",
+  ];
+
+  for (const file of rootFiles) {
+    const srcFile = join(buildWorkspace, file);
+    const destFile = join(finalDeployment, file);
+    if (existsSync(srcFile)) {
+      await copyFile(srcFile, destFile);
+      console.log(`  ✅ Copied ${file}`);
+    }
+  }
+
+  // Copy platform-specific files (setup scripts, guides, etc.)
+  const platformFiles = await readdir(buildWorkspace);
+  for (const file of platformFiles) {
+    if (
+      file.includes("setup") ||
+      file.includes("GUIDE") ||
+      file.includes("GUIA") ||
+      file.includes("README") ||
+      file.includes(".sh") ||
+      file.includes(".bat")
+    ) {
+      const srcFile = join(buildWorkspace, file);
+      const destFile = join(finalDeployment, file);
+      if (existsSync(srcFile) && (await stat(srcFile)).isFile()) {
+        await copyFile(srcFile, destFile);
+        console.log(`  ✅ Copied platform file ${file}`);
+      }
+    }
+  }
+
+  // Copy ONLY the dist/ directory (not apps/, packages/, config/)
+  const distSrc = join(buildWorkspace, "dist");
+  const distDest = join(finalDeployment, "dist");
+  if (existsSync(distSrc)) {
+    console.log("  📁 Copying dist/ directory...");
+    await fastCopy(distSrc, distDest, { recursive: true });
+    console.log("  ✅ dist/ directory copied");
+  }
+
+  console.log("✅ Final deployment structure created");
+
+  // ZIP the final deployment directory (not the build workspace)
+  const zipCommand = `cd "${finalDeployment}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
   execSync(zipCommand, { stdio: "inherit" });
 
   return zipName;

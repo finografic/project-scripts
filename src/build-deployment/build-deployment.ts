@@ -66,15 +66,15 @@ import { existsSync } from "fs";
 // Helper function to create production package.json
 async function createProductionPackageJson(workspaceRoot, buildWorkspace) {
   console.log("📦 Creating minimal production package.json...");
-  
+
   // Read the original root package.json
   const rootPackageJsonPath = join(workspaceRoot, "package.json");
   const rootPackageJson = JSON.parse(await readFile(rootPackageJsonPath, "utf8"));
-  
+
   // Read server package.json for production dependencies
   const serverPackageJsonPath = join(workspaceRoot, "apps/server/package.json");
   const serverPackageJson = JSON.parse(await readFile(serverPackageJsonPath, "utf8"));
-  
+
   // Extract only production dependencies from server
   const productionDependencies = {
     // Runtime dependencies from server
@@ -84,13 +84,19 @@ async function createProductionPackageJson(workspaceRoot, buildWorkspace) {
     "tsx": rootPackageJson.devDependencies["tsx"],
     "better-sqlite3": rootPackageJson.devDependencies["better-sqlite3"],
   };
-  
+
+  // Define optional dependencies for the deployment
+  const optionalDependencies = {
+    "npm-run-all": "^4.1.5",
+    "serve": "^14.0.0"
+  };
+
   // Remove all workspace dependencies as they'll be built locally
   delete productionDependencies["@workspace/core"];
   delete productionDependencies["@workspace/i18n"];
   delete productionDependencies["@workspace/server"];
   delete productionDependencies["@workspace/scripts"];
-  
+
   // Filter out any remaining workspace: dependencies
   Object.keys(productionDependencies).forEach(key => {
     if (productionDependencies[key] && productionDependencies[key].includes('workspace:')) {
@@ -98,7 +104,7 @@ async function createProductionPackageJson(workspaceRoot, buildWorkspace) {
       console.log("  🧹 Removed workspace dependency: " + key);
     }
   });
-  
+
   // Create minimal package.json for deployment
   const minimalPackageJson = {
     name: "touch-monorepo-deployment",
@@ -110,20 +116,20 @@ async function createProductionPackageJson(workspaceRoot, buildWorkspace) {
       npm: ">=8.0.0"
     },
     scripts: {
-      start: "npm run start:both",
-      "start:server": "node dist/server/index.js",
-      "start:client": "node start-client.js",  
-      "start:both": "node start-both.js",
+      start: "run-p start:server start:client",
+      "start:server": "node start-server.js",
+      "start:client": "node start-client.js",
       postinstall: "echo 'Touch Monorepo deployed successfully!'"
     },
-    dependencies: productionDependencies
+    dependencies: productionDependencies,
+    optionalDependencies
   };
-  
+
   // Write the minimal package.json
   const packageJsonPath = join(buildWorkspace, "package.json");
   await writeFile(packageJsonPath, JSON.stringify(minimalPackageJson, null, 2));
   console.log("  ✅ Production package.json created");
-  
+
   return minimalPackageJson;
 }
 
@@ -212,7 +218,7 @@ async function executeBuild() {
     // Create minimal package.json for production deployment
     console.log("📋 Creating production-ready package.json...");
     const productionPackageJson = await createProductionPackageJson(workspaceRoot, buildWorkspace);
-    
+
     // Install dependencies with dotenvx for GitHub token
     console.log("📦 Installing production dependencies with dotenvx...");
     console.log("  Using .env configuration for GitHub registry...");
@@ -243,17 +249,17 @@ async function executeBuild() {
 
     // Build applications (only if dist artifacts don't exist)
     console.log("🏗️  Checking for existing build artifacts...");
-    
+
     const clientDistExists = existsSync(join(buildWorkspace, "apps/client/dist"));
     const serverDistExists = existsSync(join(buildWorkspace, "apps/server/dist"));
-    
+
     if (clientDistExists && serverDistExists) {
       console.log("  ✅ Found existing build artifacts - skipping build step");
       console.log("  📁 Client dist: " + join(buildWorkspace, "apps/client/dist"));
       console.log("  📁 Server dist: " + join(buildWorkspace, "apps/server/dist"));
     } else {
       console.log("  ⚠️  Missing build artifacts - attempting to build...");
-      
+
       if (!clientDistExists) {
         console.log("  📱 Building client app...");
         try {
@@ -266,12 +272,12 @@ async function executeBuild() {
           console.log("  ⚠️  Client build failed - proceeding without client dist");
         }
       }
-      
+
       if (!serverDistExists) {
         console.log("  🖥️  Building server app...");
         try {
           execSync("npm run build.production", {
-            cwd: join(buildWorkspace, "apps/server"), 
+            cwd: join(buildWorkspace, "apps/server"),
             stdio: "inherit"
           });
           console.log("  ✅ Server build completed");
@@ -666,23 +672,35 @@ async function main(): Promise<void> {
       await generateAndDeployBuildAgent(defaultConfig, options);
 
       // Continue with platform files and ZIP creation after agent completes
-      console.log(chalk.blue("📋 Creating platform files and deployment package..."));
-      
-      const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, "deployment");
-      
+      console.log(
+        chalk.blue("📋 Creating platform files and deployment package...")
+      );
+
+      const buildWorkspace = join(
+        defaultConfig.workspaceRoot,
+        defaultConfig.paths.temp,
+        "deployment"
+      );
+
       // Copy build artifacts to expected structure (apps/client/dist -> dist/client, etc.)
-      console.log(chalk.blue("📁 Copying build artifacts to deployment structure..."));
+      console.log(
+        chalk.blue("📁 Copying build artifacts to deployment structure...")
+      );
       await copyBuildArtifacts(defaultConfig, "client");
       await copyBuildArtifacts(defaultConfig, "server");
       await copyDataFiles(defaultConfig);
-      
+
       // Create platform-specific files (start scripts, etc.)
       await createPlatformFiles(defaultConfig, options);
-      
+
       // Create ZIP archive if requested
       if (options.zip) {
         console.log(chalk.blue("📦 Creating deployment ZIP archive..."));
-        await createZipArchive(defaultConfig, options.platform || "macos", options.arch || "arm64");
+        await createZipArchive(
+          defaultConfig,
+          options.platform || "macos",
+          options.arch || "arm64"
+        );
         console.log(chalk.green("✅ ZIP archive created successfully!"));
       }
 
@@ -710,7 +728,11 @@ async function main(): Promise<void> {
     await createDirectoryStructure(defaultConfig);
 
     // Create minimal package.json with only production dependencies
-    const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, "deployment");
+    const buildWorkspace = join(
+      defaultConfig.workspaceRoot,
+      defaultConfig.paths.temp,
+      "deployment"
+    );
     await createMinimalPackageJson(defaultConfig, buildWorkspace);
 
     // Install only production dependencies (much faster than copying 30GB+)
@@ -718,7 +740,9 @@ async function main(): Promise<void> {
 
     // Copy source files only (no massive node_modules copying)
     console.log("📁 Copying source files to build workspace...");
-    const { copyOptimizedSources } = await import("./utils/optimized-isolation.utils.js");
+    const { copyOptimizedSources } = await import(
+      "./utils/optimized-isolation.utils.js"
+    );
     await copyOptimizedSources(defaultConfig, buildWorkspace);
 
     // Build applications
