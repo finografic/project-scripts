@@ -1,5 +1,5 @@
 import { mkdir, cp, copyFile, writeFile, rm } from "fs/promises";
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import { join, resolve } from "path";
 import { execSync } from "child_process";
 import type { BuildDeploymentConfig } from "../config/types";
@@ -58,6 +58,7 @@ async function fastCopy(
     if (
       options.recursive &&
       existsSync(src) &&
+      statSync(src).isDirectory() &&
       (await readdir(src)).length > 0
     ) {
       // Add trailing slash to source to copy contents, not the directory itself
