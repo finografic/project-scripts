@@ -241,6 +241,22 @@ async function executeBuild() {
       }
     }
 
+    // Build applications
+    console.log("🏗️  Building applications...");
+    console.log("  📱 Building client app...");
+    execSync("npm run build", {
+      cwd: join(buildWorkspace, "apps/client"),
+      stdio: "inherit"
+    });
+    console.log("  ✅ Client build completed");
+    
+    console.log("  🖥️  Building server app...");
+    execSync("npm run build.production", {
+      cwd: join(buildWorkspace, "apps/server"), 
+      stdio: "inherit"
+    });
+    console.log("  ✅ Server build completed");
+
     console.log("✅ Build agent completed successfully!");
 
     // Self-destruct after completion
@@ -625,9 +641,25 @@ async function main(): Promise<void> {
       // Deploy the build agent instead of failing
       await generateAndDeployBuildAgent(defaultConfig, options);
 
+      // Continue with platform files and ZIP creation after agent completes
+      console.log(chalk.blue("📋 Creating platform files and deployment package..."));
+      
+      const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, "deployment");
+      
+      // Create platform-specific files (start scripts, etc.)
+      await createPlatformFiles(defaultConfig, options);
+      
+      // Create ZIP archive if requested
+      if (options.zip) {
+        console.log(chalk.blue("📦 Creating deployment ZIP archive..."));
+        await createZipArchive(defaultConfig, options.platform || "macos", options.arch || "arm64");
+        console.log(chalk.green("✅ ZIP archive created successfully!"));
+      }
+
       // Clean up and restore workspace
       console.log(chalk.blue("🔓 Restoring workspace from isolation..."));
       await cleanupTempDirectory(defaultConfig);
+      await optimizedRestoreWorkspace(defaultConfig);
 
       console.log(chalk.green("🎉 Deployment completed via agent!"));
       return;
