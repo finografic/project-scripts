@@ -416,6 +416,22 @@ async function createPlatformFiles(
     true
   );
 
+  // Create ports utility file
+  const portsUtils = await loadTemplate("ports.utils.js.template", vars);
+  await writeExecutableFile(
+    join(buildWorkspace, "ports.utils.js"),
+    portsUtils,
+    true
+  );
+
+  // Create client server file (goes in dist/client/server.js)
+  const clientServer = await loadTemplate("client-server.js.template", vars);
+  await writeExecutableFile(
+    join(buildWorkspace, "dist", "client", "server.js"),
+    clientServer,
+    true
+  );
+
   // Create user guides
   const platformSuffix =
     platform === "universal" ? "UNIVERSAL" : platform.toUpperCase();
