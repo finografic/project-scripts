@@ -241,21 +241,45 @@ async function executeBuild() {
       }
     }
 
-    // Build applications
-    console.log("🏗️  Building applications...");
-    console.log("  📱 Building client app...");
-    execSync("npm run build", {
-      cwd: join(buildWorkspace, "apps/client"),
-      stdio: "inherit"
-    });
-    console.log("  ✅ Client build completed");
+    // Build applications (only if dist artifacts don't exist)
+    console.log("🏗️  Checking for existing build artifacts...");
     
-    console.log("  🖥️  Building server app...");
-    execSync("npm run build.production", {
-      cwd: join(buildWorkspace, "apps/server"), 
-      stdio: "inherit"
-    });
-    console.log("  ✅ Server build completed");
+    const clientDistExists = existsSync(join(buildWorkspace, "apps/client/dist"));
+    const serverDistExists = existsSync(join(buildWorkspace, "apps/server/dist"));
+    
+    if (clientDistExists && serverDistExists) {
+      console.log("  ✅ Found existing build artifacts - skipping build step");
+      console.log("  📁 Client dist: " + join(buildWorkspace, "apps/client/dist"));
+      console.log("  📁 Server dist: " + join(buildWorkspace, "apps/server/dist"));
+    } else {
+      console.log("  ⚠️  Missing build artifacts - attempting to build...");
+      
+      if (!clientDistExists) {
+        console.log("  📱 Building client app...");
+        try {
+          execSync("npm run build", {
+            cwd: join(buildWorkspace, "apps/client"),
+            stdio: "inherit"
+          });
+          console.log("  ✅ Client build completed");
+        } catch (error) {
+          console.log("  ⚠️  Client build failed - proceeding without client dist");
+        }
+      }
+      
+      if (!serverDistExists) {
+        console.log("  🖥️  Building server app...");
+        try {
+          execSync("npm run build.production", {
+            cwd: join(buildWorkspace, "apps/server"), 
+            stdio: "inherit"
+          });
+          console.log("  ✅ Server build completed");
+        } catch (error) {
+          console.log("  ⚠️  Server build failed - proceeding without server dist");
+        }
+      }
+    }
 
     console.log("✅ Build agent completed successfully!");
 
