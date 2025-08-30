@@ -73,6 +73,9 @@ async function executeBuild() {
     // Create directory structure
     console.log("🏗️  Creating build workspace structure...");
     await mkdir(join(buildWorkspace, "dist"), { recursive: true });
+    await mkdir(join(buildWorkspace, "apps"), { recursive: true });
+    await mkdir(join(buildWorkspace, "packages"), { recursive: true });
+    await mkdir(join(buildWorkspace, "config"), { recursive: true });
 
     // Copy essential configuration files
     console.log("📋 Copying essential configuration files...");
@@ -107,7 +110,7 @@ async function executeBuild() {
 
       if (existsSync(srcDir)) {
         console.log("📁 Copying " + dir + " configuration...");
-        execSync("cp -r \\"" + srcDir + "\\" \\"" + destDir + "\\"", { stdio: "inherit" });
+        execSync("mkdir -p \\"" + join(buildWorkspace, dir) + "\\" && cp -r \\"" + srcDir + "\\"/* \\"" + destDir + "\\"", { stdio: "inherit" });
         console.log("  ✅ " + dir + " copied");
       }
     }
@@ -121,7 +124,7 @@ async function executeBuild() {
 
       if (existsSync(srcDir)) {
         console.log("📁 Copying " + dir + " to build workspace...");
-        execSync("cp -r \\"" + srcDir + "\\" \\"" + destDir + "\\"", { stdio: "inherit" });
+        execSync("mkdir -p \\"" + join(buildWorkspace, dir.split('/')[0]) + "\\" && cp -r \\"" + srcDir + "\\" \\"" + destDir + "\\"", { stdio: "inherit" });
         console.log("  ✅ " + dir + " copied");
       }
     }
@@ -136,7 +139,7 @@ async function executeBuild() {
 
       if (existsSync(srcDist)) {
         console.log("  📁 Copying " + distDir + "...");
-        execSync("cp -r \\"" + srcDist + "\\" \\"" + destDist + "\\"", { stdio: "inherit" });
+        execSync("mkdir -p \\"" + join(buildWorkspace, distDir.split('/').slice(0, -1).join('/')) + "\\" && cp -r \\"" + srcDist + "\\" \\"" + destDist + "\\"", { stdio: "inherit" });
         console.log("    ✅ " + distDir + " copied");
       }
     }
