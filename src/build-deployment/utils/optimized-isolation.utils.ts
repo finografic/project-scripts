@@ -39,10 +39,19 @@ export async function createMinimalPackageJson(
     // Remove workspace dependencies that will be built
   };
 
-  // Remove workspace dependencies as they'll be built locally
+  // Remove all workspace dependencies as they'll be built locally
   delete productionDependencies["@workspace/core"];
   delete productionDependencies["@workspace/i18n"];
   delete productionDependencies["@workspace/server"];
+  delete productionDependencies["@workspace/scripts"];
+  
+  // Filter out any remaining workspace: dependencies
+  Object.keys(productionDependencies).forEach(key => {
+    if (productionDependencies[key] && productionDependencies[key].includes('workspace:')) {
+      delete productionDependencies[key];
+      console.log(`  🧹 Removed workspace dependency: ${key}`);
+    }
+  });
 
   // Create minimal package.json for deployment
   const minimalPackageJson = {

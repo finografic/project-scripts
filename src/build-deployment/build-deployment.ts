@@ -58,10 +58,75 @@ async function generateAndDeployBuildAgent(
 
 import { join, resolve } from "path";
 import { execSync } from "child_process";
-import { mkdir, rm, copyFile } from "fs/promises";
+import { mkdir, rm, copyFile, readFile, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 
 // Build Agent - Running from within isolated environment
+
+// Helper function to create production package.json
+async function createProductionPackageJson(workspaceRoot, buildWorkspace) {
+  console.log("📦 Creating minimal production package.json...");
+  
+  // Read the original root package.json
+  const rootPackageJsonPath = join(workspaceRoot, "package.json");
+  const rootPackageJson = JSON.parse(await readFile(rootPackageJsonPath, "utf8"));
+  
+  // Read server package.json for production dependencies
+  const serverPackageJsonPath = join(workspaceRoot, "apps/server/package.json");
+  const serverPackageJson = JSON.parse(await readFile(serverPackageJsonPath, "utf8"));
+  
+  // Extract only production dependencies from server
+  const productionDependencies = {
+    // Runtime dependencies from server
+    ...serverPackageJson.dependencies,
+    // Essential build tools that are needed for production
+    "cross-env": rootPackageJson.devDependencies["cross-env"],
+    "tsx": rootPackageJson.devDependencies["tsx"],
+    "better-sqlite3": rootPackageJson.devDependencies["better-sqlite3"],
+  };
+  
+  // Remove all workspace dependencies as they'll be built locally
+  delete productionDependencies["@workspace/core"];
+  delete productionDependencies["@workspace/i18n"];
+  delete productionDependencies["@workspace/server"];
+  delete productionDependencies["@workspace/scripts"];
+  
+  // Filter out any remaining workspace: dependencies
+  Object.keys(productionDependencies).forEach(key => {
+    if (productionDependencies[key] && productionDependencies[key].includes('workspace:')) {
+      delete productionDependencies[key];
+      console.log("  🧹 Removed workspace dependency: " + key);
+    }
+  });
+  
+  // Create minimal package.json for deployment
+  const minimalPackageJson = {
+    name: "touch-monorepo-deployment",
+    version: rootPackageJson.version,
+    type: "module",
+    private: true,
+    engines: {
+      node: ">=18.0.0",
+      npm: ">=8.0.0"
+    },
+    scripts: {
+      start: "npm run start:both",
+      "start:server": "node dist/server/index.js",
+      "start:client": "node start-client.js",  
+      "start:both": "node start-both.js",
+      postinstall: "echo 'Touch Monorepo deployed successfully!'"
+    },
+    dependencies: productionDependencies
+  };
+  
+  // Write the minimal package.json
+  const packageJsonPath = join(buildWorkspace, "package.json");
+  await writeFile(packageJsonPath, JSON.stringify(minimalPackageJson, null, 2));
+  console.log("  ✅ Production package.json created");
+  
+  return minimalPackageJson;
+}
+
 async function executeBuild() {
   console.log("🤖 Deployment Agent executing from isolation...");
 
@@ -144,6 +209,10 @@ async function executeBuild() {
       }
     }
 
+    // Create minimal package.json for production deployment
+    console.log("📋 Creating production-ready package.json...");
+    const productionPackageJson = await createProductionPackageJson(workspaceRoot, buildWorkspace);
+    
     // Install dependencies with dotenvx for GitHub token
     console.log("📦 Installing production dependencies with dotenvx...");
     console.log("  Using .env configuration for GitHub registry...");
