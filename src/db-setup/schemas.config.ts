@@ -1,7 +1,7 @@
 export const PATH_FOLDER_ENV = ".";
 export const PATH_FOLDER_SCHEMAS = "apps/server/src/db/schemas";
 export const PATH_FILES_CONFIG = [
-  "config/db/db-setup.config.ts",
+  "config/db-setup.config.ts",
   "db-setup.config.ts",
 ];
 
