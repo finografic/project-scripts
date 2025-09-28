@@ -34,13 +34,13 @@ export default defineConfig([
     clean: true,
     minify: false,
     splitting: false,
+    treeshake: true,
     sourcemap: false,
     dts: false, // No types for CLI
     banner: {
       js: "#!/usr/bin/env node",
     },
     external: ["fs", "path", "child_process"],
-    treeshake: true,
     // Copy templates to output
     async onSuccess() {
       const { cp } = await import("fs/promises");
