@@ -4,6 +4,7 @@
 /node_modules
 **/node_modules
 /.pnp
+**/.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -16,7 +17,9 @@
 
 # production
 /build
+**/build
 /dist
+**/dist
 /bin
 
 # misc
@@ -41,4 +44,3 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts

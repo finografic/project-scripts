@@ -2,6 +2,49 @@
   "name": "@finografic/project-scripts",
   "type": "module",
   "version": "8.5.0",
+  "packageManager": "pnpm@10.14.0",
+  "description": "Fingorafic Project Scripts",
+  "homepage": "https://github.com/finografic/project-scripts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finografic/project-scripts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/finografic/project-scripts/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "author": {
+    "name": "Justin",
+    "email": "justin.blair.rankin@gmail.com",
+    "url": "http://finografic.github.com/cv-justin-rankin"
+  },
+  "license": "MIT",
+  "keywords": [
+    "project-scripts",
+    "build-tools",
+    "deployment",
+    "cross-platform",
+    "monorepo",
+    "clean",
+    "purge",
+    "database-setup",
+    "sqlite",
+    "sqlite3",
+    "better-sqlite3",
+    "typescript",
+    "cli",
+    "finografic"
+  ],
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "module": "./dist/index.mjs",
+  "files": [
+    "bin",
+    "dist",
+    "src/build-deployment/templates"
+  ],
   "exports": {
     "./clean-docs": {
       "types": "./dist/clean-docs/index.d.ts",
@@ -34,82 +77,42 @@
       "require": "./dist/build-deployment/index.cjs"
     }
   },
-  "bin": {
-    "clean-docs": "bin/clean-docs.js",
-    "db-setup": "bin/db-setup.js",
-    "purge-builds": "bin/purge-builds.js",
-    "sqlite-rebuild": "bin/sqlite-rebuild.js",
-    "build-deployment": "bin/build-deployment.js"
-  },
-  "packageManager": "pnpm@10.14.0",
-  "description": "Fingorafic Project Scripts",
-  "author": {
-    "name": "Justin",
-    "email": "justin.blair.rankin@gmail.com",
-    "url": "http://finografic.github.com/cv-justin-rankin"
-  },
-  "license": "MIT",
-  "keywords": [
-    "project-scripts",
-    "build-tools",
-    "deployment",
-    "cross-platform",
-    "monorepo",
-    "clean",
-    "purge",
-    "database-setup",
-    "sqlite",
-    "sqlite3",
-    "better-sqlite3",
-    "typescript",
-    "cli"
-  ],
-  "files": [
-    "bin",
-    "dist",
-    "src/build-deployment/templates"
-  ],
   "scripts": {
     "========== DEV": "=======================================================",
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
-    "watch": "tsup --format esm,cjs --watch",
     "·········· BUILD": "·····················································",
     "build": "tsup",
+    "watch": "tsup --format esm,cjs --watch",
     "build.V2": "tsc && tsx ./scripts/build-bin.ts",
     "build.v1": "tsup --format esm,cjs --clean --dts",
-    "·········· BUILD:V2": "·····················································",
-    "build.v2": "tsup src/index.ts",
-    "build.v2.production": "cross-env NODE_ENV=production tsup src/index.ts",
-    "build.v2.development": "cross-env NODE_ENV=development tsup src/index.ts",
-    "·········· PUBLISH.GITHUB": "············································",
-    "prepublish.github": "pnpm build && git add dist/** && git commit -m \"chore: update generated files\" || true",
-    "publish.github.patch": "pnpm prepublish.github && dotenvx run -- pnpm version patch && pnpm publish --registry https://npm.pkg.github.com",
-    "publish.github.minor": "pnpm prepublish.github && dotenvx run -- pnpm version minor && pnpm publish --registry https://npm.pkg.github.com",
-    "publish.github.major": "pnpm prepublish.github && dotenvx run -- pnpm version major && pnpm publish --registry https://npm.pkg.github.com",
-    "·········· REGISTRIES": "··············································",
-    "view.registry.gitub": "dotenvx run -- pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
-    "·········· PACKAGES": "···················································",
-    "eslint-config": "dotenvx run -- pnpm update @finografic/eslint-config --latest",
-    "upgrade.deps.all": "pnpm update --latest",
+    "·········· TESTING": "···················································",
+    "test": "vitest",
+    "test.run": "vitest run",
+    "test.coverage": "vitest run --coverage",
     "·········· LINTING": "···················································",
     "lint": "eslint .",
-    "lint.dry": "eslint . --fix-dry-run",
     "lint.fix": "eslint . --fix",
     "lint.prod": "cross-env NODE_ENV=production eslint .",
     "lint.dry.prod": "cross-env NODE_ENV=production eslint . --fix-dry-run",
     "lint.fix.prod": "cross-env NODE_ENV=production eslint . --fix",
     "lint.strict": "cross-env STRICT_LINT=true eslint .",
     "inspect.eslint-config": "eslint-config-inspector",
+    "·········· PUBLISH.GITHUB": "············································",
+    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
+    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
+    "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
+    "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
+    "·········· REGISTRIES": "··············································",
+    "view.registry.github": "pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
+    "·········· PACKAGES": "···················································",
+    "update.project-scripts": "pnpm update @finografic/core --latest",
+    "upgrade.deps.all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
-    "tsc.debug": "pnpm exec tsc --pretty --project tsconfig.json",
-    "typecheck": "pnpm exec tsc --project tsconfig.json --noEmit",
-    "upgrade.all.deps": "pnpm update --latest",
+    "tsc.debug": "tsc --pretty --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
     "·········· HOOKS": "·····················································",
     "prepack": "pnpm build",
-    "BAK:prepare": "simple-git-hooks"
-  },
-  "peerDependencies": {
-    "jsonc-eslint-parser": "^2.4.0"
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@inquirer/confirm": "5.1.18",
@@ -124,23 +127,46 @@
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "1.51.0",
-    "@eslint/js": "9.36.0",
+    "@eslint/js": "^9.39.2",
     "@finografic/eslint-config": "9.18.4",
+    "@stylistic/eslint-plugin": "^5.6.1",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "24.5.2",
+    "@types/node": "^24.0.0",
     "@types/prompts": "^2.4.9",
     "@types/yargs": "^17.0.33",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
     "dotenv": "^17.2.2",
     "env-cmd": "^11.0.0",
-    "eslint": "^9.36.0",
+    "eslint": "^9.39.2",
     "eslint-plugin-jsonc": "^2.20.1",
+    "eslint-plugin-markdownlint": "^0.9.0",
     "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.4.0",
-    "lint-staged": "^16.2.3",
+    "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
+    "tsdown": "^0.18.3",
     "tsup": "8.5.0",
     "tsx": "^4.20.6",
-    "typescript": "5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.51.0",
+    "vitest": "^4.0.16"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "eslint --fix"
+    ]
+  },
+  "bin": {
+    "clean-docs": "bin/clean-docs.js",
+    "db-setup": "bin/db-setup.js",
+    "purge-builds": "bin/purge-builds.js",
+    "sqlite-rebuild": "bin/sqlite-rebuild.js",
+    "build-deployment": "bin/build-deployment.js"
+  },
+  "peerDependencies": {
+    "jsonc-eslint-parser": "^2.4.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -151,10 +177,5 @@
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,mjs,cjs}": [
-      "eslint --fix"
-    ]
   }
 }

@@ -16,21 +16,4 @@
     "**/*.spec.ts",
     "**/*.test.ts"
   ],
-  // "references": [
-  //   {
-  //     "path": "./config"
-  //   },
-  //   {
-  //     "path": "./packages/globals"
-  //   },
-  //   {
-  //     "path": "./packages/purge-builds"
-  //   },
-  //   {
-  //     "path": "./apps/client"
-  //   },
-  //   {
-  //     "path": "./apps/server"
-  //   }
-  // ]
 }
