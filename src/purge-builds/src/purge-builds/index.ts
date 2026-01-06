@@ -1,5 +1,5 @@
 // CLI entry point
-import { purge } from "./purge";
+import { purge } from './purge';
 
 // Display help information
 function showHelp() {
@@ -49,19 +49,19 @@ async function main() {
     const args = process.argv.slice(2);
 
     // Check for help flag
-    if (args.includes("--help") || args.includes("-h")) {
+    if (args.includes('--help') || args.includes('-h')) {
       showHelp();
       process.exit(0);
     }
 
     await purge({
-      dryRun: args.includes("--dry-run") || args.includes("-d"),
-      verbose: args.includes("--verbose") || args.includes("-v"),
-      recursive: args.includes("--recursive") || args.includes("-r"),
-      forceDetach: args.includes("--detach"),
+      dryRun: args.includes('--dry-run') || args.includes('-d'),
+      verbose: args.includes('--verbose') || args.includes('-v'),
+      recursive: args.includes('--recursive') || args.includes('-r'),
+      forceDetach: args.includes('--detach'),
     });
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
     process.exit(1);
   }
 }

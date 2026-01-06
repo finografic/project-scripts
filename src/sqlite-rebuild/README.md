@@ -5,6 +5,7 @@ A comprehensive script to fix `better-sqlite3` native binding issues in monorepo
 ## 🎯 Purpose
 
 This script addresses the common and painful `better-sqlite3` binding issues that occur when:
+
 - Switching between branches
 - Updating Node.js versions
 - Changing macOS versions
@@ -189,6 +190,7 @@ pnpm sqlite-rebuild --version 11.10.0
 ## 🎉 Success Indicators
 
 When the script completes successfully, you should see:
+
 - ✅ All packages use the same version
 - ✅ Rebuild completed successfully
 - ✅ better-sqlite3 test passed

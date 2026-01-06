@@ -56,6 +56,7 @@ purge-builds --recursive --detach
 ### The Problem
 
 CLI tools face a classic paradox: "How do you delete the directory you're running from?" Traditional approaches fail because:
+
 - Can't delete `node_modules` while process is running from it
 - Simple deletion attempts result in "file in use" errors
 - Process locks prevent cleanup of its own execution environment
@@ -71,6 +72,7 @@ purge-builds --recursive --detach
 ```
 
 **How it works:**
+
 1. 📝 **Creates temporary script** in `/tmp/purge-builds-XXXXX/`
 2. 📋 **Copies deletion logic** to memory/temp location
 3. 🚀 **Spawns detached process** that runs independently
@@ -80,6 +82,7 @@ purge-builds --recursive --detach
 7. 🧹 **Self-cleans** temporary files
 
 **Advantages:**
+
 - ✅ Complete process isolation
 - ✅ No file locks or permission issues
 - ✅ Works across all platforms
@@ -95,15 +98,18 @@ purge-builds --recursive  # Uses timer approach
 ```
 
 **How it works:**
+
 1. 🔄 **Spawns detached shell command** with platform-specific delay
 2. ⏰ **Timer waits** for original process to exit (1 second)
 3. 🗑️ **Executes deletion** after delay via shell command
 
 **Platform Commands:**
+
 - **macOS/Linux**: `sh -c "sleep 1 && rm -rf /path/to/node_modules"`
 - **Windows**: `cmd /c "timeout /t 1 /nobreak && rmdir /s /q C:\path\to\node_modules"`
 
 **Advantages:**
+
 - ✅ Simple and lightweight
 - ✅ Platform-native commands
 - ✅ No temporary files needed
@@ -366,6 +372,7 @@ MIT License - See package root for details.
 This tool represents a novel solution to the "self-deletion paradox" in CLI applications. The dual-approach system (memory detachment + timer fallback) ensures reliable cleanup across all environments while maintaining safety and user experience.
 
 **Key innovations:**
+
 - ✨ **Process isolation** through temporary script generation
 - ✨ **Cross-platform timer commands** with native shell integration
 - ✨ **Intelligent fallback system** for maximum reliability

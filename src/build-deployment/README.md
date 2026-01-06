@@ -226,6 +226,7 @@ pnpm build-deployment --platform universal --zip
 4. **Database Issues**
    - SQLite database is included in deployment
    - Automatic migration on first run
+
 -
 
 ## 📝 Notes
@@ -269,6 +270,7 @@ This tool is designed to work with monorepos that follow these patterns:
 ## 🎉 Success Indicators
 
 When deployment completes successfully:
+
 - ✅ All platform scripts created
 - ✅ Setup scripts generated
 - ✅ Dependencies installed

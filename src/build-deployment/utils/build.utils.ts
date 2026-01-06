@@ -1,15 +1,16 @@
-import { execSync } from "child_process";
-import { readFile, writeFile, readdir } from "fs/promises";
-import { join, resolve } from "path";
-import { existsSync } from "fs";
-import type { BuildDeploymentConfig } from "../config/types";
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { readdir, readFile, writeFile } from 'fs/promises';
+import { join, resolve } from 'path';
+
+import type { BuildDeploymentConfig } from '../config/types';
 
 /**
  * Build client or server application
  */
 export async function buildApp(
   config: BuildDeploymentConfig,
-  type: "client" | "server"
+  type: 'client' | 'server',
 ): Promise<void> {
   const command = `pnpm --filter ${config.packageNames[type]} ${config.buildCommands[type]}`;
 
@@ -17,14 +18,14 @@ export async function buildApp(
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   console.log(`🔒 Building from isolated workspace: ${buildWorkspace}`);
   console.log(`  📦 Command: ${command}`);
   console.log(`  📁 Working directory: ${buildWorkspace}`);
   console.log(`  📁 Package path: ${config.paths[type]}`);
-  console.log(`  📁 Expected dist location: ${join(buildWorkspace, config.paths[type], "dist")}`);
+  console.log(`  📁 Expected dist location: ${join(buildWorkspace, config.paths[type], 'dist')}`);
 
   // Check if the package directory exists before building
   const packageDir = join(buildWorkspace, config.paths[type]);
@@ -34,7 +35,7 @@ export async function buildApp(
   console.log(`  ✅ Package directory exists: ${packageDir}`);
 
   // Check if package.json exists
-  const packageJsonPath = join(packageDir, "package.json");
+  const packageJsonPath = join(packageDir, 'package.json');
   if (!existsSync(packageJsonPath)) {
     throw new Error(`Package.json not found: ${packageJsonPath}`);
   }
@@ -42,15 +43,15 @@ export async function buildApp(
 
   execSync(command, {
     cwd: buildWorkspace, // Use isolated build workspace
-    stdio: "inherit",
+    stdio: 'inherit',
   });
 
   // Check if dist directory was created after build
-  const distDir = join(packageDir, "dist");
+  const distDir = join(packageDir, 'dist');
   if (existsSync(distDir)) {
     console.log(`  ✅ Build successful - dist directory created: ${distDir}`);
     const distContents = await readdir(distDir);
-    console.log(`  📁 Dist contents: ${distContents.join(", ")}`);
+    console.log(`  📁 Dist contents: ${distContents.join(', ')}`);
   } else {
     console.log(`  ❌ Build failed - dist directory not created: ${distDir}`);
     throw new Error(`Build failed - dist directory not created: ${distDir}`);
@@ -62,52 +63,52 @@ export async function buildApp(
  */
 export async function createPackageJson(
   config: BuildDeploymentConfig,
-  serverPackagePath: string
+  serverPackagePath: string,
 ): Promise<void> {
   // Read server package.json to get dependencies
-  const serverPackageContent = await readFile(serverPackagePath, "utf-8");
+  const serverPackageContent = await readFile(serverPackagePath, 'utf-8');
   const serverPackage = JSON.parse(serverPackageContent);
 
   // Get all server dependencies (excluding workspace packages)
   const serverDependencies = { ...serverPackage.dependencies };
   Object.keys(serverDependencies).forEach((key) => {
-    if (key.startsWith("@workspace/")) {
+    if (key.startsWith('@workspace/')) {
       delete serverDependencies[key];
     }
   });
 
   const packageJson = {
-    name: config.appName.toLowerCase().replace(/\s+/g, "-"),
+    name: config.appName.toLowerCase().replace(/\s+/g, '-'),
     version: config.version,
     description: config.appDescription,
     private: true,
-    type: "module",
+    type: 'module',
     scripts: {
-      start: "run-p start:server start:client",
-      "start:server": "node start-server.js",
-      "start:client": "node start-client.js",
+      start: 'run-p start:server start:client',
+      'start:server': 'node start-server.js',
+      'start:client': 'node start-client.js',
     },
     dependencies: {
       ...serverDependencies,
-      dotenv: "^16.0.0",
+      dotenv: '^16.0.0',
     },
     optionalDependencies: {
-      "npm-run-all": "^4.1.5",
-      serve: "^14.0.0",
+      'npm-run-all': '^4.1.5',
+      serve: '^14.0.0',
     },
     engines: {
-      node: ">=20.0.0",
+      node: '>=20.0.0',
     },
   };
 
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
   await writeFile(
-    join(buildWorkspace, "package.json"),
-    JSON.stringify(packageJson, null, 2)
+    join(buildWorkspace, 'package.json'),
+    JSON.stringify(packageJson, null, 2),
   );
 }
 
@@ -116,40 +117,40 @@ export async function createPackageJson(
  */
 export async function createStandalonePackage(
   config: BuildDeploymentConfig,
-  platform: string
+  platform: string,
 ): Promise<void> {
   const packageJson = {
-    name: `${config.appName.toLowerCase().replace(/\s+/g, "-")}-standalone`,
+    name: `${config.appName.toLowerCase().replace(/\s+/g, '-')}-standalone`,
     version: config.version,
     description: `${config.appName} Standalone Deployment`,
     private: true,
-    type: "module",
+    type: 'module',
     scripts: {
-      start: "run-p start:server start:client",
-      "start:server": "node dist/server/index.js",
-      "start:client": "node dist/client/server.js",
-      setup: platform === "windows" ? "setup.bat" : "./setup.sh",
+      start: 'run-p start:server start:client',
+      'start:server': 'node dist/server/index.js',
+      'start:client': 'node dist/client/server.js',
+      setup: platform === 'windows' ? 'setup.bat' : './setup.sh',
     },
     dependencies: {
-      "better-sqlite3": "^11.9.0",
-      dotenv: "^16.0.0",
+      'better-sqlite3': '^11.9.0',
+      dotenv: '^16.0.0',
     },
     optionalDependencies: {
-      "npm-run-all": "^4.1.5",
+      'npm-run-all': '^4.1.5',
     },
     engines: {
-      node: ">=20.0.0",
+      node: '>=20.0.0',
     },
   };
 
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
   await writeFile(
-    join(buildWorkspace, "package.json"),
-    JSON.stringify(packageJson, null, 2)
+    join(buildWorkspace, 'package.json'),
+    JSON.stringify(packageJson, null, 2),
   );
 }
 
@@ -157,62 +158,62 @@ export async function createStandalonePackage(
  * Install production dependencies
  */
 export async function installDependencies(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   // Safety check: ensure we're working in the isolated .temp directory
   if (!buildWorkspace.includes(config.paths.temp)) {
     throw new Error(
-      `Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`
+      `Safety check failed: Attempting to install dependencies outside of isolated ${config.paths.temp} directory`,
     );
   }
 
   try {
     // Use npm instead of pnpm to avoid workspace conflicts
-    console.log("📦 Installing production dependencies with npm...");
+    console.log('📦 Installing production dependencies with npm...');
     console.log(`🔒 Working in isolated directory: ${buildWorkspace}`);
-    execSync("npm install --production", {
+    execSync('npm install --production', {
       cwd: buildWorkspace,
-      stdio: "inherit",
-      env: { ...process.env, NODE_ENV: "production" },
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production' },
     });
-  } catch (error) {
-    console.log("⚠️  Standard install failed, trying with force flag...");
+  } catch (_error: unknown) {
+    console.log('⚠️  Standard install failed, trying with force flag...');
 
     try {
       // Second attempt: force reinstall (handles corrupted cache/modules)
-      execSync("npm install --production --force", {
+      execSync('npm install --production --force', {
         cwd: buildWorkspace,
-        stdio: "inherit",
-        env: { ...process.env, NODE_ENV: "production" },
+        stdio: 'inherit',
+        env: { ...process.env, NODE_ENV: 'production' },
       });
-    } catch (forceError) {
+    } catch (_forceError: unknown) {
       console.log(
-        "⚠️  Force install failed, trying with no-frozen-lockfile..."
+        '⚠️  Force install failed, trying with no-frozen-lockfile...',
       );
 
       try {
         // Third attempt: allow lockfile updates
-        execSync("npm install --production", {
+        execSync('npm install --production', {
           cwd: buildWorkspace,
-          stdio: "inherit",
-          env: { ...process.env, NODE_ENV: "production" },
+          stdio: 'inherit',
+          env: { ...process.env, NODE_ENV: 'production' },
         });
-      } catch (lockfileError) {
+      } catch (_lockfileError: unknown) {
         console.log(
-          "⚠️  Lockfile install failed, trying with ignore-scripts..."
+          '⚠️  Lockfile install failed, trying with ignore-scripts...',
         );
 
         // Fourth attempt: skip problematic postinstall scripts
-        execSync("npm install --production --ignore-scripts", {
+        execSync('npm install --production --ignore-scripts', {
           cwd: buildWorkspace,
-          stdio: "inherit",
-          env: { ...process.env, NODE_ENV: "production" },
+          stdio: 'inherit',
+          env: { ...process.env, NODE_ENV: 'production' },
         });
       }
     }
@@ -224,17 +225,17 @@ export async function installDependencies(
  */
 export function killPortIfOccupied(port: number): void {
   try {
-    const result = execSync(`lsof -ti:${port}`, { stdio: "pipe" })
+    const result = execSync(`lsof -ti:${port}`, { stdio: 'pipe' })
       .toString()
       .trim();
     if (result) {
       console.log(`⚠️  Port ${port} is occupied, killing process...`);
-      execSync(`lsof -ti:${port} | xargs kill -9`, { stdio: "inherit" });
+      execSync(`lsof -ti:${port} | xargs kill -9`, { stdio: 'inherit' });
       console.log(`✅ Killed process on port ${port}`);
     } else {
       console.log(`✅ Port ${port} is available`);
     }
-  } catch (error) {
+  } catch {
     // Port is not in use (lsof returns non-zero exit code)
     console.log(`✅ Port ${port} is available`);
   }

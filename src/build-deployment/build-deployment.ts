@@ -1,57 +1,53 @@
-import { join, resolve } from "path";
-import { execSync } from "child_process";
-import { rm } from "fs/promises";
-import { existsSync } from "fs";
-import { select, checkbox, confirm } from "@inquirer/prompts";
-import chalk from "chalk";
-import {
-  platformConfigs,
-  deploymentOptions,
-  getDefaultPlatform,
-  type PlatformConfig,
-} from "./platforms.config.js";
-import { defaultConfig } from "./config/default.config.js";
-import type { BuildDeploymentConfig } from "./config/types";
-import {
-  createDirectoryStructure,
-  copyBuildArtifacts,
-  copyDataFiles,
-  createZipArchive,
-  cleanPlatformArtifacts,
-  writeExecutableFile,
-  cleanupTempDirectory,
-  isolateWorkspace,
-  verifyWorkspaceIsolation,
-  prepareIsolatedBuildWorkspace,
-} from "./utils/file.utils.js";
-import {
-  optimizedIsolateWorkspace,
-  optimizedRestoreWorkspace,
-  createMinimalPackageJson,
-  installProductionDependencies,
-} from "./utils/optimized-isolation.utils.js";
+import { checkbox, confirm, select } from '@inquirer/prompts';
+import chalk from 'chalk';
+import { execSync } from 'child_process';
+import { rm } from 'fs/promises';
+import { join, resolve } from 'path';
+
+import { defaultConfig } from './config/default.config.js';
+import type { BuildDeploymentConfig } from './config/types';
 import {
   buildApp,
   createPackageJson,
   createStandalonePackage,
   installDependencies,
   killPortIfOccupied,
-} from "./utils/build.utils.js";
+} from './utils/build.utils.js';
 import {
-  loadTemplate,
-  loadSetupTemplate,
-  loadUserGuideTemplate,
+  cleanPlatformArtifacts,
+  cleanupTempDirectory,
+  copyBuildArtifacts,
+  copyDataFiles,
+  createDirectoryStructure,
+  createZipArchive,
+  writeExecutableFile,
+} from './utils/file.utils.js';
+import {
+  createMinimalPackageJson,
+  installProductionDependencies,
+  optimizedIsolateWorkspace,
+  optimizedRestoreWorkspace,
+} from './utils/optimized-isolation.utils.js';
+import {
   formatDate,
-} from "./utils/template.utils.js";
+  loadSetupTemplate,
+  loadTemplate,
+  loadUserGuideTemplate,
+} from './utils/template.utils.js';
+import {
+  deploymentOptions,
+  getDefaultPlatform,
+  platformConfigs,
+} from './platforms.config.js';
 
 /**
  * Generate and deploy the build agent script
  */
 async function generateAndDeployBuildAgent(
   config: BuildDeploymentConfig,
-  options: BuildOptions
+  _options: BuildOptions,
 ): Promise<void> {
-  console.log(chalk.blue("🤖 Generating Deployment Agent..."));
+  console.log(chalk.blue('🤖 Generating Deployment Agent...'));
 
   // Create the build agent script content
   const buildAgentScript = `#!/usr/bin/env node
@@ -304,17 +300,17 @@ executeBuild();
 
   // Write the build agent script to the isolated environment
   const tempDir = resolve(config.workspaceRoot, config.paths.temp);
-  const agentScriptPath = join(tempDir, "build-agent.js");
+  const agentScriptPath = join(tempDir, 'build-agent.js');
 
   await writeExecutableFile(agentScriptPath, buildAgentScript, true);
 
-  console.log(chalk.green("✅ Deployment Agent generated and deployed!"));
-  console.log(chalk.blue("🤖 Executing from isolation..."));
+  console.log(chalk.green('✅ Deployment Agent generated and deployed!'));
+  console.log(chalk.blue('🤖 Executing from isolation...'));
 
   // Execute the build agent from within isolation
   execSync(`node "${agentScriptPath}"`, {
     cwd: tempDir,
-    stdio: "inherit",
+    stdio: 'inherit',
   });
 
   // Clean up the agent script
@@ -323,15 +319,15 @@ executeBuild();
 
 // Add auto-confirm flag for -y/--yes
 const autoConfirm =
-  process.argv.includes("-y") || process.argv.includes("--yes");
+  process.argv.includes('-y') || process.argv.includes('--yes');
 
 // Add emergency restoration flag
 const emergencyRestore =
-  process.argv.includes("--restore") || process.argv.includes("-r");
+  process.argv.includes('--restore') || process.argv.includes('-r');
 
 interface BuildOptions {
-  platform?: "windows" | "linux" | "macos" | "universal";
-  arch?: "x64" | "arm64" | "universal";
+  platform?: 'windows' | 'linux' | 'macos' | 'universal';
+  arch?: 'x64' | 'arm64' | 'universal';
   includeNode?: boolean;
   standalone?: boolean;
   zip?: boolean;
@@ -339,23 +335,23 @@ interface BuildOptions {
 }
 
 async function getInteractiveOptions(): Promise<BuildOptions> {
-  console.log(chalk.cyan("\n🏗️  Monorepo Deployment Builder"));
-  console.log(chalk.gray("═".repeat(50)));
+  console.log(chalk.cyan('\n🏗️  Monorepo Deployment Builder'));
+  console.log(chalk.gray('═'.repeat(50)));
 
   if (autoConfirm) {
     const defaultPlatform = getDefaultPlatform();
     const defaultConfig = platformConfigs.find(
-      (config) => config.value === defaultPlatform
+      (config) => config.value === defaultPlatform,
     );
     console.log(
       chalk.yellow(
-        `📦 Auto-confirm mode: Using ${defaultConfig?.name || "macOS"}`
-      )
+        `📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`,
+      ),
     );
 
     return {
-      platform: defaultConfig?.platform || "macos",
-      arch: defaultConfig?.arch || "x64",
+      platform: defaultConfig?.platform || 'macos',
+      arch: defaultConfig?.arch || 'x64',
       standalone: defaultConfig?.standalone || false,
       zip: true,
     };
@@ -363,7 +359,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   // Platform selection
   const selectedPlatform = await select({
-    message: chalk.bold("🎯 Select deployment platform:"),
+    message: chalk.bold('🎯 Select deployment platform:'),
     choices: platformConfigs.map((config) => ({
       name: config.name,
       value: config.value,
@@ -373,7 +369,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
   });
 
   const platformConfig = platformConfigs.find(
-    (config) => config.value === selectedPlatform
+    (config) => config.value === selectedPlatform,
   );
   if (!platformConfig) {
     throw new Error(`Invalid platform selection: ${selectedPlatform}`);
@@ -381,7 +377,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   // Additional options
   const additionalOptions = await checkbox({
-    message: chalk.bold("⚙️  Select additional options:"),
+    message: chalk.bold('⚙️  Select additional options:'),
     choices: deploymentOptions,
   });
 
@@ -392,7 +388,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
   });
 
   if (!shouldProceed) {
-    console.log(chalk.yellow("📦 Build cancelled by user"));
+    console.log(chalk.yellow('📦 Build cancelled by user'));
     process.exit(0);
   }
 
@@ -400,8 +396,8 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
     platform: platformConfig.platform,
     arch: platformConfig.arch,
     standalone: platformConfig.standalone || false,
-    zip: platformConfig.zip || additionalOptions.includes("zip"),
-    includeNode: additionalOptions.includes("includeNode"),
+    zip: platformConfig.zip || additionalOptions.includes('zip'),
+    includeNode: additionalOptions.includes('includeNode'),
   };
 }
 
@@ -414,40 +410,40 @@ function parseArguments(): BuildOptions {
     const arg = args[i];
 
     switch (arg) {
-      case "--platform":
-      case "-p":
+      case '--platform':
+      case '-p':
         options.platform = args[++i] as
-          | "windows"
-          | "linux"
-          | "macos"
-          | "universal";
+          | 'windows'
+          | 'linux'
+          | 'macos'
+          | 'universal';
         break;
-      case "--arch":
-      case "-a":
-        options.arch = args[++i] as "x64" | "arm64" | "universal";
+      case '--arch':
+      case '-a':
+        options.arch = args[++i] as 'x64' | 'arm64' | 'universal';
         break;
-      case "--include-node":
-      case "-n":
+      case '--include-node':
+      case '-n':
         options.includeNode = true;
         break;
-      case "--standalone":
-      case "-s":
+      case '--standalone':
+      case '-s':
         options.standalone = true;
         break;
-      case "--zip":
-      case "-z":
+      case '--zip':
+      case '-z':
         options.zip = true;
         break;
-      case "--output-dir":
-      case "-o":
+      case '--output-dir':
+      case '-o':
         options.outputDir = args[++i];
         break;
-      case "--restore":
-      case "-r":
+      case '--restore':
+      case '-r':
         // Emergency restoration is handled in main() function
         break;
-      case "--help":
-      case "-h":
+      case '--help':
+      case '-h':
         console.log(
           chalk.cyan(`
 🏗️  Monorepo Deployment Builder
@@ -474,7 +470,7 @@ Examples:
   pnpm build.deployment -y                 # Quick build with host platform
   pnpm build.deployment -p macos -z        # Legacy: macOS with zip
   pnpm build.deployment --restore          # Emergency workspace restoration
-        `)
+        `),
         );
         process.exit(0);
     }
@@ -485,107 +481,107 @@ Examples:
 
 async function createPlatformFiles(
   config: BuildDeploymentConfig,
-  options: BuildOptions
+  options: BuildOptions,
 ): Promise<void> {
-  const platform = options.platform || "universal";
-  const isWindows = platform === "windows" || platform === "universal";
-  const isLinux = platform === "linux" || platform === "universal";
-  const isMacOS = platform === "macos" || platform === "universal";
+  const platform = options.platform || 'universal';
+  const isWindows = platform === 'windows' || platform === 'universal';
+  const isLinux = platform === 'linux' || platform === 'universal';
+  const isMacOS = platform === 'macos' || platform === 'universal';
 
   // Template variables
   const vars = {
     APP_NAME: config.appName,
     CLIENT_PORT: config.ports.client,
     SERVER_PORT: config.ports.server,
-    GENERATED_DATE: formatDate("en-US"),
-    GENERATED_DATE_ES: formatDate("es-ES"),
+    GENERATED_DATE: formatDate('en-US'),
+    GENERATED_DATE_ES: formatDate('es-ES'),
   };
 
   // Use .temp directory for file creation (build workspace)
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   // Create setup scripts
   if (isWindows) {
-    const script = await loadSetupTemplate("windows", vars);
-    await writeExecutableFile(join(buildWorkspace, "setup.bat"), script);
+    const script = await loadSetupTemplate('windows', vars);
+    await writeExecutableFile(join(buildWorkspace, 'setup.bat'), script);
   }
   if (isLinux) {
-    const script = await loadSetupTemplate("linux", vars);
-    await writeExecutableFile(join(buildWorkspace, "setup.sh"), script, true);
+    const script = await loadSetupTemplate('linux', vars);
+    await writeExecutableFile(join(buildWorkspace, 'setup.sh'), script, true);
   }
   if (isMacOS) {
-    const script = await loadSetupTemplate("macos", vars);
+    const script = await loadSetupTemplate('macos', vars);
     await writeExecutableFile(
-      join(buildWorkspace, "setup-macos.sh"),
+      join(buildWorkspace, 'setup-macos.sh'),
       script,
-      true
+      true,
     );
   }
 
   // Create start scripts
-  const startClient = await loadTemplate("start-client.js.template", vars);
-  const startServer = await loadTemplate("start-server.js.template", vars);
+  const startClient = await loadTemplate('start-client.js.template', vars);
+  const startServer = await loadTemplate('start-server.js.template', vars);
   await writeExecutableFile(
-    join(buildWorkspace, "start-client.js"),
+    join(buildWorkspace, 'start-client.js'),
     startClient,
-    true
+    true,
   );
   await writeExecutableFile(
-    join(buildWorkspace, "start-server.js"),
+    join(buildWorkspace, 'start-server.js'),
     startServer,
-    true
+    true,
   );
 
   // Create ports utility file
-  const portsUtils = await loadTemplate("ports.utils.js.template", vars);
+  const portsUtils = await loadTemplate('ports.utils.js.template', vars);
   await writeExecutableFile(
-    join(buildWorkspace, "ports.utils.js"),
+    join(buildWorkspace, 'ports.utils.js'),
     portsUtils,
-    true
+    true,
   );
 
   // Create client server file (goes in dist/client/server.js)
-  const clientServer = await loadTemplate("client-server.js.template", vars);
+  const clientServer = await loadTemplate('client-server.js.template', vars);
   await writeExecutableFile(
-    join(buildWorkspace, "dist", "client", "server.js"),
+    join(buildWorkspace, 'dist', 'client', 'server.js'),
     clientServer,
-    true
+    true,
   );
 
   // Create user guides
   const platformSuffix =
-    platform === "universal" ? "UNIVERSAL" : platform.toUpperCase();
-  const enGuide = await loadUserGuideTemplate("en", vars);
-  const esGuide = await loadUserGuideTemplate("es", vars);
+    platform === 'universal' ? 'UNIVERSAL' : platform.toUpperCase();
+  const enGuide = await loadUserGuideTemplate('en', vars);
+  const esGuide = await loadUserGuideTemplate('es', vars);
   await writeExecutableFile(
     join(buildWorkspace, `USER_GUIDE_${platformSuffix}_EN.md`),
-    enGuide
+    enGuide,
   );
   await writeExecutableFile(
     join(buildWorkspace, `GUIA_USUARIO_${platformSuffix}_ES.md`),
-    esGuide
+    esGuide,
   );
 }
 
 async function main(): Promise<void> {
   // Handle emergency workspace restoration
   if (emergencyRestore) {
-    console.log(chalk.red("🚨 Emergency workspace restoration mode"));
-    console.log(chalk.gray("═".repeat(60)));
+    console.log(chalk.red('🚨 Emergency workspace restoration mode'));
+    console.log(chalk.gray('═'.repeat(60)));
 
     try {
       const { emergencyRestoreWorkspace } = await import(
-        "./utils/file.utils.js"
+        './utils/file.utils.js',
       );
       await emergencyRestoreWorkspace(defaultConfig.workspaceRoot);
-      console.log(chalk.green("✅ Emergency restoration completed"));
+      console.log(chalk.green('✅ Emergency restoration completed'));
       process.exit(0);
     } catch (error) {
-      console.error(chalk.red("❌ Emergency restoration failed:"), error);
+      console.error(chalk.red('❌ Emergency restoration failed:'), error);
       process.exit(1);
     }
   }
@@ -597,16 +593,16 @@ async function main(): Promise<void> {
     .slice(2)
     .some(
       (arg) =>
-        arg.startsWith("--platform") ||
-        arg.startsWith("-p") ||
-        arg.startsWith("--arch") ||
-        arg.startsWith("-a") ||
-        arg.startsWith("--standalone") ||
-        arg.startsWith("-s") ||
-        arg.startsWith("--zip") ||
-        arg.startsWith("-z") ||
-        arg.startsWith("--include-node") ||
-        arg.startsWith("-n")
+        arg.startsWith('--platform') ||
+        arg.startsWith('-p') ||
+        arg.startsWith('--arch') ||
+        arg.startsWith('-a') ||
+        arg.startsWith('--standalone') ||
+        arg.startsWith('-s') ||
+        arg.startsWith('--zip') ||
+        arg.startsWith('-z') ||
+        arg.startsWith('--include-node') ||
+        arg.startsWith('-n'),
     );
 
   if (!hasCliArgs) {
@@ -615,7 +611,7 @@ async function main(): Promise<void> {
     // Apply platform config defaults for CLI mode
     if (options.platform && !options.arch) {
       const platformConfig = platformConfigs.find(
-        (config) => config.platform === options.platform
+        (config) => config.platform === options.platform,
       );
       if (platformConfig) {
         options.arch = platformConfig.arch;
@@ -626,27 +622,27 @@ async function main(): Promise<void> {
   }
 
   // Display build configuration
-  console.log(chalk.cyan("\n🏗️  Building Monorepo Deployment"));
-  console.log(chalk.gray("═".repeat(60)));
-  console.log(`${chalk.bold("Platform:")} ${options.platform || "universal"}`);
-  console.log(`${chalk.bold("Architecture:")} ${options.arch || "universal"}`);
+  console.log(chalk.cyan('\n🏗️  Building Monorepo Deployment'));
+  console.log(chalk.gray('═'.repeat(60)));
+  console.log(`${chalk.bold('Platform:')} ${options.platform || 'universal'}`);
+  console.log(`${chalk.bold('Architecture:')} ${options.arch || 'universal'}`);
   console.log(
-    `${chalk.bold("Standalone:")} ${options.standalone ? "Yes" : "No"}`
+    `${chalk.bold('Standalone:')} ${options.standalone ? 'Yes' : 'No'}`,
   );
   console.log(
-    `${chalk.bold("Include Node:")} ${options.includeNode ? "Yes" : "No"}`
+    `${chalk.bold('Include Node:')} ${options.includeNode ? 'Yes' : 'No'}`,
   );
-  console.log(`${chalk.bold("Create Zip:")} ${options.zip ? "Yes" : "No"}`);
+  console.log(`${chalk.bold('Create Zip:')} ${options.zip ? 'Yes' : 'No'}`);
   console.log(
-    `${chalk.bold("Workspace Root:")} ${defaultConfig.workspaceRoot}`
-  );
-  console.log(
-    `${chalk.bold("Build Workspace:")} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`
+    `${chalk.bold('Workspace Root:')} ${defaultConfig.workspaceRoot}`,
   );
   console.log(
-    `${chalk.bold("Zip Destination:")} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`
+    `${chalk.bold('Build Workspace:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`,
   );
-  console.log(chalk.gray("═".repeat(60)));
+  console.log(
+    `${chalk.bold('Zip Destination:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`,
+  );
+  console.log(chalk.gray('═'.repeat(60)));
 
   try {
     // Kill occupied ports
@@ -654,40 +650,40 @@ async function main(): Promise<void> {
     killPortIfOccupied(defaultConfig.ports.server);
 
     // Optimized workspace isolation - avoids copying 30GB+ of node_modules
-    console.log(chalk.blue("🚀 Starting optimized workspace isolation..."));
+    console.log(chalk.blue('🚀 Starting optimized workspace isolation...'));
     await optimizedIsolateWorkspace(defaultConfig);
 
     // Additional safety check before proceeding
-    const { canProceedWithBuild } = await import("./utils/file.utils.js");
+    const { canProceedWithBuild } = await import('./utils/file.utils.js');
     const canProceed = await canProceedWithBuild(defaultConfig);
     if (!canProceed) {
       console.log(
         chalk.yellow(
-          "⚠️  Safety check failed - deploying build agent instead..."
-        )
+          '⚠️  Safety check failed - deploying build agent instead...',
+        ),
       );
-      console.log(chalk.blue("🤖 Transitioning to agent mode..."));
+      console.log(chalk.blue('🤖 Transitioning to agent mode...'));
 
       // Deploy the build agent instead of failing
       await generateAndDeployBuildAgent(defaultConfig, options);
 
       // Continue with platform files and ZIP creation after agent completes
       console.log(
-        chalk.blue("📋 Creating platform files and deployment package...")
+        chalk.blue('📋 Creating platform files and deployment package...'),
       );
 
-      const buildWorkspace = join(
-        defaultConfig.workspaceRoot,
-        defaultConfig.paths.temp,
-        "deployment"
-      );
+      // const buildWorkspace = join(
+      //   defaultConfig.workspaceRoot,
+      //   defaultConfig.paths.temp,
+      //   'deployment',
+      // );
 
       // Copy build artifacts to expected structure (apps/client/dist -> dist/client, etc.)
       console.log(
-        chalk.blue("📁 Copying build artifacts to deployment structure...")
+        chalk.blue('📁 Copying build artifacts to deployment structure...'),
       );
-      await copyBuildArtifacts(defaultConfig, "client");
-      await copyBuildArtifacts(defaultConfig, "server");
+      await copyBuildArtifacts(defaultConfig, 'client');
+      await copyBuildArtifacts(defaultConfig, 'server');
       await copyDataFiles(defaultConfig);
 
       // Create platform-specific files (start scripts, etc.)
@@ -695,33 +691,33 @@ async function main(): Promise<void> {
 
       // Create ZIP archive if requested
       if (options.zip) {
-        console.log(chalk.blue("📦 Creating deployment ZIP archive..."));
+        console.log(chalk.blue('📦 Creating deployment ZIP archive...'));
         await createZipArchive(
           defaultConfig,
-          options.platform || "macos",
-          options.arch || "arm64"
+          options.platform || 'macos',
+          options.arch || 'arm64',
         );
-        console.log(chalk.green("✅ ZIP archive created successfully!"));
+        console.log(chalk.green('✅ ZIP archive created successfully!'));
       }
 
       // Clean up and restore workspace
-      console.log(chalk.blue("🔓 Restoring workspace from isolation..."));
+      console.log(chalk.blue('🔓 Restoring workspace from isolation...'));
       await cleanupTempDirectory(defaultConfig);
       await optimizedRestoreWorkspace(defaultConfig);
 
-      console.log(chalk.green("🎉 Deployment completed via agent!"));
+      console.log(chalk.green('🎉 Deployment completed via agent!'));
       return;
     }
 
     console.log(
       chalk.green(
-        "🔒 Workspace isolation complete - safe to proceed with build"
-      )
+        '🔒 Workspace isolation complete - safe to proceed with build',
+      ),
     );
-    console.log(chalk.gray("   - pnpm workspace files moved to isolation"));
-    console.log(chalk.gray("   - node_modules moved to isolation"));
-    console.log(chalk.gray("   - backup created for safety"));
-    console.log(chalk.gray("═".repeat(60)));
+    console.log(chalk.gray('   - pnpm workspace files moved to isolation'));
+    console.log(chalk.gray('   - node_modules moved to isolation'));
+    console.log(chalk.gray('   - backup created for safety'));
+    console.log(chalk.gray('═'.repeat(60)));
 
     // Create directory structure in .temp (build isolation)
     await cleanPlatformArtifacts(defaultConfig);
@@ -731,7 +727,7 @@ async function main(): Promise<void> {
     const buildWorkspace = join(
       defaultConfig.workspaceRoot,
       defaultConfig.paths.temp,
-      "deployment"
+      'deployment',
     );
     await createMinimalPackageJson(defaultConfig, buildWorkspace);
 
@@ -739,19 +735,19 @@ async function main(): Promise<void> {
     await installProductionDependencies(buildWorkspace);
 
     // Copy source files only (no massive node_modules copying)
-    console.log("📁 Copying source files to build workspace...");
+    console.log('📁 Copying source files to build workspace...');
     const { copyOptimizedSources } = await import(
-      "./utils/optimized-isolation.utils.js"
+      './utils/optimized-isolation.utils.js',
     );
     await copyOptimizedSources(defaultConfig, buildWorkspace);
 
     // Build applications
-    await buildApp(defaultConfig, "client");
-    await buildApp(defaultConfig, "server");
+    await buildApp(defaultConfig, 'client');
+    await buildApp(defaultConfig, 'server');
 
     // Copy build artifacts
-    await copyBuildArtifacts(defaultConfig, "client");
-    await copyBuildArtifacts(defaultConfig, "server");
+    await copyBuildArtifacts(defaultConfig, 'client');
+    await copyBuildArtifacts(defaultConfig, 'server');
     await copyDataFiles(defaultConfig);
 
     // Create platform-specific files
@@ -761,7 +757,7 @@ async function main(): Promise<void> {
     if (options.standalone) {
       await createStandalonePackage(
         defaultConfig,
-        options.platform || "universal"
+        options.platform || 'universal',
       );
     } else {
       await createPackageJson(
@@ -769,8 +765,8 @@ async function main(): Promise<void> {
         join(
           defaultConfig.workspaceRoot,
           defaultConfig.paths.server,
-          "package.json"
-        )
+          'package.json',
+        ),
       );
       await installDependencies(defaultConfig);
     }
@@ -779,54 +775,54 @@ async function main(): Promise<void> {
     if (options.zip) {
       const zipName = await createZipArchive(
         defaultConfig,
-        options.platform || "universal",
-        options.arch || "universal"
+        options.platform || 'universal',
+        options.arch || 'universal',
       );
-      console.log("📦 Zip archive created:", zipName);
+      console.log('📦 Zip archive created:', zipName);
       console.log(
-        `📁 Saved to: ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`
+        `📁 Saved to: ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`,
       );
     }
 
     // Clean up .temp build directory and restore workspace
-    console.log(chalk.blue("🔓 Restoring workspace from isolation..."));
+    console.log(chalk.blue('🔓 Restoring workspace from isolation...'));
     await cleanupTempDirectory(defaultConfig);
     await optimizedRestoreWorkspace(defaultConfig);
 
     // Success message
-    console.log("");
-    console.log("🎉 Deployment build completed successfully!");
+    console.log('');
+    console.log('🎉 Deployment build completed successfully!');
     console.log(
-      "📦 Deployment created and zipped from isolated build workspace"
+      '📦 Deployment created and zipped from isolated build workspace',
     );
-    console.log("🔒 Workspace restored to original state");
-    console.log("");
-    console.log("🚀 Next steps:");
+    console.log('🔒 Workspace restored to original state');
+    console.log('');
+    console.log('🚀 Next steps:');
     console.log(
-      "  1. Extract the deployment zip file from deployments/ folder"
+      '  1. Extract the deployment zip file from deployments/ folder',
     );
-    console.log("  2. Run the setup script for your platform:");
-    if (options.platform === "windows" || options.platform === "universal") {
-      console.log("     Windows: Double-click setup.bat");
+    console.log('  2. Run the setup script for your platform:');
+    if (options.platform === 'windows' || options.platform === 'universal') {
+      console.log('     Windows: Double-click setup.bat');
     }
-    if (options.platform === "linux" || options.platform === "universal") {
-      console.log("     Linux: ./setup.sh");
+    if (options.platform === 'linux' || options.platform === 'universal') {
+      console.log('     Linux: ./setup.sh');
     }
-    if (options.platform === "macos" || options.platform === "universal") {
-      console.log("     macOS: ./setup-macos.sh");
+    if (options.platform === 'macos' || options.platform === 'universal') {
+      console.log('     macOS: ./setup-macos.sh');
     }
-    console.log("  3. Start the application with the provided scripts");
-    console.log("");
+    console.log('  3. Start the application with the provided scripts');
+    console.log('');
   } catch (error) {
-    console.error("❌ Deployment build failed:", error);
+    console.error('❌ Deployment build failed:', error);
 
     // Clean up .temp directory and restore workspace even on failure
     try {
       await cleanupTempDirectory(defaultConfig);
     } catch (cleanupError) {
       console.error(
-        "⚠️  Failed to cleanup .temp build directory:",
-        cleanupError
+        '⚠️  Failed to cleanup .temp build directory:',
+        cleanupError,
       );
     }
 

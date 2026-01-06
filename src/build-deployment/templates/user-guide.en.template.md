@@ -39,23 +39,28 @@ This guide will help you set up and run the {{APP_NAME}} application on your com
 ### Common Issues
 
 **"Node.js is not installed"**
+
 - Follow the installation instructions above
 - Make sure to restart your computer after installing Node.js
 
 **"Port is already in use"**
+
 - Close any other applications that might be using ports {{CLIENT_PORT}} or {{SERVER_PORT}}
 - Restart your computer and try again
 
 **"Permission denied" (Linux/macOS)**
+
 - Make sure you ran the setup script first
 - Try running: `chmod +x *.sh`
 
 **"Application won't start"**
+
 - Make sure you ran the setup script first
 - Check that you're in the correct folder
 - Try restarting your computer
 
 **"npm dependency conflicts" or "ERESOLVE errors"**
+
 - The setup script automatically tries multiple strategies to resolve conflicts
 - If you see dependency errors, try running manually: `npm install --production --force --legacy-peer-deps`
 - This is common with complex applications and usually resolves automatically
@@ -72,6 +77,7 @@ If you're still having trouble:
 ## 📞 Support
 
 For technical support, please provide:
+
 - Your operating system (Windows/Linux/macOS)
 - Any error messages you see
 - Steps you've already tried
@@ -79,6 +85,7 @@ For technical support, please provide:
 ## 🎉 You're Ready
 
 Once the application is running, you can:
+
 - Access it at <http://localhost:{{CLIENT_PORT}}>
 - Use all the features of the {{APP_NAME}} application
 - Close the terminal/command prompt windows when you're done

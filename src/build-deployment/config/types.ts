@@ -43,7 +43,7 @@ export interface BuildDeploymentConfig {
 
   // Database Configuration
   database: {
-    type: "sqlite"; // Could expand later
+    type: 'sqlite'; // Could expand later
     development: string; // e.g., "development.sqlite.db"
     production: string; // e.g., "production.sqlite.db"
   };

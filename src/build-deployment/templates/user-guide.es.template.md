@@ -39,23 +39,28 @@ Esta guía te ayudará a configurar y ejecutar la aplicación {{APP_NAME}} en tu
 ### Problemas Comunes
 
 **"Node.js no está instalado"**
+
 - Sigue las instrucciones de instalación arriba
 - Asegúrate de reiniciar tu computadora después de instalar Node.js
 
 **"Puerto ya está en uso"**
+
 - Cierra cualquier otra aplicación que pueda estar usando los puertos {{CLIENT_PORT}} o {{SERVER_PORT}}
 - Reinicia tu computadora e intenta nuevamente
 
 **"Permiso denegado" (Linux/macOS)**
+
 - Asegúrate de haber ejecutado el script de configuración primero
 - Intenta ejecutar: `chmod +x *.sh`
 
 **"La aplicación no inicia"**
+
 - Asegúrate de haber ejecutado el script de configuración primero
 - Verifica que estés en la carpeta correcta
 - Intenta reiniciar tu computadora
 
 **"Conflictos de dependencias npm" o "errores ERESOLVE"**
+
 - El script de configuración intenta automáticamente múltiples estrategias para resolver conflictos
 - Si ves errores de dependencias, intenta ejecutar manualmente: `npm install --production --force --legacy-peer-deps`
 - Esto es común con aplicaciones complejas y generalmente se resuelve automáticamente
@@ -72,6 +77,7 @@ Si aún tienes problemas:
 ## 📞 Soporte
 
 Para soporte técnico, por favor proporciona:
+
 - Tu sistema operativo (Windows/Linux/macOS)
 - Cualquier mensaje de error que veas
 - Pasos que ya has intentado
@@ -79,6 +85,7 @@ Para soporte técnico, por favor proporciona:
 ## 🎉 ¡Estás Listo
 
 Una vez que la aplicación esté ejecutándose, puedes:
+
 - Acceder a ella en <http://localhost:{{CLIENT_PORT}}>
 - Usar todas las funciones de la aplicación {{APP_NAME}}
 - Cerrar las ventanas de terminal/línea de comandos cuando hayas terminado

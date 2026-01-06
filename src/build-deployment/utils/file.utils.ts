@@ -1,27 +1,28 @@
-import { mkdir, cp, copyFile, writeFile, rm, readdir, stat } from "fs/promises";
-import { existsSync, statSync } from "fs";
-import { join, resolve } from "path";
-import { execSync } from "child_process";
-import type { BuildDeploymentConfig } from "../config/types";
+import { execSync } from 'child_process';
+import { existsSync, statSync } from 'fs';
+import { copyFile, cp, mkdir, readdir, rm, stat, writeFile } from 'fs/promises';
+import { join, resolve } from 'path';
+
+import type { BuildDeploymentConfig } from '../config/types';
 
 /**
  * Function to kill processes on specific ports
  */
 export function killPortIfOccupied(port: string): void {
   try {
-    const result = execSync("lsof -ti:" + port, { stdio: "pipe" })
+    const result = execSync('lsof -ti:' + port, { stdio: 'pipe' })
       .toString()
       .trim();
     if (result) {
-      console.log("⚠️  Port " + port + " is occupied, killing process...");
-      execSync("lsof -ti:" + port + " | xargs kill -9", { stdio: "inherit" });
-      console.log("✅ Killed process on port " + port);
+      console.log('⚠️  Port ' + port + ' is occupied, killing process...');
+      execSync('lsof -ti:' + port + ' | xargs kill -9', { stdio: 'inherit' });
+      console.log('✅ Killed process on port ' + port);
     } else {
-      console.log("✅ Port " + port + " is available");
+      console.log('✅ Port ' + port + ' is available');
     }
-  } catch (error) {
+  } catch {
     // Port is not in use
-    console.log("✅ Port " + port + " is available");
+    console.log('✅ Port ' + port + ' is available');
   }
 }
 
@@ -30,7 +31,7 @@ export function killPortIfOccupied(port: string): void {
  */
 function isRsyncAvailable(): boolean {
   try {
-    execSync("rsync --version", { stdio: "pipe" });
+    execSync('rsync --version', { stdio: 'pipe' });
     return true;
   } catch {
     return false;
@@ -43,11 +44,11 @@ function isRsyncAvailable(): boolean {
 async function fastCopy(
   src: string,
   dest: string,
-  options: { recursive?: boolean } = {}
+  options: { recursive?: boolean } = {},
 ): Promise<void> {
   if (isRsyncAvailable()) {
     // TODO: Add spinner here for better UX
-    console.log("  🚀 Using rsync for fast copy...");
+    console.log('  🚀 Using rsync for fast copy...');
 
     // Ensure proper rsync behavior for directory copying
     let rsyncSrc = src;
@@ -61,27 +62,27 @@ async function fastCopy(
       (await readdir(src)).length > 0
     ) {
       // Add trailing slash to source to copy contents, not the directory itself
-      if (!src.endsWith("/")) {
-        rsyncSrc = src + "/";
+      if (!src.endsWith('/')) {
+        rsyncSrc = src + '/';
       }
       // Ensure destination doesn't have trailing slash
-      if (dest.endsWith("/")) {
+      if (dest.endsWith('/')) {
         rsyncDest = dest.slice(0, -1);
       }
     }
 
     const rsyncArgs = [
-      "-a", // archive mode (preserves permissions, timestamps, etc.)
-      options.recursive ? "-r" : "",
-      "-v", // verbose to see what's happening
+      '-a', // archive mode (preserves permissions, timestamps, etc.)
+      options.recursive ? '-r' : '',
+      '-v', // verbose to see what's happening
       rsyncSrc,
       rsyncDest,
     ].filter(Boolean);
 
-    console.log(`  🔍 rsync command: rsync ${rsyncArgs.join(" ")}`);
-    execSync(`rsync ${rsyncArgs.join(" ")}`, { stdio: "inherit" });
+    console.log(`  🔍 rsync command: rsync ${rsyncArgs.join(' ')}`);
+    execSync(`rsync ${rsyncArgs.join(' ')}`, { stdio: 'inherit' });
   } else {
-    console.log("  📁 Using fallback cp...");
+    console.log('  📁 Using fallback cp...');
     await cp(src, dest, options);
   }
 }
@@ -90,24 +91,24 @@ async function fastCopy(
  * Create deployment directory structure in .temp folder for build isolation
  */
 export async function createDirectoryStructure(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   // Use .temp directory for build isolation
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
   const directories = [
     buildWorkspace,
-    join(buildWorkspace, "dist"),
-    join(buildWorkspace, "dist/client"),
-    join(buildWorkspace, "dist/server"),
-    join(buildWorkspace, "dist/data"),
-    join(buildWorkspace, "dist/data/db"),
-    join(buildWorkspace, "dist/data/uploads"),
-    join(buildWorkspace, "dist/data/logs"),
-    join(buildWorkspace, "dist/data/migrations"),
+    join(buildWorkspace, 'dist'),
+    join(buildWorkspace, 'dist/client'),
+    join(buildWorkspace, 'dist/server'),
+    join(buildWorkspace, 'dist/data'),
+    join(buildWorkspace, 'dist/data/db'),
+    join(buildWorkspace, 'dist/data/uploads'),
+    join(buildWorkspace, 'dist/data/logs'),
+    join(buildWorkspace, 'dist/data/migrations'),
   ];
 
   for (const dir of directories) {
@@ -120,17 +121,17 @@ export async function createDirectoryStructure(
  */
 export async function copyBuildArtifacts(
   config: BuildDeploymentConfig,
-  type: "client" | "server"
+  type: 'client' | 'server',
 ): Promise<void> {
   // The build process creates dist/ directories in the isolated build workspace
   // We need to copy from there to the final deployment structure
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
-  const srcDir = join(buildWorkspace, config.paths[type], "dist");
-  const destDir = join(buildWorkspace, "dist", type);
+  const srcDir = join(buildWorkspace, config.paths[type], 'dist');
+  const destDir = join(buildWorkspace, 'dist', type);
 
   console.log(`🔍 Debug paths for ${type}:`);
   console.log(`  Build workspace: ${buildWorkspace}`);
@@ -142,7 +143,7 @@ export async function copyBuildArtifacts(
     throw new Error(`${type} build directory not found: ${srcDir}`);
   }
 
-  console.log(`✅ Source directory exists, copying...`);
+  console.log('✅ Source directory exists, copying...');
 
   // Ensure destination directory exists
   await mkdir(destDir, { recursive: true });
@@ -167,28 +168,28 @@ export async function copyBuildArtifacts(
  * Copy data files (database, migrations, uploads)
  */
 export async function copyDataFiles(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   // Copy database
   const dbSrc = resolve(
     config.workspaceRoot,
     config.paths.data,
-    config.database.development
+    config.database.development,
   );
   const dbDest = join(
     buildWorkspace,
-    "dist/data/db",
-    config.database.production
+    'dist/data/db',
+    config.database.production,
   );
   if (existsSync(dbSrc)) {
     // Ensure destination directory exists
-    await mkdir(join(buildWorkspace, "dist/data/db"), { recursive: true });
+    await mkdir(join(buildWorkspace, 'dist/data/db'), { recursive: true });
     await fastCopy(dbSrc, dbDest);
   }
 
@@ -196,15 +197,15 @@ export async function copyDataFiles(
   const migrationsDir = resolve(
     config.workspaceRoot,
     config.paths.data,
-    "migrations"
+    'migrations',
   );
   if (existsSync(migrationsDir)) {
     await fastCopy(
       migrationsDir,
-      join(buildWorkspace, "dist/data/migrations"),
+      join(buildWorkspace, 'dist/data/migrations'),
       {
         recursive: true,
-      }
+      },
     );
   }
 
@@ -212,10 +213,10 @@ export async function copyDataFiles(
   const uploadsDir = resolve(
     config.workspaceRoot,
     config.paths.data,
-    "uploads"
+    'uploads',
   );
   if (existsSync(uploadsDir)) {
-    await fastCopy(uploadsDir, join(buildWorkspace, "dist/data/uploads"), {
+    await fastCopy(uploadsDir, join(buildWorkspace, 'dist/data/uploads'), {
       recursive: true,
     });
   }
@@ -227,15 +228,15 @@ export async function copyDataFiles(
 export async function createZipArchive(
   config: BuildDeploymentConfig,
   platform: string,
-  arch: string
+  arch: string,
 ): Promise<string> {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const zipName = `${config.appName.toLowerCase().replace(/\s+/g, "-")}-${platform}-${arch}-${timestamp}.zip`;
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const zipName = `${config.appName.toLowerCase().replace(/\s+/g, '-')}-${platform}-${arch}-${timestamp}.zip`;
 
   // Save zip to deployments folder
   const deploymentsDir = resolve(
     config.workspaceRoot,
-    config.paths.deployments
+    config.paths.deployments,
   );
   const zipPath = join(deploymentsDir, zipName);
 
@@ -246,32 +247,32 @@ export async function createZipArchive(
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   // Create final deployment directory with correct structure
   const finalDeployment = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "final-deployment"
+    'final-deployment',
   );
 
   // Clean and create final deployment directory
   if (existsSync(finalDeployment)) {
-    execSync(`rm -rf "${finalDeployment}"`, { stdio: "inherit" });
+    execSync(`rm -rf "${finalDeployment}"`, { stdio: 'inherit' });
   }
   await mkdir(finalDeployment, { recursive: true });
 
-  console.log("🎯 Creating final deployment structure...");
+  console.log('🎯 Creating final deployment structure...');
 
   // Copy only essential root files (not apps/, packages/, config/)
   const rootFiles = [
-    "package.json",
-    "package-lock.json",
-    "start-client.js",
-    "start-server.js",
-    "ports.utils.js",
-    "test-production.js",
+    'package.json',
+    'package-lock.json',
+    'start-client.js',
+    'start-server.js',
+    'ports.utils.js',
+    'test-production.js',
   ];
 
   for (const file of rootFiles) {
@@ -287,12 +288,12 @@ export async function createZipArchive(
   const platformFiles = await readdir(buildWorkspace);
   for (const file of platformFiles) {
     if (
-      file.includes("setup") ||
-      file.includes("GUIDE") ||
-      file.includes("GUIA") ||
-      file.includes("README") ||
-      file.includes(".sh") ||
-      file.includes(".bat")
+      file.includes('setup') ||
+      file.includes('GUIDE') ||
+      file.includes('GUIA') ||
+      file.includes('README') ||
+      file.includes('.sh') ||
+      file.includes('.bat')
     ) {
       const srcFile = join(buildWorkspace, file);
       const destFile = join(finalDeployment, file);
@@ -304,19 +305,19 @@ export async function createZipArchive(
   }
 
   // Copy ONLY the dist/ directory (not apps/, packages/, config/)
-  const distSrc = join(buildWorkspace, "dist");
-  const distDest = join(finalDeployment, "dist");
+  const distSrc = join(buildWorkspace, 'dist');
+  const distDest = join(finalDeployment, 'dist');
   if (existsSync(distSrc)) {
-    console.log("  📁 Copying dist/ directory...");
+    console.log('  📁 Copying dist/ directory...');
     await fastCopy(distSrc, distDest, { recursive: true });
-    console.log("  ✅ dist/ directory copied");
+    console.log('  ✅ dist/ directory copied');
   }
 
-  console.log("✅ Final deployment structure created");
+  console.log('✅ Final deployment structure created');
 
   // ZIP the final deployment directory (not the build workspace)
   const zipCommand = `cd "${finalDeployment}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
-  execSync(zipCommand, { stdio: "inherit" });
+  execSync(zipCommand, { stdio: 'inherit' });
 
   return zipName;
 }
@@ -325,24 +326,24 @@ export async function createZipArchive(
  * Clean platform-specific artifacts
  */
 export async function cleanPlatformArtifacts(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const buildWorkspace = resolve(
     config.workspaceRoot,
     config.paths.temp,
-    "deployment"
+    'deployment',
   );
 
   const cmd = [
     `cd "${buildWorkspace}"`,
-    "rm -f setup.bat setup.sh setup-macos.sh",
-    "rm -f start-*.bat start-*.sh",
-    "rm -f USER_GUIDE*.md GUIA_USUARIO*.md",
-  ].join(" && ");
+    'rm -f setup.bat setup.sh setup-macos.sh',
+    'rm -f start-*.bat start-*.sh',
+    'rm -f USER_GUIDE*.md GUIA_USUARIO*.md',
+  ].join(' && ');
 
   try {
-    execSync(cmd, { stdio: "inherit" });
-  } catch (error) {
+    execSync(cmd, { stdio: 'inherit' });
+  } catch {
     // Ignore errors - files might not exist
   }
 }
@@ -352,34 +353,34 @@ export async function cleanPlatformArtifacts(
  * This prevents pnpm from interfering with the main monorepo during deployment
  */
 export async function isolateWorkspace(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const nodeModulesPath = join(workspaceRoot, "node_modules");
-  const pnpmLockPath = join(workspaceRoot, "pnpm-lock.yaml");
-  const pnpmWorkspacePath = join(workspaceRoot, "pnpm-workspace.yaml");
+  const nodeModulesPath = join(workspaceRoot, 'node_modules');
+  const pnpmLockPath = join(workspaceRoot, 'pnpm-lock.yaml');
+  const pnpmWorkspacePath = join(workspaceRoot, 'pnpm-workspace.yaml');
 
-  console.log("🔒 Isolating workspace for deployment...");
+  console.log('🔒 Isolating workspace for deployment...');
   console.log(`  Workspace root: ${workspaceRoot}`);
   console.log(`  Temp directory: ${tempDir}`);
   console.log(
-    "  This will temporarily move pnpm workspace files to prevent interference"
+    '  This will temporarily move pnpm workspace files to prevent interference',
   );
 
   // Safety check: ensure we're not already in a temp directory
   if (workspaceRoot.includes(config.paths.temp)) {
     throw new Error(
-      `Safety check failed: Cannot isolate workspace from within ${config.paths.temp} directory`
+      `Safety check failed: Cannot isolate workspace from within ${config.paths.temp} directory`,
     );
   }
 
   // Check if workspace is currently in use
-  const { checkWorkspaceInUse } = await import("./file.utils.js");
+  const { checkWorkspaceInUse } = await import('./file.utils.js');
   const workspaceInUse = await checkWorkspaceInUse(config);
   if (workspaceInUse) {
     throw new Error(
-      "Workspace is currently in use. Please stop all pnpm and Node.js processes before isolation."
+      'Workspace is currently in use. Please stop all pnpm and Node.js processes before isolation.',
     );
   }
 
@@ -388,68 +389,64 @@ export async function isolateWorkspace(
 
   // Check if we need to isolate
   if (!existsSync(nodeModulesPath)) {
-    console.log("ℹ️  No node_modules found, skipping isolation");
+    console.log('ℹ️  No node_modules found, skipping isolation');
     return;
   }
 
-  // Create backup before isolation
-  const { createWorkspaceBackup } = await import("./file.utils.js");
-  const backupPath = await createWorkspaceBackup(config);
-
   // Create isolation subdirectory
-  const isolationDir = join(tempDir, "workspace-isolation");
+  const isolationDir = join(tempDir, 'workspace-isolation');
   await mkdir(isolationDir, { recursive: true });
 
   try {
     // Move workspace files to isolation directory
     if (existsSync(nodeModulesPath)) {
-      console.log("📦 Moving node_modules to isolation...");
-      console.log("  ⏳ Copying node_modules (this may take a moment)...");
-      await fastCopy(nodeModulesPath, join(isolationDir, "node_modules"), {
+      console.log('📦 Moving node_modules to isolation...');
+      console.log('  ⏳ Copying node_modules (this may take a moment)...');
+      await fastCopy(nodeModulesPath, join(isolationDir, 'node_modules'), {
         recursive: true,
       });
-      console.log("  ✅ node_modules copied, removing from workspace...");
+      console.log('  ✅ node_modules copied, removing from workspace...');
       await rm(nodeModulesPath, { recursive: true, force: true });
-      console.log("  ✅ node_modules moved to isolation");
+      console.log('  ✅ node_modules moved to isolation');
     }
 
     if (existsSync(pnpmLockPath)) {
-      console.log("🔐 Removing pnpm-lock.yaml for fresh npm install...");
-      console.log("  🚀 This prevents external linking issues in isolation");
+      console.log('🔐 Removing pnpm-lock.yaml for fresh npm install...');
+      console.log('  🚀 This prevents external linking issues in isolation');
       await rm(pnpmLockPath, { force: true });
       console.log(
-        "  ✅ pnpm-lock.yaml removed - npm will create fresh lock file"
+        '  ✅ pnpm-lock.yaml removed - npm will create fresh lock file',
       );
     }
 
     if (existsSync(pnpmWorkspacePath)) {
-      console.log("🏢 Moving pnpm-workspace.yaml to isolation...");
+      console.log('🏢 Moving pnpm-workspace.yaml to isolation...');
       await copyFile(
         pnpmWorkspacePath,
-        join(isolationDir, "pnpm-workspace.yaml")
+        join(isolationDir, 'pnpm-workspace.yaml'),
       );
       await rm(pnpmWorkspacePath, { force: true });
-      console.log("  ✅ pnpm-workspace.yaml moved to isolation");
+      console.log('  ✅ pnpm-workspace.yaml moved to isolation');
     }
 
-    console.log("✅ Workspace isolated successfully");
-    console.log("   - node_modules moved to isolation");
-    console.log("   - pnpm-lock.yaml moved to isolation");
-    console.log("   - pnpm-workspace.yaml moved to isolation");
-    console.log("   - pnpm will no longer interfere with main workspace");
+    console.log('✅ Workspace isolated successfully');
+    console.log('   - node_modules moved to isolation');
+    console.log('   - pnpm-lock.yaml moved to isolation');
+    console.log('   - pnpm-workspace.yaml moved to isolation');
+    console.log('   - pnpm will no longer interfere with main workspace');
   } catch (error) {
-    console.error("❌ Failed to isolate workspace:", error);
+    console.error('❌ Failed to isolate workspace:', error);
 
     // Try to restore on failure
     try {
       console.log(
-        "🔄 Attempting to restore workspace after isolation failure..."
+        '🔄 Attempting to restore workspace after isolation failure...',
       );
       await restoreWorkspace(config);
     } catch (restoreError) {
       console.error(
-        "❌ Failed to restore workspace after isolation failure:",
-        restoreError
+        '❌ Failed to restore workspace after isolation failure:',
+        restoreError,
       );
     }
 
@@ -461,60 +458,60 @@ export async function isolateWorkspace(
  * Restore workspace by moving node_modules and pnpm-lock.yaml back
  */
 export async function restoreWorkspace(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const isolationDir = join(tempDir, "workspace-isolation");
+  const isolationDir = join(tempDir, 'workspace-isolation');
 
-  console.log("🔓 Restoring workspace from isolation...");
+  console.log('🔓 Restoring workspace from isolation...');
 
   if (!existsSync(isolationDir)) {
-    console.log("ℹ️  No isolation directory found, nothing to restore");
+    console.log('ℹ️  No isolation directory found, nothing to restore');
     return;
   }
 
   try {
     // Restore workspace files
-    if (existsSync(join(isolationDir, "node_modules"))) {
-      console.log("📦 Restoring node_modules...");
-      console.log("  ⏳ Copying node_modules back to workspace...");
+    if (existsSync(join(isolationDir, 'node_modules'))) {
+      console.log('📦 Restoring node_modules...');
+      console.log('  ⏳ Copying node_modules back to workspace...');
       await fastCopy(
-        join(isolationDir, "node_modules"),
-        join(workspaceRoot, "node_modules"),
-        { recursive: true }
+        join(isolationDir, 'node_modules'),
+        join(workspaceRoot, 'node_modules'),
+        { recursive: true },
       );
-      console.log("  ✅ node_modules restored");
+      console.log('  ✅ node_modules restored');
     }
 
-    if (existsSync(join(isolationDir, "pnpm-lock.yaml"))) {
-      console.log("🔐 Restoring pnpm-lock.yaml...");
+    if (existsSync(join(isolationDir, 'pnpm-lock.yaml'))) {
+      console.log('🔐 Restoring pnpm-lock.yaml...');
       await copyFile(
-        join(isolationDir, "pnpm-lock.yaml"),
-        join(workspaceRoot, "pnpm-lock.yaml")
+        join(isolationDir, 'pnpm-lock.yaml'),
+        join(workspaceRoot, 'pnpm-lock.yaml'),
       );
-      console.log("  ✅ pnpm-lock.yaml restored");
+      console.log('  ✅ pnpm-lock.yaml restored');
     }
 
-    if (existsSync(join(isolationDir, "pnpm-workspace.yaml"))) {
-      console.log("🏢 Restoring pnpm-workspace.yaml...");
+    if (existsSync(join(isolationDir, 'pnpm-workspace.yaml'))) {
+      console.log('🏢 Restoring pnpm-workspace.yaml...');
       await copyFile(
-        join(isolationDir, "pnpm-workspace.yaml"),
-        join(workspaceRoot, "pnpm-workspace.yaml")
+        join(isolationDir, 'pnpm-workspace.yaml'),
+        join(workspaceRoot, 'pnpm-workspace.yaml'),
       );
-      console.log("  ✅ pnpm-workspace.yaml restored");
+      console.log('  ✅ pnpm-workspace.yaml restored');
     }
 
-    console.log("✅ Workspace restored successfully");
+    console.log('✅ Workspace restored successfully');
   } catch (error) {
-    console.error("❌ Failed to restore workspace:", error);
+    console.error('❌ Failed to restore workspace:', error);
 
     // Try to restore from backup if main restoration fails
     try {
-      const { restoreFromBackup } = await import("./file.utils.js");
+      const { restoreFromBackup } = await import('./file.utils.js');
       await restoreFromBackup(config);
     } catch (backupError) {
-      console.error("❌ Failed to restore from backup:", backupError);
+      console.error('❌ Failed to restore from backup:', backupError);
     }
 
     throw error;
@@ -525,20 +522,20 @@ export async function restoreWorkspace(
  * Emergency workspace restoration - can be called manually if needed
  */
 export async function emergencyRestoreWorkspace(
-  workspaceRoot: string
+  workspaceRoot: string,
 ): Promise<void> {
-  console.log("🚨 Emergency workspace restoration...");
+  console.log('🚨 Emergency workspace restoration...');
   console.log(`  Workspace root: ${workspaceRoot}`);
 
   // Look for isolation directory in common temp locations
   const possibleTempDirs = [
-    join(workspaceRoot, ".temp"),
-    join(workspaceRoot, "temp"),
-    join(workspaceRoot, "tmp"),
+    join(workspaceRoot, '.temp'),
+    join(workspaceRoot, 'temp'),
+    join(workspaceRoot, 'tmp'),
   ];
 
   for (const tempDir of possibleTempDirs) {
-    const isolationDir = join(tempDir, "workspace-isolation");
+    const isolationDir = join(tempDir, 'workspace-isolation');
     if (existsSync(isolationDir)) {
       console.log(`  Found isolation directory: ${isolationDir}`);
 
@@ -546,7 +543,7 @@ export async function emergencyRestoreWorkspace(
         await restoreWorkspace({
           workspaceRoot,
           paths: {
-            temp: tempDir.replace(workspaceRoot, "").replace(/^[\/\\]/, ""),
+            temp: tempDir.replace(workspaceRoot, '').replace(/^[/\\]/, ''),
           },
         } as any);
         return;
@@ -555,35 +552,35 @@ export async function emergencyRestoreWorkspace(
 
         // Try backup restoration
         try {
-          const { restoreFromBackup } = await import("./file.utils.js");
+          const { restoreFromBackup } = await import('./file.utils.js');
           await restoreFromBackup({
             workspaceRoot,
             paths: {
-              temp: tempDir.replace(workspaceRoot, "").replace(/^[\/\\]/, ""),
+              temp: tempDir.replace(workspaceRoot, '').replace(/^[/\\]/, ''),
             },
           } as any);
-          console.log("  ✅ Emergency restoration completed from backup");
+          console.log('  ✅ Emergency restoration completed from backup');
           return;
         } catch (backupError) {
-          console.error(`  Failed to restore from backup:`, backupError);
+          console.error('  Failed to restore from backup:', backupError);
         }
       }
     }
   }
 
-  console.log("  No isolation directory found for emergency restoration");
+  console.log('  No isolation directory found for emergency restoration');
 }
 
 /**
  * Clean up .temp directory and restore workspace
  */
 export async function cleanupTempDirectory(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const tempDir = resolve(config.workspaceRoot, config.paths.temp);
 
   if (existsSync(tempDir)) {
-    console.log("🧹 Cleaning up temporary build directory...");
+    console.log('🧹 Cleaning up temporary build directory...');
 
     try {
       // First restore the workspace
@@ -591,9 +588,9 @@ export async function cleanupTempDirectory(
 
       // Then remove the temp directory
       await rm(tempDir, { recursive: true, force: true });
-      console.log("✅ Temporary directory cleaned up");
+      console.log('✅ Temporary directory cleaned up');
     } catch (error) {
-      console.error("⚠️  Failed to cleanup temp directory:", error);
+      console.error('⚠️  Failed to cleanup temp directory:', error);
       // Don't throw here - we want to ensure workspace is restored even if cleanup fails
     }
   }
@@ -603,14 +600,14 @@ export async function cleanupTempDirectory(
  * Verify that workspace is properly isolated
  */
 export async function verifyWorkspaceIsolation(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
-  const nodeModulesPath = join(workspaceRoot, "node_modules");
-  const pnpmLockPath = join(workspaceRoot, "pnpm-lock.yaml");
-  const pnpmWorkspacePath = join(workspaceRoot, "pnpm-workspace.yaml");
+  const nodeModulesPath = join(workspaceRoot, 'node_modules');
+  const pnpmLockPath = join(workspaceRoot, 'pnpm-lock.yaml');
+  const pnpmWorkspacePath = join(workspaceRoot, 'pnpm-workspace.yaml');
 
-  console.log("🔍 Verifying workspace isolation...");
+  console.log('🔍 Verifying workspace isolation...');
 
   const isolated =
     !existsSync(nodeModulesPath) &&
@@ -618,21 +615,21 @@ export async function verifyWorkspaceIsolation(
     !existsSync(pnpmWorkspacePath);
 
   if (isolated) {
-    console.log("✅ Workspace is properly isolated");
-    console.log("   - node_modules: removed");
-    console.log("   - pnpm-lock.yaml: removed");
-    console.log("   - pnpm-workspace.yaml: removed");
+    console.log('✅ Workspace is properly isolated');
+    console.log('   - node_modules: removed');
+    console.log('   - pnpm-lock.yaml: removed');
+    console.log('   - pnpm-workspace.yaml: removed');
   } else {
-    console.log("⚠️  Workspace isolation incomplete:");
+    console.log('⚠️  Workspace isolation incomplete:');
     if (existsSync(nodeModulesPath))
-      console.log("   - node_modules: still present");
+      console.log('   - node_modules: still present');
     if (existsSync(pnpmLockPath))
-      console.log("   - pnpm-lock.yaml: still present");
+      console.log('   - pnpm-lock.yaml: still present');
     if (existsSync(pnpmWorkspacePath))
-      console.log("   - pnpm-workspace.yaml: still present");
+      console.log('   - pnpm-workspace.yaml: still present');
 
     throw new Error(
-      "Workspace isolation failed - pnpm workspace files still present"
+      'Workspace isolation failed - pnpm workspace files still present',
     );
   }
 }
@@ -641,41 +638,41 @@ export async function verifyWorkspaceIsolation(
  * Check if workspace is currently in use (has active processes)
  */
 export async function checkWorkspaceInUse(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<boolean> {
   const workspaceRoot = config.workspaceRoot;
 
   try {
     // Check if there are any active pnpm processes in this workspace
     const result = execSync(
-      `ps aux | grep -E "pnpm.*${workspaceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" | grep -v grep`,
-      { stdio: "pipe" }
+      `ps aux | grep -E "pnpm.*${workspaceRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" | grep -v grep`,
+      { stdio: 'pipe' },
     )
       .toString()
       .trim();
 
     if (result) {
-      console.log("⚠️  Active pnpm processes detected in workspace:");
+      console.log('⚠️  Active pnpm processes detected in workspace:');
       console.log(result);
       return true;
     }
 
     // Check if there are any active Node.js processes in this workspace
     const nodeResult = execSync(
-      `ps aux | grep -E "node.*${workspaceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}" | grep -v grep`,
-      { stdio: "pipe" }
+      `ps aux | grep -E "node.*${workspaceRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" | grep -v grep`,
+      { stdio: 'pipe' },
     )
       .toString()
       .trim();
 
     if (nodeResult) {
-      console.log("⚠️  Active Node.js processes detected in workspace:");
+      console.log('⚠️  Active Node.js processes detected in workspace:');
       console.log(nodeResult);
       return true;
     }
 
     return false;
-  } catch (error) {
+  } catch {
     // If grep fails, assume no processes found
     return false;
   }
@@ -685,13 +682,13 @@ export async function checkWorkspaceInUse(
  * Create backup of workspace files before isolation
  */
 export async function createWorkspaceBackup(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<string> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const backupDir = join(tempDir, "workspace-backup");
+  const backupDir = join(tempDir, 'workspace-backup');
 
-  console.log("💾 Creating workspace backup before isolation...");
+  console.log('💾 Creating workspace backup before isolation...');
 
   try {
     await mkdir(backupDir, { recursive: true });
@@ -699,16 +696,16 @@ export async function createWorkspaceBackup(
     // Create timestamp for backup
     const timestamp = new Date()
       .toISOString()
-      .replace(/[:.]/g, "-")
+      .replace(/[:.]/g, '-')
       .slice(0, 19);
     const backupPath = join(backupDir, `backup-${timestamp}`);
     await mkdir(backupPath, { recursive: true });
 
     // Backup critical workspace files
     const criticalFiles = [
-      "pnpm-lock.yaml",
-      "pnpm-workspace.yaml",
-      "package.json",
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'package.json',
     ];
 
     for (const file of criticalFiles) {
@@ -722,7 +719,7 @@ export async function createWorkspaceBackup(
     console.log(`✅ Workspace backup created: ${backupPath}`);
     return backupPath;
   } catch (error) {
-    console.error("❌ Failed to create workspace backup:", error);
+    console.error('❌ Failed to create workspace backup:', error);
     throw error;
   }
 }
@@ -731,16 +728,16 @@ export async function createWorkspaceBackup(
  * Restore workspace from backup if main restoration fails
  */
 export async function restoreFromBackup(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const backupDir = join(tempDir, "workspace-backup");
+  const backupDir = join(tempDir, 'workspace-backup');
 
-  console.log("🔄 Attempting to restore workspace from backup...");
+  console.log('🔄 Attempting to restore workspace from backup...');
 
   if (!existsSync(backupDir)) {
-    console.log("ℹ️  No backup directory found");
+    console.log('ℹ️  No backup directory found');
     return;
   }
 
@@ -749,11 +746,11 @@ export async function restoreFromBackup(
     const backupEntries = await readdir(backupDir);
     const backupFolders = backupEntries.filter(
       (entry) =>
-        entry.startsWith("backup-") && existsSync(join(backupDir, entry))
+        entry.startsWith('backup-') && existsSync(join(backupDir, entry)),
     );
 
     if (backupFolders.length === 0) {
-      console.log("ℹ️  No backup folders found");
+      console.log('ℹ️  No backup folders found');
       return;
     }
 
@@ -765,9 +762,9 @@ export async function restoreFromBackup(
 
     // Restore critical files
     const criticalFiles = [
-      "pnpm-lock.yaml",
-      "pnpm-workspace.yaml",
-      "package.json",
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'package.json',
     ];
 
     for (const file of criticalFiles) {
@@ -780,9 +777,9 @@ export async function restoreFromBackup(
       }
     }
 
-    console.log("✅ Workspace restored from backup");
+    console.log('✅ Workspace restored from backup');
   } catch (error) {
-    console.error("❌ Failed to restore from backup:", error);
+    console.error('❌ Failed to restore from backup:', error);
     throw error;
   }
 }
@@ -791,25 +788,25 @@ export async function restoreFromBackup(
  * Check if build can proceed safely after isolation
  */
 export async function canProceedWithBuild(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<boolean> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const isolationDir = join(tempDir, "workspace-isolation");
+  const isolationDir = join(tempDir, 'workspace-isolation');
 
-  console.log("🔍 Verifying build safety...");
+  console.log('🔍 Verifying build safety...');
 
   // Check if isolation directory exists
   if (!existsSync(isolationDir)) {
-    console.log("❌ Isolation directory not found - isolation may have failed");
+    console.log('❌ Isolation directory not found - isolation may have failed');
     return false;
   }
 
   // Check if critical files are in isolation
   const criticalFiles = [
-    join(isolationDir, "node_modules"),
+    join(isolationDir, 'node_modules'),
     // 🚀 Skip pnpm-lock.yaml check - we intentionally delete it for fresh npm install
-    join(isolationDir, "pnpm-workspace.yaml"),
+    join(isolationDir, 'pnpm-workspace.yaml'),
   ];
 
   for (const file of criticalFiles) {
@@ -821,9 +818,9 @@ export async function canProceedWithBuild(
 
   // Check if workspace is clean (no pnpm files)
   const workspaceFiles = [
-    join(workspaceRoot, "node_modules"),
-    join(workspaceRoot, "pnpm-lock.yaml"),
-    join(workspaceRoot, "pnpm-workspace.yaml"),
+    join(workspaceRoot, 'node_modules'),
+    join(workspaceRoot, 'pnpm-lock.yaml'),
+    join(workspaceRoot, 'pnpm-workspace.yaml'),
   ];
 
   for (const file of workspaceFiles) {
@@ -833,7 +830,7 @@ export async function canProceedWithBuild(
     }
   }
 
-  console.log("✅ Build safety verified - workspace is properly isolated");
+  console.log('✅ Build safety verified - workspace is properly isolated');
   return true;
 }
 
@@ -841,14 +838,14 @@ export async function canProceedWithBuild(
  * Prepare isolated build workspace with necessary dependencies
  */
 export async function prepareIsolatedBuildWorkspace(
-  config: BuildDeploymentConfig
+  config: BuildDeploymentConfig,
 ): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
-  const isolationDir = join(tempDir, "workspace-isolation");
-  const buildWorkspace = join(tempDir, "deployment");
+  const isolationDir = join(tempDir, 'workspace-isolation');
+  const buildWorkspace = join(tempDir, 'deployment');
 
-  console.log("🏗️  Preparing isolated build workspace...");
+  console.log('🏗️  Preparing isolated build workspace...');
 
   try {
     // Create build workspace structure
@@ -857,12 +854,12 @@ export async function prepareIsolatedBuildWorkspace(
     // 🚀 OPTIMIZATION: Skip copying node_modules - let npm install handle it fresh!
     // This saves massive time and avoids dependency conflicts
     console.log(
-      "📦 Skipping node_modules copy - will install fresh dependencies"
+      '📦 Skipping node_modules copy - will install fresh dependencies',
     );
 
     // Copy only essential package files to build workspace
     const packageFiles = [
-      "package.json",
+      'package.json',
       // 🚀 Skip pnpm-lock.yaml - npm will create fresh one without external links
     ];
 
@@ -877,17 +874,17 @@ export async function prepareIsolatedBuildWorkspace(
     }
 
     // Create a minimal pnpm-workspace.yaml for the build workspace
-    const buildWorkspaceYaml = join(buildWorkspace, "pnpm-workspace.yaml");
+    const buildWorkspaceYaml = join(buildWorkspace, 'pnpm-workspace.yaml');
     const workspaceContent = `packages:
   - 'apps/*'
   - 'packages/*'
 `;
-    await writeFile(buildWorkspaceYaml, workspaceContent, "utf8");
-    console.log(`  📄 pnpm-workspace.yaml created for build workspace`);
+    await writeFile(buildWorkspaceYaml, workspaceContent, 'utf8');
+    console.log('  📄 pnpm-workspace.yaml created for build workspace');
 
     // Copy source code directories (needed for builds)
     // 🚀 FIX: Only copy apps/client and apps/server - NOT packages or other directories
-    const sourceDirs = ["apps/client", "apps/server"];
+    const sourceDirs = ['apps/client', 'apps/server'];
 
     for (const dir of sourceDirs) {
       const srcDir = join(workspaceRoot, dir);
@@ -900,10 +897,10 @@ export async function prepareIsolatedBuildWorkspace(
 
         // Check what's in the source directory before copying
         const srcContents = await readdir(srcDir);
-        console.log(`  📋 Source contents: ${srcContents.join(", ")}`);
+        console.log(`  📋 Source contents: ${srcContents.join(', ')}`);
 
         // Check if package.json exists in source
-        const srcPackageJson = join(srcDir, "package.json");
+        const srcPackageJson = join(srcDir, 'package.json');
         if (existsSync(srcPackageJson)) {
           console.log(`  ✅ Source package.json found: ${srcPackageJson}`);
         } else {
@@ -917,17 +914,17 @@ export async function prepareIsolatedBuildWorkspace(
         // Verify what was copied
         if (existsSync(destDir)) {
           const destContents = await readdir(destDir);
-          console.log(`  📋 Destination contents: ${destContents.join(", ")}`);
+          console.log(`  📋 Destination contents: ${destContents.join(', ')}`);
 
           // Check if package.json was copied
-          const destPackageJson = join(destDir, "package.json");
+          const destPackageJson = join(destDir, 'package.json');
           if (existsSync(destPackageJson)) {
             console.log(
-              `  ✅ Destination package.json found: ${destPackageJson}`
+              `  ✅ Destination package.json found: ${destPackageJson}`,
             );
           } else {
             console.log(
-              `  ❌ Destination package.json NOT found: ${destPackageJson}`
+              `  ❌ Destination package.json NOT found: ${destPackageJson}`,
             );
           }
         } else {
@@ -939,18 +936,18 @@ export async function prepareIsolatedBuildWorkspace(
     }
 
     // Copy essential configuration files
-    console.log("📋 Copying essential configuration files...");
+    console.log('📋 Copying essential configuration files...');
     const configFiles = [
-      ".env",
-      ".env.local",
-      ".env.production",
-      ".env.shared.ts",
-      "env.example",
-      "drizzle.config.ts",
-      "tsconfig.json",
-      "vite.config.ts",
-      "tailwind.config.js",
-      "postcss.config.js",
+      '.env',
+      '.env.local',
+      '.env.production',
+      '.env.shared.ts',
+      'env.example',
+      'drizzle.config.ts',
+      'tsconfig.json',
+      'vite.config.ts',
+      'tailwind.config.js',
+      'postcss.config.js',
     ];
 
     for (const file of configFiles) {
@@ -968,10 +965,10 @@ export async function prepareIsolatedBuildWorkspace(
     // These directories are NOT needed in the final deployment and cause path confusion
 
     console.log(
-      "✅ Isolated build workspace prepared (optimized - no node_modules copy)"
+      '✅ Isolated build workspace prepared (optimized - no node_modules copy)',
     );
   } catch (error) {
-    console.error("❌ Failed to prepare isolated build workspace:", error);
+    console.error('❌ Failed to prepare isolated build workspace:', error);
     throw error;
   }
 }
@@ -980,10 +977,10 @@ export async function prepareIsolatedBuildWorkspace(
  * Make scripts executable (Unix only)
  */
 export function makeExecutable(filePath: string): void {
-  if (process.platform !== "win32") {
+  if (process.platform !== 'win32') {
     try {
-      execSync(`chmod +x ${filePath}`, { stdio: "inherit" });
-    } catch (error) {
+      execSync(`chmod +x ${filePath}`, { stdio: 'inherit' });
+    } catch{
       // Ignore errors
     }
   }
@@ -995,7 +992,7 @@ export function makeExecutable(filePath: string): void {
 export async function writeExecutableFile(
   filePath: string,
   content: string,
-  makeExec = false
+  makeExec = false,
 ): Promise<void> {
   await writeFile(filePath, content);
   if (makeExec) {

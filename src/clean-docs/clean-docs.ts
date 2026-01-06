@@ -1,11 +1,13 @@
-import { deleteAsync } from 'del';
-import chalk from 'chalk';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { CleanOptions, DeleteProgress } from './clean-docs.types';
-import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean-docs.config';
+
+import chalk from 'chalk';
+import { deleteAsync } from 'del';
+
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';
+import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean-docs.config';
+import type { CleanOptions, DeleteProgress } from './clean-docs.types';
 
 const WORKSPACE_ROOT = findProjectRoot();
 
@@ -73,13 +75,13 @@ export async function clean({ dryRun = false, verbose = false }: CleanOptions = 
         dot: true,
         onProgress: verbose
           ? (progress: DeleteProgress) => {
-              const { deletedCount, totalCount, percent } = progress;
-              console.log(
-                chalk[dryRun ? 'gray' : 'magenta'](
-                  `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
-                ),
-              );
-            }
+            const { deletedCount, totalCount, percent } = progress;
+            console.log(
+              chalk[dryRun ? 'gray' : 'magenta'](
+                `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
+              ),
+            );
+          }
           : undefined,
         ignore: GLOB_DELETE_EXCLUDE.map((p) => path.join(baseDir, p).replace(/\\/g, '/')),
       });

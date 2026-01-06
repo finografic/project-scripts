@@ -71,6 +71,7 @@ pnpm db.setup
 ```
 
 The command will present an interactive interface to:
+
 1. Select operations to perform (seed data, run migrations, generate migrations)
 2. Choose specific schemas to process (if seeding data)
 3. Execute operations in the correct order, respecting dependencies

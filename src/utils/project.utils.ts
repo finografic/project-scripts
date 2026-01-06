@@ -1,7 +1,7 @@
-import path from "node:path";
-import fs from "node:fs";
+import fs from 'node:fs';
+import path from 'node:path';
 
-const ROOT_MARKERS = ["pnpm-workspace.yaml", "package.json", ".git"];
+const ROOT_MARKERS = ['pnpm-workspace.yaml', 'package.json', '.git'];
 
 // Helper to determine if we're in a PROJECT / WORKSPACE ROOT directory
 export const findProjectRoot = (startDir = process.cwd()): string => {
@@ -12,19 +12,19 @@ export const findProjectRoot = (startDir = process.cwd()): string => {
     if (ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) {
       // 🎯 CRITICAL: Check if this is the REAL monorepo root
       const hasPnpmWorkspace = fs.existsSync(
-        path.join(dir, "pnpm-workspace.yaml")
+        path.join(dir, 'pnpm-workspace.yaml'),
       );
-      const hasAppsDir = fs.existsSync(path.join(dir, "apps"));
-      const hasPackagesDir = fs.existsSync(path.join(dir, "packages"));
+      const hasAppsDir = fs.existsSync(path.join(dir, 'apps'));
+      const hasPackagesDir = fs.existsSync(path.join(dir, 'packages'));
 
       // This is a monorepo root if it has pnpm-workspace.yaml AND apps/packages directories
       if (hasPnpmWorkspace && (hasAppsDir || hasPackagesDir)) {
         console.log(`🎯 Found monorepo root: ${dir}`);
         console.log(
-          `  - pnpm-workspace.yaml: ${hasPnpmWorkspace ? "✅" : "❌"}`
+          `  - pnpm-workspace.yaml: ${hasPnpmWorkspace ? '✅' : '❌'}`,
         );
-        console.log(`  - apps directory: ${hasAppsDir ? "✅" : "❌"}`);
-        console.log(`  - packages directory: ${hasPackagesDir ? "✅" : "❌"}`);
+        console.log(`  - apps directory: ${hasAppsDir ? '✅' : '❌'}`);
+        console.log(`  - packages directory: ${hasPackagesDir ? '✅' : '❌'}`);
         return dir;
       }
 
@@ -42,7 +42,7 @@ export const findProjectRoot = (startDir = process.cwd()): string => {
 
   // Fallback to current working directory if no monorepo found
   console.log(
-    `⚠️  No monorepo root found, using current directory: ${process.cwd()}`
+    `⚠️  No monorepo root found, using current directory: ${process.cwd()}`,
   );
   return process.cwd();
 };
@@ -59,7 +59,7 @@ export const getPackageScope = (): string | null => {
   const relativePath = path.relative(WORKSPACE_ROOT, cwd);
   const parts = relativePath.split(path.sep);
 
-  if ((parts[0] === "apps" || parts[0] === "packages") && parts[1]) {
+  if ((parts[0] === 'apps' || parts[0] === 'packages') && parts[1]) {
     return path.join(parts[0], parts[1]);
   }
 

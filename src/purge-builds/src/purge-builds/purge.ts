@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-import fs from "node:fs/promises";
-import path from "node:path";
-import chalk from "chalk";
-import { spawn } from "node:child_process";
-import { tmpdir } from "node:os";
-import ora from "ora";
+import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { setTimeout } from 'node:timers';
+
+import chalk from 'chalk';
+import ora from 'ora';
 
 export interface PurgeOptions {
   dryRun?: boolean;
@@ -15,15 +17,15 @@ export interface PurgeOptions {
 
 interface FindResult {
   path: string;
-  type: "file" | "directory";
+  type: 'file' | 'directory';
   size: number;
 }
 
 // Patterns to delete
 const DELETE_PATTERNS = {
-  directories: [".turbo", ".tsup", "dist", "node_modules", ".pnpm"],
-  files: ["pnpm-lock.yaml"],
-  fileExtensions: [".tsbuildinfo"], // catches tsconfig.tsbuildinfo and any other *.tsbuildinfo files
+  directories: ['.turbo', '.tsup', 'dist', 'node_modules', '.pnpm'],
+  files: ['pnpm-lock.yaml'],
+  fileExtensions: ['.tsbuildinfo'], // catches tsconfig.tsbuildinfo and any other *.tsbuildinfo files
 };
 
 // Protection patterns are now handled directly in shouldDelete function
@@ -33,39 +35,39 @@ const DELETE_PATTERNS = {
  */
 async function scheduleDeferredDeletion(
   itemPath: string,
-  relativePath: string
+  _relativePath: string,
 ): Promise<boolean> {
   try {
     const platform = process.platform;
 
-    if (platform === "win32") {
+    if (platform === 'win32') {
       // Windows: Use timeout to delay execution
       spawn(
-        "cmd",
-        ["/c", `timeout /t 2 /nobreak && rmdir /s /q "${itemPath}"`],
+        'cmd',
+        ['/c', `timeout /t 2 /nobreak && rmdir /s /q "${itemPath}"`],
         {
           detached: true,
-          stdio: "ignore",
+          stdio: 'ignore',
           shell: true,
-        }
+        },
       ).unref();
     } else {
       // Unix/macOS: Use sleep to delay execution with force
       spawn(
-        "sh",
+        'sh',
         [
-          "-c",
+          '-c',
           `sleep 2 && rm -rf "${itemPath}" && find "$(dirname "${itemPath}")" -name "node_modules" -type d -empty -delete 2>/dev/null || true`,
         ],
         {
           detached: true,
-          stdio: "ignore",
-        }
+          stdio: 'ignore',
+        },
       ).unref();
     }
 
     return true;
-  } catch (error) {
+  } catch {
     // If process detachment fails, fall back to manual instructions
     return false;
   }
@@ -77,8 +79,8 @@ async function scheduleDeferredDeletion(
 async function executeFromMemory(originalPath: string): Promise<boolean> {
   try {
     // Create a temporary copy of the current script
-    const tempDir = await fs.mkdtemp(path.join(tmpdir(), "purge-builds-"));
-    const tempScript = path.join(tempDir, "purge-builds-detached.js");
+    const tempDir = await fs.mkdtemp(path.join(tmpdir(), 'purge-builds-'));
+    const tempScript = path.join(tempDir, 'purge-builds-detached.js');
 
     // Create a minimal detached script that can delete the original node_modules
     const detachedScript = `
@@ -135,7 +137,7 @@ setTimeout(cleanupNodeModules, 1000);
     // Execute the detached script
     spawn(process.execPath, [tempScript], {
       detached: true,
-      stdio: "ignore",
+      stdio: 'ignore',
     }).unref();
 
     // Check if node_modules exists before waiting
@@ -147,7 +149,7 @@ setTimeout(cleanupNodeModules, 1000);
     }
 
     // Wait for completion
-    const spinner = ora("Waiting for node_modules deletion...").start();
+    const spinner = ora('Waiting for node_modules deletion...').start();
     let attempts = 0;
     const maxAttempts = 10; // 5 seconds total (500ms * 10)
 
@@ -159,7 +161,7 @@ setTimeout(cleanupNodeModules, 1000);
         // Still exists
       } catch {
         // node_modules is gone
-        spinner.succeed("Successfully deleted node_modules");
+        spinner.succeed('Successfully deleted node_modules');
         return true;
       }
 
@@ -167,9 +169,9 @@ setTimeout(cleanupNodeModules, 1000);
       spinner.text = `Waiting for node_modules deletion... (${attempts}/${maxAttempts})`;
     }
 
-    spinner.warn("Deletion process started but completion unconfirmed");
+    spinner.warn('Deletion process started but completion unconfirmed');
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -190,13 +192,13 @@ function isPartOfCurrentExecution(itemPath: string): boolean {
   const currentScript = getCurrentExecutionPath();
 
   // If we're running from node_modules, protect only our specific package
-  if (currentScript.includes("node_modules/@finografic/project-scripts")) {
-    return itemPath.includes("node_modules/@finografic/project-scripts");
+  if (currentScript.includes('node_modules/@finografic/project-scripts')) {
+    return itemPath.includes('node_modules/@finografic/project-scripts');
   }
 
   // If we're running from a local package, protect that specific path
-  if (currentScript.includes("packages/purge-builds")) {
-    return itemPath.includes("packages/purge-builds/dist");
+  if (currentScript.includes('packages/purge-builds')) {
+    return itemPath.includes('packages/purge-builds/dist');
   }
 
   return false;
@@ -211,8 +213,8 @@ function shouldDeferNodeModules(itemPath: string): boolean {
 
   // If this is the main node_modules and we're running from within it
   return (
-    itemPath === path.join(workingDir, "node_modules") &&
-    currentScript.includes("node_modules")
+    itemPath === path.join(workingDir, 'node_modules') &&
+    currentScript.includes('node_modules')
   );
 }
 
@@ -222,7 +224,7 @@ function shouldDeferNodeModules(itemPath: string): boolean {
 function shouldDelete(
   itemPath: string,
   itemName: string,
-  isDirectory: boolean
+  isDirectory: boolean,
 ): boolean {
   // Never delete ourselves (self-preservation)
   if (isPartOfCurrentExecution(itemPath)) {
@@ -230,14 +232,14 @@ function shouldDelete(
   }
 
   // Always protect certain directories regardless of level (like src, .git, etc.)
-  const alwaysProtect = [".git", ".env", "package.json", "src"];
+  const alwaysProtect = ['.git', '.env', 'package.json', 'src'];
   if (alwaysProtect.includes(itemName)) {
     return false;
   }
 
   // Protect top-level structural directories
   const pathParts = itemPath.split(path.sep);
-  const topLevelStructural = ["apps", "packages", "config", "scripts"];
+  const topLevelStructural = ['apps', 'packages', 'config', 'scripts'];
   const isTopLevelStructural =
     topLevelStructural.includes(itemName) && pathParts.length <= 2;
 
@@ -298,7 +300,7 @@ async function findItemsToDelete(
   recursive: boolean = false,
   results: FindResult[] = [],
   // biome-ignore lint/style/noInferrableTypes: is's fine
-  currentDepth: number = 0
+  currentDepth: number = 0,
 ): Promise<FindResult[]> {
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
@@ -315,7 +317,7 @@ async function findItemsToDelete(
 
         results.push({
           path: itemPath,
-          type: isDirectory ? "directory" : "file",
+          type: isDirectory ? 'directory' : 'file',
           size,
         });
 
@@ -340,7 +342,7 @@ async function findItemsToDelete(
  */
 async function deleteItem(
   itemPath: string,
-  isDirectory: boolean
+  isDirectory: boolean,
 ): Promise<boolean> {
   try {
     if (isDirectory) {
@@ -377,7 +379,7 @@ async function cleanupEmptyDirectories(workingDir: string): Promise<void> {
  * Find empty node_modules directories
  */
 async function findEmptyNodeModulesDirectories(
-  dirPath: string
+  dirPath: string,
 ): Promise<string[]> {
   const emptyDirs: string[] = [];
 
@@ -388,7 +390,7 @@ async function findEmptyNodeModulesDirectories(
       if (item.isDirectory()) {
         const itemPath = path.join(dirPath, item.name);
 
-        if (item.name === "node_modules") {
+        if (item.name === 'node_modules') {
           // Check if this node_modules directory is empty
           try {
             const contents = await fs.readdir(itemPath);
@@ -416,9 +418,9 @@ async function findEmptyNodeModulesDirectories(
  * Format bytes to human readable string
  */
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
 }
@@ -437,22 +439,22 @@ export async function purge({
 
   // Safety check
   if (dryRun) {
-    console.log(chalk.green("🔒 DRY RUN MODE - NO FILES WILL BE DELETED\n"));
+    console.log(chalk.green('🔒 DRY RUN MODE - NO FILES WILL BE DELETED\n'));
     console.log(
       chalk.yellow(
-        "⚠️  This is a simulation only. Remove --dry-run to actually delete files.\n"
-      )
+        '⚠️  This is a simulation only. Remove --dry-run to actually delete files.\n',
+      ),
     );
   }
 
   console.log(chalk.gray(`Working Directory: ${workingDir}`));
   console.log(
-    chalk.gray(`Mode: ${recursive ? "Recursive (deep)" : "Current level only"}`)
+    chalk.gray(`Mode: ${recursive ? 'Recursive (deep)' : 'Current level only'}`),
   );
   console.log(
     chalk.gray(
-      `Operation: ${dryRun ? "DRY RUN (simulation)" : "LIVE (actual deletion)"}`
-    )
+      `Operation: ${dryRun ? 'DRY RUN (simulation)' : 'LIVE (actual deletion)'}`,
+    ),
   );
 
   // Show self-preservation info
@@ -460,20 +462,20 @@ export async function purge({
   console.log(chalk.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
-  const scanSpinner = ora("Scanning for build artifacts...").start();
+  const scanSpinner = ora('Scanning for build artifacts...').start();
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
 
   if (itemsToDelete.length === 0) {
-    scanSpinner.succeed("No build artifacts found to clean!");
+    scanSpinner.succeed('No build artifacts found to clean!');
     return;
   }
 
   // Calculate totals
   const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
   const dirCount = itemsToDelete.filter(
-    (item) => item.type === "directory"
+    (item) => item.type === 'directory',
   ).length;
-  const fileCount = itemsToDelete.filter((item) => item.type === "file").length;
+  const fileCount = itemsToDelete.filter((item) => item.type === 'file').length;
 
   // Show what will be deleted
   scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
@@ -482,31 +484,31 @@ export async function purge({
   console.log(chalk.gray(`   • ${formatBytes(totalSize)} total size\n`));
 
   if (verbose || dryRun) {
-    console.log(chalk.white("📝 Items to be processed:\n"));
+    console.log(chalk.white('📝 Items to be processed:\n'));
 
     // Group by type for better display
     const directories = itemsToDelete.filter(
-      (item) => item.type === "directory"
+      (item) => item.type === 'directory',
     );
-    const files = itemsToDelete.filter((item) => item.type === "file");
+    const files = itemsToDelete.filter((item) => item.type === 'file');
 
     if (directories.length > 0) {
-      console.log(chalk.cyan("📁 Directories:"));
+      console.log(chalk.cyan('📁 Directories:'));
       directories.forEach((item) => {
         const relativePath = path.relative(workingDir, item.path);
         console.log(
-          chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`)
+          chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`),
         );
       });
       console.log();
     }
 
     if (files.length > 0) {
-      console.log(chalk.cyan("📄 Files:"));
+      console.log(chalk.cyan('📄 Files:'));
       files.forEach((item) => {
         const relativePath = path.relative(workingDir, item.path);
         console.log(
-          chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`)
+          chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`),
         );
       });
       console.log();
@@ -514,23 +516,23 @@ export async function purge({
   }
 
   if (dryRun) {
-    console.log(chalk.yellow("🔒 DRY RUN: No files were actually deleted."));
+    console.log(chalk.yellow('🔒 DRY RUN: No files were actually deleted.'));
     console.log(
-      chalk.gray(`Would have freed ${formatBytes(totalSize)} of space.`)
+      chalk.gray(`Would have freed ${formatBytes(totalSize)} of space.`),
     );
     return;
   }
 
   // Separate items into immediate and deferred deletions
   const immediateItems = itemsToDelete.filter(
-    (item) => !shouldDeferNodeModules(item.path)
+    (item) => !shouldDeferNodeModules(item.path),
   );
   const deferredItems = itemsToDelete.filter((item) =>
-    shouldDeferNodeModules(item.path)
+    shouldDeferNodeModules(item.path),
   );
 
   // Actually delete immediate items
-  const deleteSpinner = ora("Deleting items...").start();
+  const deleteSpinner = ora('Deleting items...').start();
   let deletedCount = 0;
   let freedSpace = 0;
   let errorCount = 0;
@@ -539,7 +541,7 @@ export async function purge({
     const relativePath = path.relative(workingDir, item.path);
     deleteSpinner.text = `Deleting: ${relativePath}`;
 
-    const success = await deleteItem(item.path, item.type === "directory");
+    const success = await deleteItem(item.path, item.type === 'directory');
 
     if (success) {
       deletedCount++;
@@ -556,7 +558,7 @@ export async function purge({
 
   // Handle deferred deletions (node_modules that we can't delete while running from them)
   if (deferredItems.length > 0) {
-    console.log(chalk.cyan("\n🔄 Handling deferred deletions...\n"));
+    console.log(chalk.cyan('\n🔄 Handling deferred deletions...\n'));
 
     for (const item of deferredItems) {
       const relativePath = path.relative(workingDir, item.path);
@@ -566,26 +568,26 @@ export async function purge({
       if (forceDetach) {
         // Try the memory-copy approach first when forced
         console.log(
-          chalk.cyan(`🧠 Attempting memory detachment for ${relativePath}...`)
+          chalk.cyan(`🧠 Attempting memory detachment for ${relativePath}...`),
         );
         deleted = await executeFromMemory(item.path);
 
         if (deleted) {
           console.log(
             chalk.green(
-              `⏰ Memory-detached: ${relativePath} will be deleted after process exits`
-            )
+              `⏰ Memory-detached: ${relativePath} will be deleted after process exits`,
+            ),
           );
         } else {
           // Fallback to timer approach
-          console.log(chalk.cyan(`⏰ Falling back to timer approach...`));
+          console.log(chalk.cyan('⏰ Falling back to timer approach...'));
           deleted = await scheduleDeferredDeletion(item.path, relativePath);
 
           if (deleted) {
             console.log(
               chalk.green(
-                `⏰ Timer-scheduled: ${relativePath} will be deleted after process exits`
-              )
+                `⏰ Timer-scheduled: ${relativePath} will be deleted after process exits`,
+              ),
             );
           }
         }
@@ -596,8 +598,8 @@ export async function purge({
         if (deleted) {
           console.log(
             chalk.green(
-              `⏰ Scheduled: ${relativePath} will be deleted after process exits`
-            )
+              `⏰ Scheduled: ${relativePath} will be deleted after process exits`,
+            ),
           );
         }
       }
@@ -606,25 +608,25 @@ export async function purge({
         // Fallback to manual instructions
         console.log(
           chalk.yellow(
-            `⏸️  Deferred: ${relativePath} (automatic deletion failed)`
-          )
+            `⏸️  Deferred: ${relativePath} (automatic deletion failed)`,
+          ),
         );
         console.log(
           chalk.gray(
-            `   Run after this completes: rm -rf ${relativePath} && pnpm install`
-          )
+            `   Run after this completes: rm -rf ${relativePath} && pnpm install`,
+          ),
         );
         console.log(
-          chalk.gray(`   Or try: pnpm clean --detach for automatic deletion`)
+          chalk.gray('   Or try: pnpm clean --detach for automatic deletion'),
         );
       }
     }
   }
 
   // Clean up any empty directories left behind
-  const cleanupSpinner = ora("Cleaning up empty directories...").start();
+  const cleanupSpinner = ora('Cleaning up empty directories...').start();
   await cleanupEmptyDirectories(workingDir);
-  cleanupSpinner.succeed("Cleaned up empty directories");
+  cleanupSpinner.succeed('Cleaned up empty directories');
 
   // Final summary
   const duration = Date.now() - startTime;
