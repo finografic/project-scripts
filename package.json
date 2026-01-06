@@ -102,6 +102,7 @@
     "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
     "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
     "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
+    "release.publish": "pnpm publish --registry https://npm.pkg.github.com",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "···················································",
