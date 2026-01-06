@@ -1,4 +1,4 @@
-# @finografic/project-scripts
+# 🦋 @finografic/project-scripts
 
 A collection of utility scripts for managing monorepo projects, including cleaning build artifacts and database setup tools.
 
