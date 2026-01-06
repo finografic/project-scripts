@@ -48,9 +48,6 @@ importers:
       '@finografic/eslint-config':
         specifier: 9.18.4
         version: 9.18.4(@eslint-react/eslint-plugin@1.53.1(eslint@9.39.2(jiti@2.6.1))(ts-api-utils@2.4.0(typescript@5.9.3))(typescript@5.9.3))(@prettier/plugin-xml@3.4.2(prettier@3.7.4))(@types/node@24.10.4)(@typescript-eslint/parser@8.52.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(@unocss/eslint-plugin@66.5.12(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.26)(astro-eslint-parser@1.2.2)(eslint-import-resolver-node@0.3.9)(eslint-plugin-astro@1.5.0(eslint@9.39.2(jiti@2.6.1)))(eslint-plugin-format@1.1.0(eslint@9.39.2(jiti@2.6.1)))(eslint-plugin-react-hooks@5.2.0(eslint@9.39.2(jiti@2.6.1)))(eslint-plugin-react-refresh@0.4.26(eslint@9.39.2(jiti@2.6.1)))(eslint-plugin-vuejs-accessibility@2.4.1(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))(prettier-plugin-astro@0.14.1)(typescript@5.9.3)(vitest@4.0.16(@types/node@24.10.4)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
-      '@finografic/project-scripts':
-        specifier: ^8.2.0
-        version: 8.5.0(@types/node@24.10.4)(jsonc-eslint-parser@2.4.2)
       '@stylistic/eslint-plugin':
         specifier: ^5.6.1
         version: 5.6.1(eslint@9.39.2(jiti@2.6.1))
@@ -636,12 +633,6 @@ packages:
       eslint-plugin-react-refresh: ^0.4.19
       eslint-plugin-vuejs-accessibility: ^2.4.1
       prettier-plugin-astro: ^0.14.0
-
-  '@finografic/project-scripts@8.5.0':
-    resolution: {integrity: sha512-x5RVVeAA6lGX2l573+EjCP09svNMpYA7o+wEHjSbSXO7kWBPdZ+QJum8aYNB8ilLxY+zfzMawwyUIZkl1v+c/g==, tarball: https://npm.pkg.github.com/download/@finografic/project-scripts/8.5.0/cd362be61c22c455f3d7f8cb59e6fad7d3fa3051}
-    hasBin: true
-    peerDependencies:
-      jsonc-eslint-parser: ^2.4.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4713,21 +4704,6 @@ snapshots:
       - typescript
       - vitest
 
-  '@finografic/project-scripts@8.5.0(@types/node@24.10.4)(jsonc-eslint-parser@2.4.2)':
-    dependencies:
-      '@inquirer/confirm': 5.1.18(@types/node@24.10.4)
-      '@inquirer/core': 10.2.2(@types/node@24.10.4)
-      '@inquirer/input': 4.2.4(@types/node@24.10.4)
-      '@inquirer/prompts': 7.8.6(@types/node@24.10.4)
-      chalk: 5.6.2
-      del: 8.0.1
-      jsonc-eslint-parser: 2.4.2
-      ora: 9.0.0
-      parse-gitignore: 2.0.0
-      yargs: 18.0.0
-    transitivePeerDependencies:
-      - '@types/node'
-
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -7571,7 +7547,7 @@ snapshots:
   micromark-util-character@2.1.1:
     dependencies:
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.1
 
   micromark-util-chunked@2.0.1:
     dependencies:
@@ -7581,12 +7557,12 @@ snapshots:
     dependencies:
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.1
 
   micromark-util-combine-extensions@2.0.1:
     dependencies:
       micromark-util-chunked: 2.0.1
-      micromark-util-types: 2.0.2
+      micromark-util-types: 2.0.1
 
   micromark-util-decode-numeric-character-reference@2.0.2:
     dependencies:
