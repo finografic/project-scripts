@@ -174,8 +174,5 @@
       "simple-git-hooks",
       "unrs-resolver"
     ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
   }
 }
