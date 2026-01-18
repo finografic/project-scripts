@@ -18,11 +18,31 @@ export default defineConfig([
     },
     external: ['fs', 'path', 'child_process'],
   },
-  // Build CLI scripts to bin/
+  // Build db-setup CLI script (needs tsx shebang to load .ts config files)
+  {
+    entry: {
+      'db-setup': 'src/db-setup/db-setup.ts',
+    },
+    outDir: 'bin',
+    format: ['esm'],
+    target: 'node18',
+    platform: 'node',
+    shims: true,
+    clean: false, // Don't clean, other scripts are in same dir
+    minify: false,
+    splitting: false,
+    treeshake: true,
+    sourcemap: false,
+    dts: false,
+    banner: {
+      js: '#!/usr/bin/env tsx', // tsx is required to load .ts config files at runtime
+    },
+    external: ['fs', 'path', 'child_process'],
+  },
+  // Build other CLI scripts to bin/
   {
     entry: {
       'clean-docs': 'src/clean-docs/clean-docs.ts',
-      'db-setup': 'src/db-setup/db-setup.ts',
       'purge-builds': 'src/purge-builds/src/purge-builds/index.ts',
       'build-deployment': 'src/build-deployment/cli.ts',
     },
@@ -31,21 +51,14 @@ export default defineConfig([
     target: 'node18',
     platform: 'node',
     shims: true,
-    clean: true,
+    clean: false, // Don't clean, db-setup is in same dir
     minify: false,
     splitting: false,
     treeshake: true,
     sourcemap: false,
     dts: false, // No types for CLI
     banner: {
-      js: (file) => {
-        // db-setup needs tsx to load .ts config files at runtime
-        // tsx is required as a peerDependency for db-setup to work
-        if (file.includes('db-setup')) {
-          return '#!/usr/bin/env tsx';
-        }
-        return '#!/usr/bin/env node';
-      },
+      js: '#!/usr/bin/env node',
     },
     external: ['fs', 'path', 'child_process'],
     // Copy templates to output

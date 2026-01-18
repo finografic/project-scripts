@@ -57,6 +57,7 @@ export const seedOrder: SeedConfig[] = [
 2. The `db-setup` script requires `tsx` to load TypeScript config files. You have two options:
 
 **Option A: Install `tsx` in your project (recommended)**
+
 ```json
 {
   "devDependencies": {
@@ -69,6 +70,7 @@ export const seedOrder: SeedConfig[] = [
 ```
 
 **Option B: Use `NODE_OPTIONS` (works with `pnpm dlx`)**
+
 ```json
 {
   "scripts": {
