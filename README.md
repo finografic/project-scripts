@@ -54,8 +54,21 @@ export const seedOrder: SeedConfig[] = [
 ];
 ```
 
-2. Ensure your project has the required Node options for TypeScript support:
+2. The `db-setup` script requires `tsx` to load TypeScript config files. You have two options:
 
+**Option A: Install `tsx` in your project (recommended)**
+```json
+{
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  },
+  "scripts": {
+    "db.setup": "db-setup"
+  }
+}
+```
+
+**Option B: Use `NODE_OPTIONS` (works with `pnpm dlx`)**
 ```json
 {
   "scripts": {
@@ -63,6 +76,8 @@ export const seedOrder: SeedConfig[] = [
   }
 }
 ```
+
+Note: `tsx` is a peerDependency of `@finografic/project-scripts` and is required for `db-setup` to work.
 
 #### Usage
 

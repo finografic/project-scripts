@@ -38,7 +38,14 @@ export default defineConfig([
     sourcemap: false,
     dts: false, // No types for CLI
     banner: {
-      js: '#!/usr/bin/env node',
+      js: (file) => {
+        // db-setup needs tsx to load .ts config files at runtime
+        // tsx is required as a peerDependency for db-setup to work
+        if (file.includes('db-setup')) {
+          return '#!/usr/bin/env tsx';
+        }
+        return '#!/usr/bin/env node';
+      },
     },
     external: ['fs', 'path', 'child_process'],
     // Copy templates to output

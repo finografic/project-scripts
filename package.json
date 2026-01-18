@@ -167,7 +167,8 @@
     "build-deployment": "bin/build-deployment.js"
   },
   "peerDependencies": {
-    "jsonc-eslint-parser": "^2.4.0"
+    "jsonc-eslint-parser": "^2.4.0",
+    "tsx": "^4.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
