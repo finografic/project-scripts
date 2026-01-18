@@ -3,6 +3,9 @@
   "type": "module",
   "version": "8.11.2",
   "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=22.17.1"
+  },
   "description": "Fingorafic Project Scripts",
   "homepage": "https://github.com/finografic/project-scripts",
   "repository": {

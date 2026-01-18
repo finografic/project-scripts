@@ -112,3 +112,50 @@ The `build-deployment` script copies templates in `onSuccess` hook. Ensure `tsdo
 ## Migration Date
 
 _To be filled when migration is completed_
+
+## Migration Notes (2025-01-XX)
+
+### Key Challenges
+
+1. **Multiple Build Configs**: tsdown may not support array of configs like tsup. May need:
+   - Separate build scripts for each config
+   - Or use a single config with conditional logic
+   - Or use a build script that runs tsdown multiple times
+
+2. **Custom Shebangs**: Need to verify tsdown supports `banner` option or equivalent
+   - Critical for `db-setup` which needs `#!/usr/bin/env tsx`
+   - Other scripts need `#!/usr/bin/env node`
+
+3. **Template Copying**: `onSuccess` hook may not exist in tsdown
+   - May need a separate script or post-build step
+   - Or use a build script wrapper
+
+4. **Multiple Output Directories**:
+   - CLI scripts → `bin/`
+   - Library exports → `dist/`
+   - May need separate configs or build steps
+
+### Recommended Approach
+
+1. **Test tsdown capabilities first**:
+   - Check if it supports array of configs
+   - Check if it supports `banner` option
+   - Check if it supports hooks or plugins
+
+2. **If tsdown doesn't support all features**:
+   - Use a build script wrapper (e.g., `scripts/build.ts`)
+   - Run tsdown multiple times with different configs
+   - Handle template copying in the wrapper script
+   - Add shebangs manually if needed
+
+3. **Alternative**: Keep tsup for now, migrate later when tsdown adds missing features
+
+### Reference: @finografic-create Migration
+
+The `@finografic/create` package successfully uses tsdown with:
+- Single entry point
+- ESM format
+- Simple config structure
+- `exports: { legacy: true }` for cleaner package.json exports
+
+This suggests tsdown is simpler but may need workarounds for complex builds.

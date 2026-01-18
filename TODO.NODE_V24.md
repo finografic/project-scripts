@@ -160,3 +160,48 @@ Review Node v24 release notes for:
 ## Migration Date
 
 _To be filled when upgrade is completed_
+
+## Decision: Node v24 Compatibility (2025-01-XX)
+
+### Can project-scripts built with Node v24 be used in monorepos using Node v22?
+
+**YES, with proper configuration:**
+
+1. **Build Target**: Keep `target: 'node18'` or `target: 'node22'` in build config
+   - The compiled JavaScript will be compatible with Node v22
+   - Building with Node v24 doesn't affect runtime compatibility if target is set correctly
+
+2. **Runtime Execution**:
+   - When using `pnpm dlx`, scripts run with the **monorepo's Node version** (v22)
+   - The shebang `#!/usr/bin/env tsx` uses whatever Node is in PATH
+   - As long as compiled code targets compatible ES version, it works
+
+3. **Package.json engines**:
+   - Set to `">=22.17.1"` to allow both Node v22 and v24
+   - Or `">=18.0.0"` for maximum compatibility
+
+### Recommended Strategy
+
+**Option A: Upgrade project-scripts to Node v24, keep monorepo on v22** ✅ RECOMMENDED
+- Build project-scripts with Node v24
+- Keep build target at `node18` or `node22`
+- Set `engines.node` to `">=22.17.1"`
+- Monorepo can continue using Node v22
+- **Pros**: Can use Node v24 features in development, maintain compatibility
+- **Cons**: None significant
+
+**Option B: Upgrade everything to Node v24**
+- Upgrade both project-scripts and monorepo to Node v24
+- Update build target to `node24` if desired
+- Set `engines.node` to `">=24.0.0"`
+- **Pros**: Latest features everywhere, simpler maintenance
+- **Cons**: Requires coordinated upgrade, may break other dependencies
+
+### Testing Plan
+
+1. Build project-scripts with Node v24 (target: node18)
+2. Test in monorepo with Node v22:
+   - `pnpm dlx db-setup` works
+   - All CLI scripts work
+   - Library imports work
+3. If successful, proceed with Option A
