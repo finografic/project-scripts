@@ -24,11 +24,11 @@ export const loadSeedConfig = async ({
     ? configFileGlob
     : [configFileGlob];
 
-  // Try both .ts and .js extensions
+  // Try both .ts and .js extensions (prioritize .js for Node.js v24 ESM compatibility)
   const configPath = findScriptConfigFile(
     configFileGlobArr.flatMap((pattern) => [
-      pattern,
-      pattern.replace(/\.ts$/, '.js'),
+      pattern.replace(/\.ts$/, '.js'), // Check .js first (Node.js v24 ESM compatibility)
+      pattern, // Then check original pattern
       `${pattern}.js`,
       `${pattern}.ts`,
     ]),
