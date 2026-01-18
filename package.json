@@ -1,7 +1,7 @@
 {
   "name": "@finografic/project-scripts",
   "type": "module",
-  "version": "8.11.1",
+  "version": "8.11.2",
   "packageManager": "pnpm@10.14.0",
   "description": "Fingorafic Project Scripts",
   "homepage": "https://github.com/finografic/project-scripts",
