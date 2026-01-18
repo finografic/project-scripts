@@ -48,6 +48,7 @@ This document tracks the upgrade of `@finografic/project-scripts` to Node.js v24
 ### 3. Update Package.json
 
 - [ ] Add/update `engines` field:
+
   ```json
   "engines": {
     "node": ">=24.0.0"  // or ">=22.17.1" if maintaining compatibility
@@ -74,6 +75,7 @@ This document tracks the upgrade of `@finografic/project-scripts` to Node.js v24
 ### 6. ESM Considerations
 
 Node v24 has stricter ESM handling:
+
 - [ ] Verify all `.ts` file imports work correctly
 - [ ] Ensure `tsx` loader works with Node v24
 - [ ] Test dynamic imports (used in `db-setup` for config loading)
@@ -87,6 +89,7 @@ Node v24 has stricter ESM handling:
 ## Breaking Changes in Node v24
 
 Review Node v24 release notes for:
+
 - [ ] Deprecated APIs removed
 - [ ] ESM behavior changes
 - [ ] Module resolution changes
@@ -118,11 +121,13 @@ Review Node v24 release notes for:
 ## Recommended Approach
 
 **Option A** is recommended if:
+
 - The package is used by multiple monorepos
 - Not all monorepos can upgrade to Node v24 immediately
 - No Node v24-specific features are needed
 
 **Option B** is recommended if:
+
 - All consuming monorepos can upgrade together
 - Node v24 features provide significant benefits
 - Simpler maintenance with single Node version

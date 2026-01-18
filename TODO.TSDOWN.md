@@ -88,6 +88,7 @@ After migration, verify:
 ### db-setup Shebang
 
 The `db-setup` script **must** use `#!/usr/bin/env tsx` because:
+
 - It dynamically imports `.ts` config files at runtime
 - Node.js cannot import `.ts` files directly without a loader
 - `tsx` is a peerDependency for this reason
