@@ -24,20 +24,20 @@ export const loadSeedConfig = async ({
     ? configFileGlob
     : [configFileGlob];
 
-  // Try both .ts and .js extensions (prioritize .js for Node.js v24 ESM compatibility)
+  // Find .ts config file (TypeScript is required for type safety with SeedConfig/ViewConfig)
+  // Note: Node.js cannot import .ts files directly - requires NODE_OPTIONS='--import tsx'
   const configPath = findScriptConfigFile(
     configFileGlobArr.flatMap((pattern) => [
-      pattern.replace(/\.ts$/, '.js'), // Check .js first (Node.js v24 ESM compatibility)
-      pattern, // Then check original pattern
-      `${pattern}.js`,
-      `${pattern}.ts`,
+      pattern, // Primary: .ts file (e.g., 'config/db-setup.config.ts')
+      `${pattern}.ts`, // Fallback: add .ts if not present
     ]),
     projectRoot,
   );
 
   if (!configPath) {
     throw new Error(
-      'No config file found! Please create a db-setup.config.ts or db-setup.config.js file.',
+      'No config file found! Please create a db-setup.config.ts file. ' +
+        'Note: TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.',
     );
   }
 
@@ -52,12 +52,15 @@ export const loadSeedConfig = async ({
       error.code === 'ERR_UNKNOWN_FILE_EXTENSION'
     ) {
       console.error(chalk.red('\n❌ Error loading TypeScript config file.'));
-      console.error(chalk.yellow('Please either:'));
       console.error(
-        chalk.yellow('1. Use a .js extension for your config file'),
+        chalk.yellow(
+          'Node.js cannot import .ts files directly. Please run with: NODE_OPTIONS=\'--import tsx\' db-setup',
+        ),
       );
       console.error(
-        chalk.yellow('2. Run with tsx if you want to keep the .ts extension'),
+        chalk.yellow(
+          'TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.',
+        ),
       );
       process.exit(1);
     }
@@ -79,20 +82,20 @@ export const loadViewConfig = async ({
     ? configFileGlob
     : [configFileGlob];
 
-  // Try both .ts and .js extensions
+  // Find .ts config file (TypeScript is required for type safety with SeedConfig/ViewConfig)
+  // Note: Node.js cannot import .ts files directly - requires NODE_OPTIONS='--import tsx'
   const configPath = findScriptConfigFile(
     configFileGlobArr.flatMap((pattern) => [
-      pattern,
-      pattern.replace(/\.ts$/, '.js'),
-      `${pattern}.js`,
-      `${pattern}.ts`,
+      pattern, // Primary: .ts file (e.g., 'config/db-setup.config.ts')
+      `${pattern}.ts`, // Fallback: add .ts if not present
     ]),
     projectRoot,
   );
 
   if (!configPath) {
     throw new Error(
-      'No config file found! Please create a db-setup.config.ts or db-setup.config.js file.',
+      'No config file found! Please create a db-setup.config.ts file. ' +
+        'Note: TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.',
     );
   }
 
@@ -107,12 +110,15 @@ export const loadViewConfig = async ({
       error.code === 'ERR_UNKNOWN_FILE_EXTENSION'
     ) {
       console.error(chalk.red('\n❌ Error loading TypeScript config file.'));
-      console.error(chalk.yellow('Please either:'));
       console.error(
-        chalk.yellow('1. Use a .js extension for your config file'),
+        chalk.yellow(
+          'Node.js cannot import .ts files directly. Please run with: NODE_OPTIONS=\'--import tsx\' db-setup',
+        ),
       );
       console.error(
-        chalk.yellow('2. Run with tsx if you want to keep the .ts extension'),
+        chalk.yellow(
+          'TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.',
+        ),
       );
       process.exit(1);
     }
