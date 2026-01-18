@@ -153,6 +153,7 @@ _To be filled when migration is completed_
 ### Reference: @finografic-create Migration
 
 The `@finografic/create` package successfully uses tsdown with:
+
 - Single entry point
 - ESM format
 - Simple config structure

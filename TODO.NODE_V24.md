@@ -183,6 +183,7 @@ _To be filled when upgrade is completed_
 ### Recommended Strategy
 
 **Option A: Upgrade project-scripts to Node v24, keep monorepo on v22** ✅ RECOMMENDED
+
 - Build project-scripts with Node v24
 - Keep build target at `node18` or `node22`
 - Set `engines.node` to `">=22.17.1"`
@@ -191,6 +192,7 @@ _To be filled when upgrade is completed_
 - **Cons**: None significant
 
 **Option B: Upgrade everything to Node v24**
+
 - Upgrade both project-scripts and monorepo to Node v24
 - Update build target to `node24` if desired
 - Set `engines.node` to `">=24.0.0"`
