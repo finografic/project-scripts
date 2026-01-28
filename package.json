@@ -183,10 +183,10 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "eslint --fix",
-      "dprint fmt"
+      "dprint fmt --allow-no-files"
     ],
     "*.{json,jsonc,md,yml,yaml,toml}": [
-      "dprint fmt"
+      "dprint fmt --allow-no-files"
     ]
   },
   "simple-git-hooks": {
