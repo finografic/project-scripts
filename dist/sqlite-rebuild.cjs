@@ -1,0 +1,260 @@
+const require_chunk = require('./chunk-CbDLau6x.cjs');
+let chalk = require("chalk");
+chalk = require_chunk.__toESM(chalk);
+let child_process = require("child_process");
+let fs = require("fs");
+fs = require_chunk.__toESM(fs);
+let path = require("path");
+path = require_chunk.__toESM(path);
+
+//#region src/sqlite-rebuild/sqlite-rebuild.ts
+var SqliteRebuilder = class {
+	workspaceRoot;
+	options;
+	packages = [];
+	constructor(options = {}) {
+		this.options = {
+			force: false,
+			verbose: false,
+			targetVersion: "11.9.0",
+			cleanOnly: false,
+			includeMigration: false,
+			...options
+		};
+		this.workspaceRoot = this.findWorkspaceRoot();
+	}
+	findWorkspaceRoot() {
+		let currentDir = process.cwd();
+		while (currentDir !== path.dirname(currentDir)) {
+			if (fs.existsSync(path.join(currentDir, "pnpm-workspace.yaml"))) return currentDir;
+			currentDir = path.dirname(currentDir);
+		}
+		throw new Error("Could not find workspace root (pnpm-workspace.yaml)");
+	}
+	log(message, type = "info") {
+		const colors = {
+			info: chalk.default.blue,
+			success: chalk.default.green,
+			error: chalk.default.red,
+			warning: chalk.default.yellow
+		};
+		console.log(colors[type](`[SQLite Rebuilder] ${message}`));
+	}
+	logVerbose(message) {
+		if (this.options.verbose) console.log(chalk.default.gray(`[DEBUG] ${message}`));
+	}
+	async runCommand(command, cwd) {
+		this.logVerbose(`Running: ${command}${cwd ? ` in ${cwd}` : ""}`);
+		try {
+			return (0, child_process.execSync)(command, {
+				cwd: cwd || this.workspaceRoot,
+				encoding: "utf8",
+				stdio: this.options.verbose ? "inherit" : "pipe"
+			});
+		} catch (error) {
+			if (this.options.verbose) throw error;
+			throw new Error(`Command failed: ${command}\n${error.message}`);
+		}
+	}
+	async scanPackages() {
+		this.log("Scanning packages for better-sqlite3 dependencies...");
+		const packageDirs = [
+			this.workspaceRoot,
+			path.join(this.workspaceRoot, "apps", "client"),
+			path.join(this.workspaceRoot, "apps", "server"),
+			path.join(this.workspaceRoot, "packages", "core"),
+			path.join(this.workspaceRoot, "packages", "i18n")
+		];
+		for (const packageDir of packageDirs) {
+			if (!fs.existsSync(packageDir)) continue;
+			const packageJsonPath = path.join(packageDir, "package.json");
+			if (!fs.existsSync(packageJsonPath)) continue;
+			try {
+				const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+				const betterSqlite3Version = packageJson.dependencies?.["better-sqlite3"] || packageJson.devDependencies?.["better-sqlite3"];
+				this.packages.push({
+					name: packageJson.name || path.basename(packageDir),
+					version: packageJson.version || "unknown",
+					path: packageDir,
+					hasBetterSqlite3: !!betterSqlite3Version,
+					betterSqlite3Version
+				});
+			} catch {
+				this.log(`Failed to parse package.json in ${packageDir}`, "warning");
+			}
+		}
+		this.log(`Found ${this.packages.length} packages`);
+		this.packages.forEach((pkg) => {
+			if (pkg.hasBetterSqlite3) this.log(`  ${pkg.name}: better-sqlite3@${pkg.betterSqlite3Version}`, "info");
+		});
+	}
+	async checkVersionConsistency() {
+		this.log("Checking version consistency...");
+		const versions = this.packages.filter((pkg) => pkg.hasBetterSqlite3).map((pkg) => pkg.betterSqlite3Version);
+		const uniqueVersions = [...new Set(versions)];
+		if (uniqueVersions.length === 0) {
+			this.log("No better-sqlite3 dependencies found", "warning");
+			return true;
+		}
+		if (uniqueVersions.length === 1) {
+			this.log(`✅ All packages use the same version: ${uniqueVersions[0]}`, "success");
+			return true;
+		}
+		this.log("❌ Version mismatch detected:", "error");
+		uniqueVersions.forEach((version) => {
+			const packages = this.packages.filter((pkg) => pkg.betterSqlite3Version === version);
+			this.log(`  ${version}: ${packages.map((pkg) => pkg.name).join(", ")}`, "error");
+		});
+		return false;
+	}
+	async updateVersions() {
+		this.log(`Updating all packages to use better-sqlite3@${this.options.targetVersion}...`);
+		for (const pkg of this.packages) {
+			if (!pkg.hasBetterSqlite3) continue;
+			if (pkg.betterSqlite3Version === this.options.targetVersion) {
+				this.log(`  ${pkg.name}: Already using target version`, "info");
+				continue;
+			}
+			try {
+				const packageJsonPath = path.join(pkg.path, "package.json");
+				const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+				if (packageJson.dependencies?.["better-sqlite3"]) packageJson.dependencies["better-sqlite3"] = this.options.targetVersion;
+				if (packageJson.devDependencies?.["better-sqlite3"]) packageJson.devDependencies["better-sqlite3"] = this.options.targetVersion;
+				fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+				this.log(`  ✅ Updated ${pkg.name} to ${this.options.targetVersion}`, "success");
+			} catch (error) {
+				this.log(`  ❌ Failed to update ${pkg.name}: ${error}`, "error");
+			}
+		}
+	}
+	async cleanNodeModules() {
+		this.log("Cleaning node_modules directories...");
+		const nodeModulesDirs = [
+			path.join(this.workspaceRoot, "node_modules"),
+			path.join(this.workspaceRoot, "apps", "client", "node_modules"),
+			path.join(this.workspaceRoot, "apps", "server", "node_modules"),
+			path.join(this.workspaceRoot, "packages", "core", "node_modules"),
+			path.join(this.workspaceRoot, "packages", "i18n", "node_modules")
+		];
+		for (const dir of nodeModulesDirs) if (fs.existsSync(dir)) try {
+			fs.rmSync(dir, {
+				recursive: true,
+				force: true
+			});
+			this.log(`  ✅ Cleaned ${path.relative(this.workspaceRoot, dir)}`, "success");
+		} catch (error) {
+			this.log(`  ❌ Failed to clean ${dir}: ${error}`, "error");
+		}
+	}
+	async rebuildBetterSqlite3() {
+		this.log("Rebuilding better-sqlite3 native bindings...");
+		try {
+			await this.runCommand("pnpm rebuild better-sqlite3");
+			this.log("✅ Rebuild completed successfully", "success");
+		} catch {
+			this.log("❌ Rebuild failed, trying alternative approach...", "warning");
+			try {
+				const betterSqlite3Path = path.join(this.workspaceRoot, "node_modules", ".pnpm", `better-sqlite3@${this.options.targetVersion}`, "node_modules", "better-sqlite3");
+				if (fs.existsSync(betterSqlite3Path)) {
+					this.log("Attempting manual rebuild...", "info");
+					await this.runCommand("npm run build-release", betterSqlite3Path);
+					this.log("✅ Manual rebuild completed", "success");
+				} else throw new Error("Could not find better-sqlite3 package directory");
+			} catch (manualError) {
+				this.log("❌ Manual rebuild also failed", "error");
+				throw manualError;
+			}
+		}
+	}
+	async testBetterSqlite3() {
+		this.log("Testing better-sqlite3 functionality...");
+		try {
+			await this.runCommand(`node -e "
+        const Database = require('better-sqlite3');
+        const db = new Database(':memory:');
+        console.log('✅ better-sqlite3 is working!');
+        db.close();
+      "`);
+			this.log("✅ better-sqlite3 test passed", "success");
+			return true;
+		} catch {
+			this.log("❌ better-sqlite3 test failed", "error");
+			return false;
+		}
+	}
+	async runDatabaseMigration() {
+		if (!this.options.includeMigration) {
+			this.log("Skipping database migration test as --include-migration is not set.", "info");
+			return true;
+		}
+		this.log("Testing database migration...");
+		try {
+			const serverPath = path.join(this.workspaceRoot, "apps", "server");
+			if (!fs.existsSync(serverPath)) {
+				this.log("Server directory not found, skipping migration test", "warning");
+				return true;
+			}
+			const migrationScript = path.join(serverPath, "src", "db", "utils", "migrate.ts");
+			if (!fs.existsSync(migrationScript)) {
+				this.log("Migration script not found, skipping migration test", "warning");
+				return true;
+			}
+			await this.runCommand("pnpm db.migrations.run", serverPath);
+			this.log("✅ Database migration test passed", "success");
+			return true;
+		} catch {
+			this.log("❌ Database migration test failed", "error");
+			this.log("This is often due to missing environment variables or database configuration", "warning");
+			this.log("The basic better-sqlite3 functionality should still work", "info");
+			return false;
+		}
+	}
+	async rebuild() {
+		this.log("🚀 Starting better-sqlite3 rebuild process...", "info");
+		try {
+			await this.scanPackages();
+			const isConsistent = await this.checkVersionConsistency();
+			if (!isConsistent && !this.options.force) {
+				this.log("Version inconsistency detected. Use --force to proceed anyway.", "warning");
+				return;
+			}
+			if (!isConsistent) await this.updateVersions();
+			await this.cleanNodeModules();
+			if (this.options.cleanOnly) {
+				this.log("Clean-only mode: skipping rebuild", "info");
+				return;
+			}
+			this.log("Reinstalling dependencies...");
+			await this.runCommand("pnpm install");
+			await this.rebuildBetterSqlite3();
+			if (!await this.testBetterSqlite3()) throw new Error("better-sqlite3 test failed after rebuild");
+			if (!await this.runDatabaseMigration()) this.log("Database migration test failed, but basic functionality works", "warning");
+			this.log("🎉 better-sqlite3 rebuild completed successfully!", "success");
+		} catch (error) {
+			this.log(`❌ Rebuild failed: ${error}`, "error");
+			throw error;
+		}
+	}
+};
+async function main() {
+	const args = process.argv.slice(2);
+	const options = {
+		force: args.includes("--force") || args.includes("-f"),
+		verbose: args.includes("--verbose") || args.includes("-v"),
+		cleanOnly: args.includes("--clean-only") || args.includes("-c"),
+		includeMigration: args.includes("--include-migration") || args.includes("-m")
+	};
+	const versionIndex = args.indexOf("--version");
+	if (versionIndex !== -1 && args[versionIndex + 1]) options.targetVersion = args[versionIndex + 1];
+	const rebuilder = new SqliteRebuilder(options);
+	try {
+		await rebuilder.rebuild();
+	} catch (error) {
+		console.error(chalk.default.red(`\n❌ Rebuild failed: ${error}`));
+		process.exit(1);
+	}
+}
+if (require("url").pathToFileURL(__filename).href === `file://${process.argv[1]}`) main();
+
+//#endregion
+exports.SqliteRebuilder = SqliteRebuilder;

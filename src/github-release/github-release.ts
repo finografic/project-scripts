@@ -1,20 +1,24 @@
 import { log } from 'utils/log.utils';
 import { verifyGit } from './verify-git';
+import { verifyWorkspace } from './verify-workspace';
 
 type ReleaseType = 'patch' | 'minor' | 'major';
 
-export async function runRelease(argv: string[]): Promise<void> {
+/**
+ * Entry point for the github-release CLI.
+ */
+export async function githubRelease(argv: string[]): Promise<void> {
   try {
     const releaseType = parseReleaseType(argv);
 
-    log.header(`finografic release (${releaseType})`);
+    log.header(`github release (${releaseType})`);
 
+    await verifyWorkspace();
     await verifyGit();
 
-    log.info('git verification passed');
     log.info('release flow not yet complete');
 
-    // next steps (coming soon):
+    // next:
     // await bumpVersion(releaseType);
     // await pushTags();
   } catch (error) {
@@ -23,17 +27,15 @@ export async function runRelease(argv: string[]): Promise<void> {
 }
 
 /* -------------------------------------------------------------------------- */
-/* helpers                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function parseReleaseType(argv: string[]): ReleaseType {
   const [, , type] = argv;
 
   if (type !== 'patch' && type !== 'minor' && type !== 'major') {
     throw new Error(
-      'invalid release type\n' +
-        '→ expected one of: patch | minor | major\n' +
-        '→ example: finografic-release patch',
+      'invalid release type\n'
+        + '→ expected one of: patch | minor | major\n'
+        + '→ example: github-release patch',
     );
   }
 

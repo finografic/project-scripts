@@ -15,12 +15,14 @@
 # testing
 /coverage
 
+# NOTE: DO NOT IGNORE BUILDS FOR THIS REPO project-scripts
+
 # production
-/build
-**/build
-/dist
-**/dist
-/bin
+# /build
+# **/build
+# /dist
+# **/dist
+# /bin
 
 # IDE
 .cursor

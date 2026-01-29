@@ -2,7 +2,7 @@
   "name": "@finografic/project-scripts",
   "type": "module",
   "version": "9.0.0",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264",
   "engines": {
     "node": ">=22.17.1"
   },
@@ -48,46 +48,57 @@
     "dist",
     "src/build-deployment/templates"
   ],
+  "bin": {
+    "clean-docs": "bin/clean-docs.mjs",
+    "db-setup": "bin/db-setup.mjs",
+    "purge-builds": "bin/purge-builds.mjs",
+    "sqlite-rebuild": "bin/sqlite-rebuild.mjs",
+    "build-deployment": "bin/build-deployment.mjs",
+    "github-release": "./bin/github-release.mjs"
+  },
   "exports": {
+    ".": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.mjs",
+      "require": "./dist/utils.cjs"
+    },
     "./clean-docs": {
-      "types": "./dist/clean-docs/index.d.ts",
-      "import": "./dist/clean-docs/index.js",
-      "require": "./dist/clean-docs/index.cjs"
+      "types": "./dist/clean-docs.d.ts",
+      "import": "./dist/clean-docs.mjs",
+      "require": "./dist/clean-docs.cjs"
     },
     "./db-setup": {
-      "types": "./dist/db-setup/index.d.ts",
-      "import": "./dist/db-setup/index.js",
-      "require": "./dist/db-setup/index.cjs"
+      "types": "./dist/db-setup.d.ts",
+      "import": "./dist/db-setup.mjs",
+      "require": "./dist/db-setup.cjs"
+    },
+    "./db-setup/config.template": {
+      "types": "./dist/db-setup/config.template.d.ts",
+      "import": "./dist/db-setup/config.template.mjs",
+      "require": "./dist/db-setup/config.template.cjs"
     },
     "./purge-builds": {
-      "types": "./dist/purge-builds/src/purge-builds/index.d.ts",
-      "import": "./dist/purge-builds/src/purge-builds/index.js",
-      "require": "./dist/purge-builds/src/purge-builds/index.cjs"
+      "types": "./dist/purge-builds.d.ts",
+      "import": "./dist/purge-builds.mjs",
+      "require": "./dist/purge-builds.cjs"
     },
     "./sqlite-rebuild": {
-      "types": "./dist/sqlite-rebuild/index.d.ts",
-      "import": "./dist/sqlite-rebuild/index.js",
-      "require": "./dist/sqlite-rebuild/index.cjs"
-    },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js",
-      "require": "./dist/utils/index.cjs"
+      "types": "./dist/sqlite-rebuild.d.ts",
+      "import": "./dist/sqlite-rebuild.mjs",
+      "require": "./dist/sqlite-rebuild.cjs"
     },
     "./build-deployment": {
-      "types": "./dist/build-deployment/index.d.ts",
-      "import": "./dist/build-deployment/index.js",
-      "require": "./dist/build-deployment/index.cjs"
-    }
+      "types": "./dist/build-deployment.d.ts",
+      "import": "./dist/build-deployment.mjs",
+      "require": "./dist/build-deployment.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "========== DEV": "=======================================================",
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
     "·········· BUILD": "·····················································",
-    "build": "tsup",
-    "watch": "tsup --format esm,cjs --watch",
-    "build.V2": "tsc && tsx ./scripts/build-bin.ts",
-    "build.v1": "tsup --format esm,cjs --clean --dts",
+    "build": "tsdown",
     "·········· TESTING": "···················································",
     "test": "vitest",
     "test.run": "vitest run",
@@ -104,10 +115,11 @@
     "format": "dprint fmt --diff",
     "format.check": "dprint check",
     "·········· PUBLISH.GITHUB": "············································",
-    "release.github.patch": "pnpm run release.check && pnpm version patch && git push --follow-tags",
-    "release.github.minor": "pnpm run release.check && pnpm version minor && git push --follow-tags",
-    "release.github.major": "pnpm run release.check && pnpm version major && git push --follow-tags",
-    "release.check": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
+    "release.github.patch": "pnpm run build && pnpm run release.check && pnpm version patch && git push --follow-tags",
+    "release.github.minor": "pnpm run build && pnpm run release.check && pnpm version minor && git push --follow-tags",
+    "release.github.major": "pnpm run build && pnpm run release.check && pnpm version major && git push --follow-tags",
+    "release.check": "pnpm lint && pnpm typecheck && pnpm test.run",
+    "release.check.fix": "pnpm lint.fix && pnpm typecheck && pnpm test.run",
     "release.publish": "pnpm publish --registry https://npm.pkg.github.com",
     "·········· REGISTRIES": "··············································",
     "view.registry.github": "pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
@@ -134,47 +146,42 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@dotenvx/dotenvx": "1.51.0",
     "@eslint/js": "^9.39.2",
     "@finografic/dprint-config": "0.9.1",
     "@finografic/eslint-config": "9.18.4",
     "@stylistic/eslint-plugin": "^5.6.1",
-    "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.0.0",
-    "@types/prompts": "^2.4.9",
     "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
-    "dotenv": "^17.2.2",
-    "env-cmd": "^11.0.0",
     "eslint": "^9.39.2",
     "eslint-plugin-jsonc": "^2.20.1",
     "eslint-plugin-markdownlint": "^0.9.0",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.4.0",
     "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
-    "tsdown": "^0.18.3",
-    "tsup": "8.5.0",
+    "tsdown": "0.20.1",
+    "tsup": "^8.5.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.51.0",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^4.0.16"
   },
-  "bin": {
-    "clean-docs": "bin/clean-docs.js",
-    "db-setup": "bin/db-setup.js",
-    "purge-builds": "bin/purge-builds.js",
-    "sqlite-rebuild": "bin/sqlite-rebuild.js",
-    "build-deployment": "bin/build-deployment.js"
-  },
   "peerDependencies": {
-    "jsonc-eslint-parser": "^2.4.0",
     "tsx": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tsx": {
+      "optional": false
+    }
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "dprint",
       "esbuild",
       "simple-git-hooks",
       "unrs-resolver"
@@ -182,8 +189,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
-      "eslint --fix",
-      "dprint fmt --allow-no-files"
+      "dprint fmt --allow-no-files",
+      "eslint --fix"
     ],
     "*.{json,jsonc,md,yml,yaml,toml}": [
       "dprint fmt --allow-no-files"

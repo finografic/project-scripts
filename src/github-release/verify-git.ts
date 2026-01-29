@@ -1,6 +1,6 @@
 import { exec } from 'utils/cli.utils';
 import { log } from 'utils/log.utils';
-import { DEFAULT_RELEASE_BRANCH } from './defaults.constants';
+import { DEFAULT_RELEASE_BRANCH } from './github-release.constants';
 
 export async function verifyGit(): Promise<void> {
   log.step('verifying git state');
@@ -43,8 +43,8 @@ async function assertNotDetachedHead(): Promise<void> {
     await exec('git symbolic-ref --quiet HEAD');
   } catch {
     throw new Error(
-      'detached HEAD detected\n' +
-        '→ checkout a branch before running a release',
+      'detached HEAD detected\n'
+        + '→ checkout a branch before running a release',
     );
   }
 }
@@ -54,8 +54,8 @@ async function assertCleanWorkingTree(): Promise<void> {
 
   if (stdout.trim().length > 0) {
     throw new Error(
-      'working tree is not clean\n' +
-        '→ commit or stash your changes before releasing',
+      'working tree is not clean\n'
+        + '→ commit or stash your changes before releasing',
     );
   }
 }
@@ -66,8 +66,8 @@ async function assertOnReleaseBranch(): Promise<void> {
 
   if (branch !== DEFAULT_RELEASE_BRANCH) {
     throw new Error(
-      `not on release branch (${DEFAULT_RELEASE_BRANCH})\n` +
-        `→ current branch: ${branch}`,
+      `not on release branch (${DEFAULT_RELEASE_BRANCH})\n`
+        + `→ current branch: ${branch}`,
     );
   }
 }
@@ -77,8 +77,8 @@ async function assertUpstreamExists(): Promise<void> {
     await exec('git rev-parse --abbrev-ref --symbolic-full-name @{u}');
   } catch {
     throw new Error(
-      'no upstream branch configured\n' +
-        '→ run: git push --set-upstream origin <branch>',
+      'no upstream branch configured\n'
+        + '→ run: git push --set-upstream origin <branch>',
     );
   }
 }
@@ -93,8 +93,8 @@ async function assertNoUnpushedCommits(): Promise<void> {
 
   if (count > 0) {
     throw new Error(
-      'unpushed commits detected\n' +
-        '→ run: git push',
+      'unpushed commits detected\n'
+        + '→ run: git push',
     );
   }
 }
