@@ -1,7 +1,7 @@
 {
   "name": "@finografic/project-scripts",
   "type": "module",
-  "version": "9.2.0",
+  "version": "9.2.1",
   "engines": {
     "node": ">=22.17.1"
   },
