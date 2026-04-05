@@ -94,7 +94,9 @@ export default defineConfig([
         },
       ],
 
-      '@stylistic/indent': ['warn', 2, { SwitchCase: 1, ignoredNodes: ['ConditionalExpression'] }],
+      // Indentation is enforced by oxfmt (see lint-staged: oxfmt then eslint). @stylistic/indent
+      // fights the formatter on nested ternaries / arrow callbacks despite ignoredNodes tuning.
+      '@stylistic/indent': 'off',
       '@stylistic/operator-linebreak': [
         'warn',
         'after',

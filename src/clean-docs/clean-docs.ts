@@ -74,13 +74,13 @@ export async function clean({ dryRun = false, verbose = false }: CleanOptions = 
         dot: true,
         onProgress: verbose
           ? (progress: DeleteProgress) => {
-            const { deletedCount, totalCount, percent } = progress;
-            console.log(
-              chalk[dryRun ? 'gray' : 'magenta'](
-                `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
-              ),
-            );
-          }
+              const { deletedCount, totalCount, percent } = progress;
+              console.log(
+                chalk[dryRun ? 'gray' : 'magenta'](
+                  `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
+                ),
+              );
+            }
           : undefined,
         ignore: GLOB_DELETE_EXCLUDE.map((p) => path.join(baseDir, p).replace(/\\/g, '/')),
       });

@@ -3,19 +3,23 @@
 
   "editor.formatOnSave": true,
 
+  // Match lint-staged (*.{ts,tsx,...}: oxfmt then eslint --fix): default formatter runs first,
+  // then ESLint fixes. Do not rely on ESLint for indentation — oxfmt owns layout.
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "always"
   },
-  "eslint.format.enable": true,
 
+  "eslint.format.enable": true,
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.validate": ["javascript", "typescript", "css", "markdown"],
   "oxc.typeAware": true,
+
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSaveMode": "file",
 
   "prettier.enable": false,
+
   "typescript.tsdk": "node_modules/typescript/lib",
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
