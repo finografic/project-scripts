@@ -17,13 +17,12 @@ export const loadSeedConfig = async ({
   const projectRoot = findProjectRoot();
   const configFileGlobArr = Array.isArray(configFileGlob) ? configFileGlob : [configFileGlob];
 
-  // Find .ts config file (TypeScript is required for type safety with SeedConfig/ViewConfig)
-  // Note: Node.js cannot import .ts files directly - requires NODE_OPTIONS='--import tsx'
+  /**
+   * Find the db-setup `.ts` config (typed SeedConfig / ViewConfig).
+   * Tries each glob as given, then `${pattern}.ts`. Runtime `.ts` import needs `NODE_OPTIONS='--import tsx'`.
+   */
   const configPath = findScriptConfigFile(
-    configFileGlobArr.flatMap((pattern) => [
-      pattern, // Primary: .ts file (e.g., 'config/db-setup.config.ts')
-      `${pattern}.ts`, // Fallback: add .ts if not present
-    ]),
+    configFileGlobArr.flatMap((pattern) => [pattern, `${pattern}.ts`]),
     projectRoot,
   );
 
@@ -68,13 +67,12 @@ export const loadViewConfig = async ({
   const projectRoot = findProjectRoot();
   const configFileGlobArr = Array.isArray(configFileGlob) ? configFileGlob : [configFileGlob];
 
-  // Find .ts config file (TypeScript is required for type safety with SeedConfig/ViewConfig)
-  // Note: Node.js cannot import .ts files directly - requires NODE_OPTIONS='--import tsx'
+  /**
+   * Find the db-setup `.ts` config (typed SeedConfig / ViewConfig).
+   * Tries each glob as given, then `${pattern}.ts`. Runtime `.ts` import needs `NODE_OPTIONS='--import tsx'`.
+   */
   const configPath = findScriptConfigFile(
-    configFileGlobArr.flatMap((pattern) => [
-      pattern, // Primary: .ts file (e.g., 'config/db-setup.config.ts')
-      `${pattern}.ts`, // Fallback: add .ts if not present
-    ]),
+    configFileGlobArr.flatMap((pattern) => [pattern, `${pattern}.ts`]),
     projectRoot,
   );
 
@@ -111,11 +109,9 @@ export const loadViewConfig = async ({
   }
 };
 
-// Helper to get all available schemas
 export const getAllSchemas = ({ seedConfigs }: { seedConfigs: SeedConfig[] }) =>
   seedConfigs.map((config) => config.name);
 
-// Helper to validate dependencies
 export const validateDependencies = ({
   seedConfigs,
   selectedSchemas,
@@ -138,7 +134,8 @@ export const validateDependencies = ({
   return missing;
 };
 
-// Helper to sort schemas based on dependencies
+// ─── SORT SCHEMAS BASED ON DEPENDENCIES ──────────────────────────────────────
+
 export const getSortedSchemas = ({
   seedConfigs,
   selectedSchemas,
@@ -177,7 +174,8 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
     process.exit(1);
   }
 
-  // Get available schemas from config
+  // ─── GET AVAILABLE SCHEMAS ────────────────────────────────────────────────────
+
   const schemas = getAllSchemas({ seedConfigs }).filter((schema) => !SCHEMAS_BLOCKLIST.includes(schema));
 
   if (schemas.length === 0) {
@@ -194,7 +192,8 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
     })),
   });
 
-  // Validate dependencies
+  // ─── VALIDATE DEPENDENCIES ────────────────────────────────────────────────────
+
   const missingDeps = validateDependencies({ seedConfigs, selectedSchemas });
   if (missingDeps.length > 0) {
     console.error(pc.red('\n❌ Missing dependencies:'));
@@ -204,6 +203,5 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
     process.exit(1);
   }
 
-  // Sort based on dependencies
   return getSortedSchemas({ seedConfigs, selectedSchemas });
 };

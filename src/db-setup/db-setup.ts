@@ -2,20 +2,15 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-// import { config } from "@dotenvx/dotenvx";
 import { checkbox } from '@inquirer/prompts';
 
 import { pc } from 'utils/picocolors';
 import { PATH_FOLDER_ENV } from './schemas.config';
 import { getSchemaSelection, loadSeedConfig, loadViewConfig } from './schemas.utils';
 
-// Add autoConfirm flag for -y/--yes
 const autoConfirm = process.argv.includes('-y') || process.argv.includes('--yes');
 
 console.log('--- [db-setup] Script started ---');
-
-// ======================================================================== //
-// NOTE: LOAD ENV CONFIG
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 console.log('[db-setup] NODE_ENV:', nodeEnv);
@@ -24,6 +19,8 @@ if (!['development', 'test', 'production'].includes(nodeEnv)) {
   console.warn(pc.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
 }
 
+// ─── LOAD ENV CONFIG ────────────────────────────────────────────────────────────
+
 const envPath = path.resolve(process.cwd(), `${PATH_FOLDER_ENV}/.env.${nodeEnv}`);
 console.log('[db-setup] Looking for env file at:', envPath);
 if (!fs.existsSync(envPath)) {
@@ -31,7 +28,6 @@ if (!fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-// Load environment variables manually to avoid ESM issues with @dotenvx/dotenvx
 const envContent = fs.readFileSync(envPath, 'utf8');
 const envVars = envContent.split('\n').reduce(
   (acc, line) => {
@@ -54,8 +50,7 @@ Object.entries(envVars).forEach(([key, value]) => {
 
 console.log('[db-setup] Loaded env config');
 
-// ======================================================================== //
-// NOTE: CHOICES - EXECUTION METHODS
+// ─── GENERATE MIGRATIONS FUNCTION ────────────────────────────────────────────
 
 async function generateMigrations() {
   console.log('[db-setup] Running generateMigrations...');
@@ -91,8 +86,7 @@ async function seedData(schemas: string[]) {
   }
 }
 
-// ======================================================================== //
-// NOTE: CREATE VIEWS FUNCTION
+// ─── CREATE VIEWS FUNCTION ────────────────────────────────────────────────────
 
 async function createViews() {
   try {
@@ -123,8 +117,7 @@ async function createViews() {
   }
 }
 
-// ======================================================================== //
-// NOTE: MAIN FUNCTION
+// ─── MAIN FUNCTION ────────────────────────────────────────────────────────────
 
 export async function main() {
   try {
