@@ -15,6 +15,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
 - [README Standards](/.github/instructions/08-readme-standards.instructions.md)
 - [Picocolors CLI styling](/.github/instructions/09-picocolors-cli-styling.instructions.md)
+- [Git Policy](/.github/instructions/10-git-policy.instructions.md)
 
 ## Rules - Project-Specific
 
@@ -29,22 +30,21 @@ Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 - Padded pipes: one space on each side of every `|`, including the separator row.
 - Align column widths so all cells in the same column are equal width.
 
-## Commit Message Policy (LLAAB)
+## Git Policy
 
 - IMPORTANT: NEVER include `Co-Authored-By` lines in commit messages. Not ever, not for any reason.
-
-Use this format for all commits unless the user says otherwise.
-
-- Subject: conventional commit style, e.g. `chore(scope): short action`. Allowed **types** are enforced by `commitlint.config.mjs` (see `docs/process/DEVELOPER_WORKFLOW.md`); use **scopes** such as `agents`, `skills`, or package names for area.
-- Body: terse bullets points; prioritize brevity over grammar.
-- Verification section is allowed, but keep each line short, e.g. `- workspace typecheck OK`.
-- Preserve real newlines in commit bodies; never use escaped `\\n` literals.
-- Prefer writing commit messages via `git commit -F <message-file>` for multiline safety.
+- [Git — Commits](/.github/instructions/10-git-policy.instructions.md#commits)
+- [Git — Releases](/.github/instructions/10-git-policy.instructions.md#releases)
 
 ## Learned User Preferences
 
 - For personal or ecosystem-only repos, keep contributor workflow in `docs/process/`; add a root `CONTRIBUTING.md` mainly when a public repo needs GitHub’s usual discoverability.
+- In `AGENTS.md` `## Git Policy` sections: place IMPORTANT hard-stop bullets first, then anchored links (e.g. `#commits`, `#releases`). The `## Rules - General` section lists only bare file links.
 
 ## Learned Workspace Facts
 
 - Commitlint rule severity is numeric only (`0` / `1` / `2`); the string `error` is not valid in rule configuration.
+- `bin/` and `dist/` are committed (not gitignored); the published tarball is built at publish time via `prepack`, not at consumer install time.
+- oxfmt is the TypeScript formatter; `@stylistic/indent` is disabled for TypeScript files so oxfmt is the sole indentation authority.
+- `src/clean` is deprecated; `src/purge-builds` is the current canonical build-artifact cleanup utility.
+- The git instructions file is `10-git-policy.instructions.md` with `## Commits` and `## Releases` sub-sections.
