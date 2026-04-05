@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.1.0",
   "engines": {
-    "node": ">=22.17.1"
+    "node": ">=24.3.0"
   },
   "description": "Fingorafic Project Scripts",
   "homepage": "https://github.com/finografic/project-scripts",
@@ -161,17 +161,15 @@
     "@typescript-eslint/parser": "^8.51.0",
     "dprint": "^0.53.2",
     "eslint": "^9.39.2",
-    "eslint-plugin-jsonc": "^2.20.1",
     "eslint-plugin-markdownlint": "^0.9.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "globals": "^16.4.0",
+    "globals": "^17.3.0",
     "lint-staged": "^16.2.7",
     "simple-git-hooks": "^2.13.1",
-    "tsdown": "0.20.1",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.2",
+    "tsdown": "0.20.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "tsx": "^4.0.0"
