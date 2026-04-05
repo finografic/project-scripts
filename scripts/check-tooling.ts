@@ -25,8 +25,8 @@ const nodeMajor = Number(process.versions.node.split('.')[0]);
 
 if (nodeMajor !== 22 && nodeMajor !== 24) {
   fail(
-    `Unsupported Node.js version ${process.versions.node}\n`
-      + 'Expected Node 22 or 24',
+    `Unsupported Node.js version ${process.versions.node}\n` +
+      'Expected Node 22 or 24',
   );
 }
 
@@ -38,11 +38,11 @@ const pnpmPath = run('which pnpm');
 
 if (!pnpmPath.includes('node')) {
   fail(
-    'pnpm does not appear to be managed by Corepack.\n'
-      + `Found pnpm at: ${pnpmPath}\n\n`
-      + 'Fix:\n'
-      + '  corepack enable\n'
-      + '  corepack prepare pnpm@10.28.1 --activate',
+    'pnpm does not appear to be managed by Corepack.\n' +
+      `Found pnpm at: ${pnpmPath}\n\n` +
+      'Fix:\n' +
+      '  corepack enable\n' +
+      '  corepack prepare pnpm@10.28.1 --activate',
   );
 }
 
@@ -61,11 +61,11 @@ const actualVersion = run('pnpm --version');
 
 if (actualVersion !== expectedVersion) {
   fail(
-    'pnpm version mismatch\n\n'
-      + `Expected: ${expectedVersion}\n`
-      + `Found:    ${actualVersion}\n\n`
-      + 'Fix:\n'
-      + `  corepack prepare pnpm@${expectedVersion} --activate`,
+    'pnpm version mismatch\n\n' +
+      `Expected: ${expectedVersion}\n` +
+      `Found:    ${actualVersion}\n\n` +
+      'Fix:\n' +
+      `  corepack prepare pnpm@${expectedVersion} --activate`,
   );
 }
 

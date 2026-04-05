@@ -24,8 +24,8 @@ async function assertRequiredArtifactsExist(): Promise<void> {
     );
   } catch {
     throw new Error(
-      'required build artifacts are missing\n'
-        + '→ run the build before releasing',
+      'required build artifacts are missing\n' +
+        '→ run the build before releasing',
     );
   }
 }

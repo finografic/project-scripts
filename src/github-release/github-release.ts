@@ -33,9 +33,9 @@ function parseReleaseType(argv: string[]): ReleaseType {
 
   if (type !== 'patch' && type !== 'minor' && type !== 'major') {
     throw new Error(
-      'invalid release type\n'
-        + '→ expected one of: patch | minor | major\n'
-        + '→ example: github-release patch',
+      'invalid release type\n' +
+        '→ expected one of: patch | minor | major\n' +
+        '→ example: github-release patch',
     );
   }
 
