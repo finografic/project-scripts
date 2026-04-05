@@ -13,6 +13,7 @@ export default defineConfig([
       'purge-builds': 'src/purge-builds/src/purge-builds/index.ts',
       'build-deployment': 'src/build-deployment/cli.ts',
       'github-release': 'src/github-release/github-release.ts',
+      'audit-script-separators': 'src/audit-script-separators/index.ts',
     },
 
     outDir: 'bin',
@@ -56,6 +57,7 @@ export default defineConfig([
       'sqlite-rebuild': 'src/sqlite-rebuild/index.ts',
       utils: 'src/utils/index.ts',
       'build-deployment': 'src/build-deployment/index.ts',
+      'audit-script-separators': 'src/audit-script-separators/audit-script-separators.ts',
     },
 
     outDir: 'dist',

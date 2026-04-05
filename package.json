@@ -53,7 +53,8 @@
     "purge-builds": "bin/purge-builds.mjs",
     "sqlite-rebuild": "bin/sqlite-rebuild.mjs",
     "build-deployment": "bin/build-deployment.mjs",
-    "github-release": "./bin/github-release.mjs"
+    "github-release": "./bin/github-release.mjs",
+    "audit-script-separators": "./bin/audit-script-separators.mjs"
   },
   "exports": {
     ".": {
@@ -83,6 +84,10 @@
     "./build-deployment": {
       "types": "./dist/build-deployment.d.mts",
       "import": "./dist/build-deployment.mjs"
+    },
+    "./audit-script-separators": {
+      "types": "./dist/audit-script-separators.d.mts",
+      "import": "./dist/audit-script-separators.mjs"
     },
     "./package.json": "./package.json"
   },
