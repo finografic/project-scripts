@@ -1,8 +1,8 @@
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import type { BuildDeploymentConfig } from './types';
 
 import { findProjectRoot } from '../../utils/project.utils.js';
-import type { BuildDeploymentConfig } from './types';
 
 // Get the current file's directory and resolve workspace root
 const __filename = fileURLToPath(import.meta.url);

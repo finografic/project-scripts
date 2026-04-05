@@ -55,18 +55,18 @@ buildProduction();
 
 // Or with custom configuration
 const config: BuildDeploymentConfig = {
-  appName: "My App",
-  appDescription: "My Awesome App",
-  version: "1.0.0",
+  appName: 'My App',
+  appDescription: 'My Awesome App',
+  version: '1.0.0',
   packageNames: {
-    client: "@workspace/client",
-    server: "@workspace/server"
+    client: '@workspace/client',
+    server: '@workspace/server',
   },
   paths: {
-    client: "apps/client",
-    server: "apps/server",
-    data: "data",
-    output: "deployment"
+    client: 'apps/client',
+    server: 'apps/server',
+    data: 'data',
+    output: 'deployment',
   },
   // ... other configuration options
 };
@@ -80,14 +80,14 @@ The build system is highly configurable to support different monorepo structures
 
 ### Build Options
 
-| Option | CLI Flag | Description | Default |
-|--------|----------|-------------|---------|
-| Platform | \`--platform\`, \`-p\` | Target platform (windows\|linux\|macos\|universal) | universal |
-| Architecture | \`--arch\`, \`-a\` | Target architecture (x64\|arm64\|universal) | universal |
-| Include Node.js | \`--include-node\`, \`-n\` | Include Node.js runtime | false |
-| Standalone | \`--standalone\`, \`-s\` | Create standalone package | false |
-| Zip | \`--zip\`, \`-z\` | Create zip archive | false |
-| Output Directory | \`--output-dir\`, \`-o\` | Output directory for zip | workspace root |
+| Option           | CLI Flag                   | Description                                        | Default        |
+| ---------------- | -------------------------- | -------------------------------------------------- | -------------- |
+| Platform         | \`--platform\`, \`-p\`     | Target platform (windows\|linux\|macos\|universal) | universal      |
+| Architecture     | \`--arch\`, \`-a\`         | Target architecture (x64\|arm64\|universal)        | universal      |
+| Include Node.js  | \`--include-node\`, \`-n\` | Include Node.js runtime                            | false          |
+| Standalone       | \`--standalone\`, \`-s\`   | Create standalone package                          | false          |
+| Zip              | \`--zip\`, \`-z\`          | Create zip archive                                 | false          |
+| Output Directory | \`--output-dir\`, \`-o\`   | Output directory for zip                           | workspace root |
 
 ### Configuration File
 
@@ -97,58 +97,58 @@ Create a \`build-deployment.config.ts\` file:
 import type { BuildDeploymentConfig } from '@finografic/project-scripts/build-deployment';
 
 export const config: BuildDeploymentConfig = {
-  appName: "My App",
-  appDescription: "My Awesome App",
-  version: "1.0.0",
+  appName: 'My App',
+  appDescription: 'My Awesome App',
+  version: '1.0.0',
 
   // Package Names (for pnpm --filter)
   packageNames: {
-    client: "@workspace/client",
-    server: "@workspace/server"
+    client: '@workspace/client',
+    server: '@workspace/server',
   },
 
   // Directory Structure
   paths: {
-    client: "apps/client",
-    server: "apps/server",
-    data: "data",
-    output: "deployment"
+    client: 'apps/client',
+    server: 'apps/server',
+    data: 'data',
+    output: 'deployment',
   },
 
   // Server Configuration
   ports: {
     client: 3000,
-    server: 4040
+    server: 4040,
   },
 
   // Build Commands
   buildCommands: {
-    client: "build.production",
-    server: "build.production"
+    client: 'build.production',
+    server: 'build.production',
   },
 
   // Environment Variables
   env: {
     production: {
-      NODE_ENV: "production",
-      API_PORT: "4040",
+      NODE_ENV: 'production',
+      API_PORT: '4040',
       // ... other env vars
-    }
+    },
   },
 
   // Database Configuration
   database: {
-    type: "sqlite",
-    development: "development.sqlite.db",
-    production: "production.sqlite.db"
+    type: 'sqlite',
+    development: 'development.sqlite.db',
+    production: 'production.sqlite.db',
   },
 
   // Build Options
   options: {
     includeNode: false,
     standalone: false,
-    zip: true
-  }
+    zip: true,
+  },
 };
 ```
 

@@ -1,11 +1,9 @@
-import { checkbox, confirm, select } from '@inquirer/prompts';
-import chalk from 'chalk';
 import { execSync } from 'child_process';
 import { rm } from 'fs/promises';
 import { join, resolve } from 'path';
+import { checkbox, confirm, select } from '@inquirer/prompts';
+import chalk from 'chalk';
 
-import { defaultConfig } from './config/default.config.js';
-import type { BuildDeploymentConfig } from './config/types';
 import {
   buildApp,
   createPackageJson,
@@ -34,11 +32,9 @@ import {
   loadTemplate,
   loadUserGuideTemplate,
 } from './utils/template.utils.js';
-import {
-  deploymentOptions,
-  getDefaultPlatform,
-  platformConfigs,
-} from './platforms.config.js';
+import { defaultConfig } from './config/default.config.js';
+import type { BuildDeploymentConfig } from './config/types';
+import { deploymentOptions, getDefaultPlatform, platformConfigs } from './platforms.config.js';
 
 /**
  * Generate and deploy the build agent script
@@ -318,12 +314,10 @@ executeBuild();
 }
 
 // Add auto-confirm flag for -y/--yes
-const autoConfirm =
-  process.argv.includes('-y') || process.argv.includes('--yes');
+const autoConfirm = process.argv.includes('-y') || process.argv.includes('--yes');
 
 // Add emergency restoration flag
-const emergencyRestore =
-  process.argv.includes('--restore') || process.argv.includes('-r');
+const emergencyRestore = process.argv.includes('--restore') || process.argv.includes('-r');
 
 interface BuildOptions {
   platform?: 'windows' | 'linux' | 'macos' | 'universal';
@@ -340,14 +334,8 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   if (autoConfirm) {
     const defaultPlatform = getDefaultPlatform();
-    const defaultConfig = platformConfigs.find(
-      (config) => config.value === defaultPlatform,
-    );
-    console.log(
-      chalk.yellow(
-        `📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`,
-      ),
-    );
+    const defaultConfig = platformConfigs.find((config) => config.value === defaultPlatform);
+    console.log(chalk.yellow(`📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`));
 
     return {
       platform: defaultConfig?.platform || 'macos',
@@ -368,9 +356,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
     default: getDefaultPlatform(),
   });
 
-  const platformConfig = platformConfigs.find(
-    (config) => config.value === selectedPlatform,
-  );
+  const platformConfig = platformConfigs.find((config) => config.value === selectedPlatform);
   if (!platformConfig) {
     throw new Error(`Invalid platform selection: ${selectedPlatform}`);
   }
@@ -412,11 +398,7 @@ function parseArguments(): BuildOptions {
     switch (arg) {
       case '--platform':
       case '-p':
-        options.platform = args[++i] as
-          | 'windows'
-          | 'linux'
-          | 'macos'
-          | 'universal';
+        options.platform = args[++i] as 'windows' | 'linux' | 'macos' | 'universal';
         break;
       case '--arch':
       case '-a':
@@ -479,10 +461,7 @@ Examples:
   return options;
 }
 
-async function createPlatformFiles(
-  config: BuildDeploymentConfig,
-  options: BuildOptions,
-): Promise<void> {
+async function createPlatformFiles(config: BuildDeploymentConfig, options: BuildOptions): Promise<void> {
   const platform = options.platform || 'universal';
   const isWindows = platform === 'windows' || platform === 'universal';
   const isLinux = platform === 'linux' || platform === 'universal';
@@ -498,11 +477,7 @@ async function createPlatformFiles(
   };
 
   // Use .temp directory for file creation (build workspace)
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   // Create setup scripts
   if (isWindows) {
@@ -515,56 +490,29 @@ async function createPlatformFiles(
   }
   if (isMacOS) {
     const script = await loadSetupTemplate('macos', vars);
-    await writeExecutableFile(
-      join(buildWorkspace, 'setup-macos.sh'),
-      script,
-      true,
-    );
+    await writeExecutableFile(join(buildWorkspace, 'setup-macos.sh'), script, true);
   }
 
   // Create start scripts
   const startClient = await loadTemplate('start-client.js.template', vars);
   const startServer = await loadTemplate('start-server.js.template', vars);
-  await writeExecutableFile(
-    join(buildWorkspace, 'start-client.js'),
-    startClient,
-    true,
-  );
-  await writeExecutableFile(
-    join(buildWorkspace, 'start-server.js'),
-    startServer,
-    true,
-  );
+  await writeExecutableFile(join(buildWorkspace, 'start-client.js'), startClient, true);
+  await writeExecutableFile(join(buildWorkspace, 'start-server.js'), startServer, true);
 
   // Create ports utility file
   const portsUtils = await loadTemplate('ports.utils.js.template', vars);
-  await writeExecutableFile(
-    join(buildWorkspace, 'ports.utils.js'),
-    portsUtils,
-    true,
-  );
+  await writeExecutableFile(join(buildWorkspace, 'ports.utils.js'), portsUtils, true);
 
   // Create client server file (goes in dist/client/server.js)
   const clientServer = await loadTemplate('client-server.js.template', vars);
-  await writeExecutableFile(
-    join(buildWorkspace, 'dist', 'client', 'server.js'),
-    clientServer,
-    true,
-  );
+  await writeExecutableFile(join(buildWorkspace, 'dist', 'client', 'server.js'), clientServer, true);
 
   // Create user guides
-  const platformSuffix =
-    platform === 'universal' ? 'UNIVERSAL' : platform.toUpperCase();
+  const platformSuffix = platform === 'universal' ? 'UNIVERSAL' : platform.toUpperCase();
   const enGuide = await loadUserGuideTemplate('en', vars);
   const esGuide = await loadUserGuideTemplate('es', vars);
-  await writeExecutableFile(
-    join(buildWorkspace, `USER_GUIDE_${platformSuffix}_EN.md`),
-    enGuide,
-  );
-  await writeExecutableFile(
-    join(buildWorkspace, `GUIA_USUARIO_${platformSuffix}_ES.md`),
-    esGuide,
-  );
+  await writeExecutableFile(join(buildWorkspace, `USER_GUIDE_${platformSuffix}_EN.md`), enGuide);
+  await writeExecutableFile(join(buildWorkspace, `GUIA_USUARIO_${platformSuffix}_ES.md`), esGuide);
 }
 
 async function main(): Promise<void> {
@@ -574,9 +522,7 @@ async function main(): Promise<void> {
     console.log(chalk.gray('═'.repeat(60)));
 
     try {
-      const { emergencyRestoreWorkspace } = await import(
-        './utils/file.utils.js',
-      );
+      const { emergencyRestoreWorkspace } = await import('./utils/file.utils.js');
       await emergencyRestoreWorkspace(defaultConfig.workspaceRoot);
       console.log(chalk.green('✅ Emergency restoration completed'));
       process.exit(0);
@@ -610,9 +556,7 @@ async function main(): Promise<void> {
   } else {
     // Apply platform config defaults for CLI mode
     if (options.platform && !options.arch) {
-      const platformConfig = platformConfigs.find(
-        (config) => config.platform === options.platform,
-      );
+      const platformConfig = platformConfigs.find((config) => config.platform === options.platform);
       if (platformConfig) {
         options.arch = platformConfig.arch;
         options.standalone = platformConfig.standalone || false;
@@ -626,16 +570,10 @@ async function main(): Promise<void> {
   console.log(chalk.gray('═'.repeat(60)));
   console.log(`${chalk.bold('Platform:')} ${options.platform || 'universal'}`);
   console.log(`${chalk.bold('Architecture:')} ${options.arch || 'universal'}`);
-  console.log(
-    `${chalk.bold('Standalone:')} ${options.standalone ? 'Yes' : 'No'}`,
-  );
-  console.log(
-    `${chalk.bold('Include Node:')} ${options.includeNode ? 'Yes' : 'No'}`,
-  );
+  console.log(`${chalk.bold('Standalone:')} ${options.standalone ? 'Yes' : 'No'}`);
+  console.log(`${chalk.bold('Include Node:')} ${options.includeNode ? 'Yes' : 'No'}`);
   console.log(`${chalk.bold('Create Zip:')} ${options.zip ? 'Yes' : 'No'}`);
-  console.log(
-    `${chalk.bold('Workspace Root:')} ${defaultConfig.workspaceRoot}`,
-  );
+  console.log(`${chalk.bold('Workspace Root:')} ${defaultConfig.workspaceRoot}`);
   console.log(
     `${chalk.bold('Build Workspace:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`,
   );
@@ -657,20 +595,14 @@ async function main(): Promise<void> {
     const { canProceedWithBuild } = await import('./utils/file.utils.js');
     const canProceed = await canProceedWithBuild(defaultConfig);
     if (!canProceed) {
-      console.log(
-        chalk.yellow(
-          '⚠️  Safety check failed - deploying build agent instead...',
-        ),
-      );
+      console.log(chalk.yellow('⚠️  Safety check failed - deploying build agent instead...'));
       console.log(chalk.blue('🤖 Transitioning to agent mode...'));
 
       // Deploy the build agent instead of failing
       await generateAndDeployBuildAgent(defaultConfig, options);
 
       // Continue with platform files and ZIP creation after agent completes
-      console.log(
-        chalk.blue('📋 Creating platform files and deployment package...'),
-      );
+      console.log(chalk.blue('📋 Creating platform files and deployment package...'));
 
       // const buildWorkspace = join(
       //   defaultConfig.workspaceRoot,
@@ -679,9 +611,7 @@ async function main(): Promise<void> {
       // );
 
       // Copy build artifacts to expected structure (apps/client/dist -> dist/client, etc.)
-      console.log(
-        chalk.blue('📁 Copying build artifacts to deployment structure...'),
-      );
+      console.log(chalk.blue('📁 Copying build artifacts to deployment structure...'));
       await copyBuildArtifacts(defaultConfig, 'client');
       await copyBuildArtifacts(defaultConfig, 'server');
       await copyDataFiles(defaultConfig);
@@ -692,11 +622,7 @@ async function main(): Promise<void> {
       // Create ZIP archive if requested
       if (options.zip) {
         console.log(chalk.blue('📦 Creating deployment ZIP archive...'));
-        await createZipArchive(
-          defaultConfig,
-          options.platform || 'macos',
-          options.arch || 'arm64',
-        );
+        await createZipArchive(defaultConfig, options.platform || 'macos', options.arch || 'arm64');
         console.log(chalk.green('✅ ZIP archive created successfully!'));
       }
 
@@ -709,11 +635,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    console.log(
-      chalk.green(
-        '🔒 Workspace isolation complete - safe to proceed with build',
-      ),
-    );
+    console.log(chalk.green('🔒 Workspace isolation complete - safe to proceed with build'));
     console.log(chalk.gray('   - pnpm workspace files moved to isolation'));
     console.log(chalk.gray('   - node_modules moved to isolation'));
     console.log(chalk.gray('   - backup created for safety'));
@@ -724,11 +646,7 @@ async function main(): Promise<void> {
     await createDirectoryStructure(defaultConfig);
 
     // Create minimal package.json with only production dependencies
-    const buildWorkspace = join(
-      defaultConfig.workspaceRoot,
-      defaultConfig.paths.temp,
-      'deployment',
-    );
+    const buildWorkspace = join(defaultConfig.workspaceRoot, defaultConfig.paths.temp, 'deployment');
     await createMinimalPackageJson(defaultConfig, buildWorkspace);
 
     // Install only production dependencies (much faster than copying 30GB+)
@@ -736,9 +654,7 @@ async function main(): Promise<void> {
 
     // Copy source files only (no massive node_modules copying)
     console.log('📁 Copying source files to build workspace...');
-    const { copyOptimizedSources } = await import(
-      './utils/optimized-isolation.utils.js',
-    );
+    const { copyOptimizedSources } = await import('./utils/optimized-isolation.utils.js');
     await copyOptimizedSources(defaultConfig, buildWorkspace);
 
     // Build applications
@@ -755,18 +671,11 @@ async function main(): Promise<void> {
 
     // Create package.json and install dependencies
     if (options.standalone) {
-      await createStandalonePackage(
-        defaultConfig,
-        options.platform || 'universal',
-      );
+      await createStandalonePackage(defaultConfig, options.platform || 'universal');
     } else {
       await createPackageJson(
         defaultConfig,
-        join(
-          defaultConfig.workspaceRoot,
-          defaultConfig.paths.server,
-          'package.json',
-        ),
+        join(defaultConfig.workspaceRoot, defaultConfig.paths.server, 'package.json'),
       );
       await installDependencies(defaultConfig);
     }
@@ -779,9 +688,7 @@ async function main(): Promise<void> {
         options.arch || 'universal',
       );
       console.log('📦 Zip archive created:', zipName);
-      console.log(
-        `📁 Saved to: ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`,
-      );
+      console.log(`📁 Saved to: ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`);
     }
 
     // Clean up .temp build directory and restore workspace
@@ -792,15 +699,11 @@ async function main(): Promise<void> {
     // Success message
     console.log('');
     console.log('🎉 Deployment build completed successfully!');
-    console.log(
-      '📦 Deployment created and zipped from isolated build workspace',
-    );
+    console.log('📦 Deployment created and zipped from isolated build workspace');
     console.log('🔒 Workspace restored to original state');
     console.log('');
     console.log('🚀 Next steps:');
-    console.log(
-      '  1. Extract the deployment zip file from deployments/ folder',
-    );
+    console.log('  1. Extract the deployment zip file from deployments/ folder');
     console.log('  2. Run the setup script for your platform:');
     if (options.platform === 'windows' || options.platform === 'universal') {
       console.log('     Windows: Double-click setup.bat');
@@ -820,10 +723,7 @@ async function main(): Promise<void> {
     try {
       await cleanupTempDirectory(defaultConfig);
     } catch (cleanupError) {
-      console.error(
-        '⚠️  Failed to cleanup .temp build directory:',
-        cleanupError,
-      );
+      console.error('⚠️  Failed to cleanup .temp build directory:', cleanupError);
     }
 
     process.exit(1);

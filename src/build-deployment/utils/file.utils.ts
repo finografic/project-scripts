@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { existsSync, statSync } from 'fs';
 import { copyFile, cp, mkdir, readdir, rm, stat, writeFile } from 'fs/promises';
 import { join, resolve } from 'path';
-
 import type { BuildDeploymentConfig } from '../config/types';
 
 /**
@@ -41,11 +40,7 @@ function isRsyncAvailable(): boolean {
 /**
  * Fast copy using rsync if available, fallback to cp
  */
-async function fastCopy(
-  src: string,
-  dest: string,
-  options: { recursive?: boolean } = {},
-): Promise<void> {
+async function fastCopy(src: string, dest: string, options: { recursive?: boolean } = {}): Promise<void> {
   if (isRsyncAvailable()) {
     // TODO: Add spinner here for better UX
     console.log('  🚀 Using rsync for fast copy...');
@@ -90,15 +85,9 @@ async function fastCopy(
 /**
  * Create deployment directory structure in .temp folder for build isolation
  */
-export async function createDirectoryStructure(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function createDirectoryStructure(config: BuildDeploymentConfig): Promise<void> {
   // Use .temp directory for build isolation
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
   const directories = [
     buildWorkspace,
     join(buildWorkspace, 'dist'),
@@ -125,11 +114,7 @@ export async function copyBuildArtifacts(
 ): Promise<void> {
   // The build process creates dist/ directories in the isolated build workspace
   // We need to copy from there to the final deployment structure
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
   const srcDir = join(buildWorkspace, config.paths[type], 'dist');
   const destDir = join(buildWorkspace, 'dist', type);
 
@@ -167,26 +152,12 @@ export async function copyBuildArtifacts(
 /**
  * Copy data files (database, migrations, uploads)
  */
-export async function copyDataFiles(
-  config: BuildDeploymentConfig,
-): Promise<void> {
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+export async function copyDataFiles(config: BuildDeploymentConfig): Promise<void> {
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   // Copy database
-  const dbSrc = resolve(
-    config.workspaceRoot,
-    config.paths.data,
-    config.database.development,
-  );
-  const dbDest = join(
-    buildWorkspace,
-    'dist/data/db',
-    config.database.production,
-  );
+  const dbSrc = resolve(config.workspaceRoot, config.paths.data, config.database.development);
+  const dbDest = join(buildWorkspace, 'dist/data/db', config.database.production);
   if (existsSync(dbSrc)) {
     // Ensure destination directory exists
     await mkdir(join(buildWorkspace, 'dist/data/db'), { recursive: true });
@@ -194,27 +165,15 @@ export async function copyDataFiles(
   }
 
   // Copy migrations
-  const migrationsDir = resolve(
-    config.workspaceRoot,
-    config.paths.data,
-    'migrations',
-  );
+  const migrationsDir = resolve(config.workspaceRoot, config.paths.data, 'migrations');
   if (existsSync(migrationsDir)) {
-    await fastCopy(
-      migrationsDir,
-      join(buildWorkspace, 'dist/data/migrations'),
-      {
-        recursive: true,
-      },
-    );
+    await fastCopy(migrationsDir, join(buildWorkspace, 'dist/data/migrations'), {
+      recursive: true,
+    });
   }
 
   // Copy uploads
-  const uploadsDir = resolve(
-    config.workspaceRoot,
-    config.paths.data,
-    'uploads',
-  );
+  const uploadsDir = resolve(config.workspaceRoot, config.paths.data, 'uploads');
   if (existsSync(uploadsDir)) {
     await fastCopy(uploadsDir, join(buildWorkspace, 'dist/data/uploads'), {
       recursive: true,
@@ -234,28 +193,17 @@ export async function createZipArchive(
   const zipName = `${config.appName.toLowerCase().replace(/\s+/g, '-')}-${platform}-${arch}-${timestamp}.zip`;
 
   // Save zip to deployments folder
-  const deploymentsDir = resolve(
-    config.workspaceRoot,
-    config.paths.deployments,
-  );
+  const deploymentsDir = resolve(config.workspaceRoot, config.paths.deployments);
   const zipPath = join(deploymentsDir, zipName);
 
   // Ensure deployments directory exists
   await mkdir(deploymentsDir, { recursive: true });
 
   // Build workspace is in .temp
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   // Create final deployment directory with correct structure
-  const finalDeployment = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'final-deployment',
-  );
+  const finalDeployment = resolve(config.workspaceRoot, config.paths.temp, 'final-deployment');
 
   // Clean and create final deployment directory
   if (existsSync(finalDeployment)) {
@@ -325,14 +273,8 @@ export async function createZipArchive(
 /**
  * Clean platform-specific artifacts
  */
-export async function cleanPlatformArtifacts(
-  config: BuildDeploymentConfig,
-): Promise<void> {
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+export async function cleanPlatformArtifacts(config: BuildDeploymentConfig): Promise<void> {
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   const cmd = [
     `cd "${buildWorkspace}"`,
@@ -352,9 +294,7 @@ export async function cleanPlatformArtifacts(
  * Isolate workspace by temporarily moving node_modules and pnpm-lock.yaml
  * This prevents pnpm from interfering with the main monorepo during deployment
  */
-export async function isolateWorkspace(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function isolateWorkspace(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const nodeModulesPath = join(workspaceRoot, 'node_modules');
@@ -364,9 +304,7 @@ export async function isolateWorkspace(
   console.log('🔒 Isolating workspace for deployment...');
   console.log(`  Workspace root: ${workspaceRoot}`);
   console.log(`  Temp directory: ${tempDir}`);
-  console.log(
-    '  This will temporarily move pnpm workspace files to prevent interference',
-  );
+  console.log('  This will temporarily move pnpm workspace files to prevent interference');
 
   // Safety check: ensure we're not already in a temp directory
   if (workspaceRoot.includes(config.paths.temp)) {
@@ -414,17 +352,12 @@ export async function isolateWorkspace(
       console.log('🔐 Removing pnpm-lock.yaml for fresh npm install...');
       console.log('  🚀 This prevents external linking issues in isolation');
       await rm(pnpmLockPath, { force: true });
-      console.log(
-        '  ✅ pnpm-lock.yaml removed - npm will create fresh lock file',
-      );
+      console.log('  ✅ pnpm-lock.yaml removed - npm will create fresh lock file');
     }
 
     if (existsSync(pnpmWorkspacePath)) {
       console.log('🏢 Moving pnpm-workspace.yaml to isolation...');
-      await copyFile(
-        pnpmWorkspacePath,
-        join(isolationDir, 'pnpm-workspace.yaml'),
-      );
+      await copyFile(pnpmWorkspacePath, join(isolationDir, 'pnpm-workspace.yaml'));
       await rm(pnpmWorkspacePath, { force: true });
       console.log('  ✅ pnpm-workspace.yaml moved to isolation');
     }
@@ -439,15 +372,10 @@ export async function isolateWorkspace(
 
     // Try to restore on failure
     try {
-      console.log(
-        '🔄 Attempting to restore workspace after isolation failure...',
-      );
+      console.log('🔄 Attempting to restore workspace after isolation failure...');
       await restoreWorkspace(config);
     } catch (restoreError) {
-      console.error(
-        '❌ Failed to restore workspace after isolation failure:',
-        restoreError,
-      );
+      console.error('❌ Failed to restore workspace after isolation failure:', restoreError);
     }
 
     throw error;
@@ -457,9 +385,7 @@ export async function isolateWorkspace(
 /**
  * Restore workspace by moving node_modules and pnpm-lock.yaml back
  */
-export async function restoreWorkspace(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function restoreWorkspace(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
@@ -476,29 +402,21 @@ export async function restoreWorkspace(
     if (existsSync(join(isolationDir, 'node_modules'))) {
       console.log('📦 Restoring node_modules...');
       console.log('  ⏳ Copying node_modules back to workspace...');
-      await fastCopy(
-        join(isolationDir, 'node_modules'),
-        join(workspaceRoot, 'node_modules'),
-        { recursive: true },
-      );
+      await fastCopy(join(isolationDir, 'node_modules'), join(workspaceRoot, 'node_modules'), {
+        recursive: true,
+      });
       console.log('  ✅ node_modules restored');
     }
 
     if (existsSync(join(isolationDir, 'pnpm-lock.yaml'))) {
       console.log('🔐 Restoring pnpm-lock.yaml...');
-      await copyFile(
-        join(isolationDir, 'pnpm-lock.yaml'),
-        join(workspaceRoot, 'pnpm-lock.yaml'),
-      );
+      await copyFile(join(isolationDir, 'pnpm-lock.yaml'), join(workspaceRoot, 'pnpm-lock.yaml'));
       console.log('  ✅ pnpm-lock.yaml restored');
     }
 
     if (existsSync(join(isolationDir, 'pnpm-workspace.yaml'))) {
       console.log('🏢 Restoring pnpm-workspace.yaml...');
-      await copyFile(
-        join(isolationDir, 'pnpm-workspace.yaml'),
-        join(workspaceRoot, 'pnpm-workspace.yaml'),
-      );
+      await copyFile(join(isolationDir, 'pnpm-workspace.yaml'), join(workspaceRoot, 'pnpm-workspace.yaml'));
       console.log('  ✅ pnpm-workspace.yaml restored');
     }
 
@@ -521,9 +439,7 @@ export async function restoreWorkspace(
 /**
  * Emergency workspace restoration - can be called manually if needed
  */
-export async function emergencyRestoreWorkspace(
-  workspaceRoot: string,
-): Promise<void> {
+export async function emergencyRestoreWorkspace(workspaceRoot: string): Promise<void> {
   console.log('🚨 Emergency workspace restoration...');
   console.log(`  Workspace root: ${workspaceRoot}`);
 
@@ -574,9 +490,7 @@ export async function emergencyRestoreWorkspace(
 /**
  * Clean up .temp directory and restore workspace
  */
-export async function cleanupTempDirectory(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function cleanupTempDirectory(config: BuildDeploymentConfig): Promise<void> {
   const tempDir = resolve(config.workspaceRoot, config.paths.temp);
 
   if (existsSync(tempDir)) {
@@ -599,9 +513,7 @@ export async function cleanupTempDirectory(
 /**
  * Verify that workspace is properly isolated
  */
-export async function verifyWorkspaceIsolation(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function verifyWorkspaceIsolation(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const nodeModulesPath = join(workspaceRoot, 'node_modules');
   const pnpmLockPath = join(workspaceRoot, 'pnpm-lock.yaml');
@@ -610,9 +522,7 @@ export async function verifyWorkspaceIsolation(
   console.log('🔍 Verifying workspace isolation...');
 
   const isolated =
-    !existsSync(nodeModulesPath) &&
-    !existsSync(pnpmLockPath) &&
-    !existsSync(pnpmWorkspacePath);
+    !existsSync(nodeModulesPath) && !existsSync(pnpmLockPath) && !existsSync(pnpmWorkspacePath);
 
   if (isolated) {
     console.log('✅ Workspace is properly isolated');
@@ -621,25 +531,18 @@ export async function verifyWorkspaceIsolation(
     console.log('   - pnpm-workspace.yaml: removed');
   } else {
     console.log('⚠️  Workspace isolation incomplete:');
-    if (existsSync(nodeModulesPath))
-      console.log('   - node_modules: still present');
-    if (existsSync(pnpmLockPath))
-      console.log('   - pnpm-lock.yaml: still present');
-    if (existsSync(pnpmWorkspacePath))
-      console.log('   - pnpm-workspace.yaml: still present');
+    if (existsSync(nodeModulesPath)) console.log('   - node_modules: still present');
+    if (existsSync(pnpmLockPath)) console.log('   - pnpm-lock.yaml: still present');
+    if (existsSync(pnpmWorkspacePath)) console.log('   - pnpm-workspace.yaml: still present');
 
-    throw new Error(
-      'Workspace isolation failed - pnpm workspace files still present',
-    );
+    throw new Error('Workspace isolation failed - pnpm workspace files still present');
   }
 }
 
 /**
  * Check if workspace is currently in use (has active processes)
  */
-export async function checkWorkspaceInUse(
-  config: BuildDeploymentConfig,
-): Promise<boolean> {
+export async function checkWorkspaceInUse(config: BuildDeploymentConfig): Promise<boolean> {
   const workspaceRoot = config.workspaceRoot;
 
   try {
@@ -681,9 +584,7 @@ export async function checkWorkspaceInUse(
 /**
  * Create backup of workspace files before isolation
  */
-export async function createWorkspaceBackup(
-  config: BuildDeploymentConfig,
-): Promise<string> {
+export async function createWorkspaceBackup(config: BuildDeploymentConfig): Promise<string> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const backupDir = join(tempDir, 'workspace-backup');
@@ -694,19 +595,12 @@ export async function createWorkspaceBackup(
     await mkdir(backupDir, { recursive: true });
 
     // Create timestamp for backup
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .slice(0, 19);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const backupPath = join(backupDir, `backup-${timestamp}`);
     await mkdir(backupPath, { recursive: true });
 
     // Backup critical workspace files
-    const criticalFiles = [
-      'pnpm-lock.yaml',
-      'pnpm-workspace.yaml',
-      'package.json',
-    ];
+    const criticalFiles = ['pnpm-lock.yaml', 'pnpm-workspace.yaml', 'package.json'];
 
     for (const file of criticalFiles) {
       const filePath = join(workspaceRoot, file);
@@ -727,9 +621,7 @@ export async function createWorkspaceBackup(
 /**
  * Restore workspace from backup if main restoration fails
  */
-export async function restoreFromBackup(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function restoreFromBackup(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const backupDir = join(tempDir, 'workspace-backup');
@@ -745,8 +637,7 @@ export async function restoreFromBackup(
     // Find the most recent backup
     const backupEntries = await readdir(backupDir);
     const backupFolders = backupEntries.filter(
-      (entry) =>
-        entry.startsWith('backup-') && existsSync(join(backupDir, entry)),
+      (entry) => entry.startsWith('backup-') && existsSync(join(backupDir, entry)),
     );
 
     if (backupFolders.length === 0) {
@@ -761,11 +652,7 @@ export async function restoreFromBackup(
     console.log(`📦 Restoring from backup: ${latestBackup}`);
 
     // Restore critical files
-    const criticalFiles = [
-      'pnpm-lock.yaml',
-      'pnpm-workspace.yaml',
-      'package.json',
-    ];
+    const criticalFiles = ['pnpm-lock.yaml', 'pnpm-workspace.yaml', 'package.json'];
 
     for (const file of criticalFiles) {
       const backupFile = join(latestBackup, file);
@@ -787,9 +674,7 @@ export async function restoreFromBackup(
 /**
  * Check if build can proceed safely after isolation
  */
-export async function canProceedWithBuild(
-  config: BuildDeploymentConfig,
-): Promise<boolean> {
+export async function canProceedWithBuild(config: BuildDeploymentConfig): Promise<boolean> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
@@ -837,9 +722,7 @@ export async function canProceedWithBuild(
 /**
  * Prepare isolated build workspace with necessary dependencies
  */
-export async function prepareIsolatedBuildWorkspace(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function prepareIsolatedBuildWorkspace(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
@@ -853,9 +736,7 @@ export async function prepareIsolatedBuildWorkspace(
 
     // 🚀 OPTIMIZATION: Skip copying node_modules - let npm install handle it fresh!
     // This saves massive time and avoids dependency conflicts
-    console.log(
-      '📦 Skipping node_modules copy - will install fresh dependencies',
-    );
+    console.log('📦 Skipping node_modules copy - will install fresh dependencies');
 
     // Copy only essential package files to build workspace
     const packageFiles = [
@@ -919,13 +800,9 @@ export async function prepareIsolatedBuildWorkspace(
           // Check if package.json was copied
           const destPackageJson = join(destDir, 'package.json');
           if (existsSync(destPackageJson)) {
-            console.log(
-              `  ✅ Destination package.json found: ${destPackageJson}`,
-            );
+            console.log(`  ✅ Destination package.json found: ${destPackageJson}`);
           } else {
-            console.log(
-              `  ❌ Destination package.json NOT found: ${destPackageJson}`,
-            );
+            console.log(`  ❌ Destination package.json NOT found: ${destPackageJson}`);
           }
         } else {
           console.log(`  ❌ Destination directory not created: ${destDir}`);
@@ -964,9 +841,7 @@ export async function prepareIsolatedBuildWorkspace(
     // const configDirs = ["config", "deployment/config"];
     // These directories are NOT needed in the final deployment and cause path confusion
 
-    console.log(
-      '✅ Isolated build workspace prepared (optimized - no node_modules copy)',
-    );
+    console.log('✅ Isolated build workspace prepared (optimized - no node_modules copy)');
   } catch (error) {
     console.error('❌ Failed to prepare isolated build workspace:', error);
     throw error;
@@ -980,7 +855,7 @@ export function makeExecutable(filePath: string): void {
   if (process.platform !== 'win32') {
     try {
       execSync(`chmod +x ${filePath}`, { stdio: 'inherit' });
-    } catch{
+    } catch {
       // Ignore errors
     }
   }

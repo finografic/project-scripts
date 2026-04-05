@@ -42,10 +42,7 @@ async function assertNotDetachedHead(): Promise<void> {
   try {
     await exec('git symbolic-ref --quiet HEAD');
   } catch {
-    throw new Error(
-      'detached HEAD detected\n' +
-        '→ checkout a branch before running a release',
-    );
+    throw new Error('detached HEAD detected\n' + '→ checkout a branch before running a release');
   }
 }
 
@@ -53,10 +50,7 @@ async function assertCleanWorkingTree(): Promise<void> {
   const { stdout } = await exec('git status --porcelain');
 
   if (stdout.trim().length > 0) {
-    throw new Error(
-      'working tree is not clean\n' +
-        '→ commit or stash your changes before releasing',
-    );
+    throw new Error('working tree is not clean\n' + '→ commit or stash your changes before releasing');
   }
 }
 
@@ -65,10 +59,7 @@ async function assertOnReleaseBranch(): Promise<void> {
   const branch = stdout.trim();
 
   if (branch !== DEFAULT_RELEASE_BRANCH) {
-    throw new Error(
-      `not on release branch (${DEFAULT_RELEASE_BRANCH})\n` +
-        `→ current branch: ${branch}`,
-    );
+    throw new Error(`not on release branch (${DEFAULT_RELEASE_BRANCH})\n` + `→ current branch: ${branch}`);
   }
 }
 
@@ -76,10 +67,7 @@ async function assertUpstreamExists(): Promise<void> {
   try {
     await exec('git rev-parse --abbrev-ref --symbolic-full-name @{u}');
   } catch {
-    throw new Error(
-      'no upstream branch configured\n' +
-        '→ run: git push --set-upstream origin <branch>',
-    );
+    throw new Error('no upstream branch configured\n' + '→ run: git push --set-upstream origin <branch>');
   }
 }
 
@@ -92,9 +80,6 @@ async function assertNoUnpushedCommits(): Promise<void> {
   }
 
   if (count > 0) {
-    throw new Error(
-      'unpushed commits detected\n' +
-        '→ run: git push',
-    );
+    throw new Error('unpushed commits detected\n' + '→ run: git push');
   }
 }

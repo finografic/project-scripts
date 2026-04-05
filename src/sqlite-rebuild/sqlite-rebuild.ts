@@ -1,7 +1,7 @@
-import chalk from 'chalk';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import chalk from 'chalk';
 
 interface RebuildOptions {
   force?: boolean;
@@ -47,10 +47,7 @@ class SqliteRebuilder {
     throw new Error('Could not find workspace root (pnpm-workspace.yaml)');
   }
 
-  private log(
-    message: string,
-    type: 'info' | 'success' | 'error' | 'warning' = 'info',
-  ) {
+  private log(message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') {
     const colors = {
       info: chalk.blue,
       success: chalk.green,
@@ -102,12 +99,9 @@ class SqliteRebuilder {
       if (!fs.existsSync(packageJsonPath)) continue;
 
       try {
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, 'utf8'),
-        );
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         const betterSqlite3Version =
-          packageJson.dependencies?.['better-sqlite3'] ||
-          packageJson.devDependencies?.['better-sqlite3'];
+          packageJson.dependencies?.['better-sqlite3'] || packageJson.devDependencies?.['better-sqlite3'];
 
         this.packages.push({
           name: packageJson.name || path.basename(packageDir),
@@ -124,10 +118,7 @@ class SqliteRebuilder {
     this.log(`Found ${this.packages.length} packages`);
     this.packages.forEach((pkg) => {
       if (pkg.hasBetterSqlite3) {
-        this.log(
-          `  ${pkg.name}: better-sqlite3@${pkg.betterSqlite3Version}`,
-          'info',
-        );
+        this.log(`  ${pkg.name}: better-sqlite3@${pkg.betterSqlite3Version}`, 'info');
       }
     });
   }
@@ -147,31 +138,21 @@ class SqliteRebuilder {
     }
 
     if (uniqueVersions.length === 1) {
-      this.log(
-        `✅ All packages use the same version: ${uniqueVersions[0]}`,
-        'success',
-      );
+      this.log(`✅ All packages use the same version: ${uniqueVersions[0]}`, 'success');
       return true;
     }
 
     this.log('❌ Version mismatch detected:', 'error');
     uniqueVersions.forEach((version) => {
-      const packages = this.packages.filter(
-        (pkg) => pkg.betterSqlite3Version === version,
-      );
-      this.log(
-        `  ${version}: ${packages.map((pkg) => pkg.name).join(', ')}`,
-        'error',
-      );
+      const packages = this.packages.filter((pkg) => pkg.betterSqlite3Version === version);
+      this.log(`  ${version}: ${packages.map((pkg) => pkg.name).join(', ')}`, 'error');
     });
 
     return false;
   }
 
   private async updateVersions(): Promise<void> {
-    this.log(
-      `Updating all packages to use better-sqlite3@${this.options.targetVersion}...`,
-    );
+    this.log(`Updating all packages to use better-sqlite3@${this.options.targetVersion}...`);
 
     for (const pkg of this.packages) {
       if (!pkg.hasBetterSqlite3) continue;
@@ -183,30 +164,20 @@ class SqliteRebuilder {
 
       try {
         const packageJsonPath = path.join(pkg.path, 'package.json');
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, 'utf8'),
-        );
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
         // Update in dependencies
         if (packageJson.dependencies?.['better-sqlite3']) {
-          packageJson.dependencies['better-sqlite3'] =
-            this.options.targetVersion;
+          packageJson.dependencies['better-sqlite3'] = this.options.targetVersion;
         }
 
         // Update in devDependencies
         if (packageJson.devDependencies?.['better-sqlite3']) {
-          packageJson.devDependencies['better-sqlite3'] =
-            this.options.targetVersion;
+          packageJson.devDependencies['better-sqlite3'] = this.options.targetVersion;
         }
 
-        fs.writeFileSync(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + '\n',
-        );
-        this.log(
-          `  ✅ Updated ${pkg.name} to ${this.options.targetVersion}`,
-          'success',
-        );
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+        this.log(`  ✅ Updated ${pkg.name} to ${this.options.targetVersion}`, 'success');
       } catch (error) {
         this.log(`  ❌ Failed to update ${pkg.name}: ${error}`, 'error');
       }
@@ -228,10 +199,7 @@ class SqliteRebuilder {
       if (fs.existsSync(dir)) {
         try {
           fs.rmSync(dir, { recursive: true, force: true });
-          this.log(
-            `  ✅ Cleaned ${path.relative(this.workspaceRoot, dir)}`,
-            'success',
-          );
+          this.log(`  ✅ Cleaned ${path.relative(this.workspaceRoot, dir)}`, 'success');
         } catch (error) {
           this.log(`  ❌ Failed to clean ${dir}: ${error}`, 'error');
         }
@@ -296,10 +264,7 @@ class SqliteRebuilder {
 
   private async runDatabaseMigration(): Promise<boolean> {
     if (!this.options.includeMigration) {
-      this.log(
-        'Skipping database migration test as --include-migration is not set.',
-        'info',
-      );
+      this.log('Skipping database migration test as --include-migration is not set.', 'info');
       return true;
     }
 
@@ -309,26 +274,14 @@ class SqliteRebuilder {
       // Check if the server directory exists
       const serverPath = path.join(this.workspaceRoot, 'apps', 'server');
       if (!fs.existsSync(serverPath)) {
-        this.log(
-          'Server directory not found, skipping migration test',
-          'warning',
-        );
+        this.log('Server directory not found, skipping migration test', 'warning');
         return true;
       }
 
       // Check if the migration script exists
-      const migrationScript = path.join(
-        serverPath,
-        'src',
-        'db',
-        'utils',
-        'migrate.ts',
-      );
+      const migrationScript = path.join(serverPath, 'src', 'db', 'utils', 'migrate.ts');
       if (!fs.existsSync(migrationScript)) {
-        this.log(
-          'Migration script not found, skipping migration test',
-          'warning',
-        );
+        this.log('Migration script not found, skipping migration test', 'warning');
         return true;
       }
 
@@ -337,14 +290,8 @@ class SqliteRebuilder {
       return true;
     } catch {
       this.log('❌ Database migration test failed', 'error');
-      this.log(
-        'This is often due to missing environment variables or database configuration',
-        'warning',
-      );
-      this.log(
-        'The basic better-sqlite3 functionality should still work',
-        'info',
-      );
+      this.log('This is often due to missing environment variables or database configuration', 'warning');
+      this.log('The basic better-sqlite3 functionality should still work', 'info');
       return false;
     }
   }
@@ -360,10 +307,7 @@ class SqliteRebuilder {
       const isConsistent = await this.checkVersionConsistency();
 
       if (!isConsistent && !this.options.force) {
-        this.log(
-          'Version inconsistency detected. Use --force to proceed anyway.',
-          'warning',
-        );
+        this.log('Version inconsistency detected. Use --force to proceed anyway.', 'warning');
         return;
       }
 
@@ -396,10 +340,7 @@ class SqliteRebuilder {
       // Step 8: Test database migration
       const migrationPassed = await this.runDatabaseMigration();
       if (!migrationPassed) {
-        this.log(
-          'Database migration test failed, but basic functionality works',
-          'warning',
-        );
+        this.log('Database migration test failed, but basic functionality works', 'warning');
       }
 
       this.log('🎉 better-sqlite3 rebuild completed successfully!', 'success');
@@ -418,8 +359,7 @@ async function main() {
     force: args.includes('--force') || args.includes('-f'),
     verbose: args.includes('--verbose') || args.includes('-v'),
     cleanOnly: args.includes('--clean-only') || args.includes('-c'),
-    includeMigration:
-      args.includes('--include-migration') || args.includes('-m'),
+    includeMigration: args.includes('--include-migration') || args.includes('-m'),
   };
 
   // Parse target version

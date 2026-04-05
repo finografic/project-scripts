@@ -56,7 +56,6 @@ These map directly to `pnpm version`.
 
 - Release branch: `master`
 - Required artifacts:
-
   - bin/github-release.js
 
 Defaults are defined in:

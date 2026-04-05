@@ -11,18 +11,14 @@ export const findProjectRoot = (startDir = process.cwd()): string => {
     // Check if this directory has workspace markers
     if (ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) {
       // 🎯 CRITICAL: Check if this is the REAL monorepo root
-      const hasPnpmWorkspace = fs.existsSync(
-        path.join(dir, 'pnpm-workspace.yaml'),
-      );
+      const hasPnpmWorkspace = fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'));
       const hasAppsDir = fs.existsSync(path.join(dir, 'apps'));
       const hasPackagesDir = fs.existsSync(path.join(dir, 'packages'));
 
       // This is a monorepo root if it has pnpm-workspace.yaml AND apps/packages directories
       if (hasPnpmWorkspace && (hasAppsDir || hasPackagesDir)) {
         console.log(`🎯 Found monorepo root: ${dir}`);
-        console.log(
-          `  - pnpm-workspace.yaml: ${hasPnpmWorkspace ? '✅' : '❌'}`,
-        );
+        console.log(`  - pnpm-workspace.yaml: ${hasPnpmWorkspace ? '✅' : '❌'}`);
         console.log(`  - apps directory: ${hasAppsDir ? '✅' : '❌'}`);
         console.log(`  - packages directory: ${hasPackagesDir ? '✅' : '❌'}`);
         return dir;
@@ -41,9 +37,7 @@ export const findProjectRoot = (startDir = process.cwd()): string => {
   }
 
   // Fallback to current working directory if no monorepo found
-  console.log(
-    `⚠️  No monorepo root found, using current directory: ${process.cwd()}`,
-  );
+  console.log(`⚠️  No monorepo root found, using current directory: ${process.cwd()}`);
   return process.cwd();
 };
 

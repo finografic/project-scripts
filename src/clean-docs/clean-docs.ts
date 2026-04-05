@@ -1,13 +1,12 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-
 import chalk from 'chalk';
 import { deleteAsync } from 'del';
+import type { CleanOptions, DeleteProgress } from './clean-docs.types';
 
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';
 import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean-docs.config';
-import type { CleanOptions, DeleteProgress } from './clean-docs.types';
 
 const WORKSPACE_ROOT = findProjectRoot();
 

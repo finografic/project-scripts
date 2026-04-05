@@ -24,10 +24,7 @@ function run(cmd: string): string {
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 
 if (nodeMajor !== 22 && nodeMajor !== 24) {
-  fail(
-    `Unsupported Node.js version ${process.versions.node}\n` +
-      'Expected Node 22 or 24',
-  );
+  fail(`Unsupported Node.js version ${process.versions.node}\n` + 'Expected Node 22 or 24');
 }
 
 /* -------------------------------------------------------------------------- */

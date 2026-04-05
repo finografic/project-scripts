@@ -19,13 +19,8 @@ export async function verifyWorkspace(): Promise<void> {
 
 async function assertRequiredArtifactsExist(): Promise<void> {
   try {
-    await Promise.all(
-      REQUIRED_BUILD_ARTIFACTS.map((file) => access(file)),
-    );
+    await Promise.all(REQUIRED_BUILD_ARTIFACTS.map((file) => access(file)));
   } catch {
-    throw new Error(
-      'required build artifacts are missing\n' +
-        '→ run the build before releasing',
-    );
+    throw new Error('required build artifacts are missing\n' + '→ run the build before releasing');
   }
 }

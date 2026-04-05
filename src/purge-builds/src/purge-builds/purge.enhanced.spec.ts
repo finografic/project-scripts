@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { purge, type PurgeOptions } from './purge.enhanced';
@@ -38,7 +37,10 @@ describe('purge.enhanced', () => {
     vi.spyOn(process, 'cwd').mockReturnValue(testDir);
     // Mock process.argv[1] by replacing the entire argv array
     Object.defineProperty(process, 'argv', {
-      value: ['node', path.join(testDir, 'node_modules', '@finografic', 'project-scripts', 'bin', 'purge-builds.js')],
+      value: [
+        'node',
+        path.join(testDir, 'node_modules', '@finografic', 'project-scripts', 'bin', 'purge-builds.js'),
+      ],
       writable: true,
       configurable: true,
     });
@@ -169,16 +171,12 @@ describe('purge.enhanced', () => {
 
         // For packages directory, return a nested package
         if (dirName === 'packages') {
-          return [
-            { name: 'package-a', isDirectory: () => true, isFile: () => false },
-          ] as any;
+          return [{ name: 'package-a', isDirectory: () => true, isFile: () => false }] as any;
         }
 
         // For nested package-a, return dist
         if (dirName === 'package-a') {
-          return [
-            { name: 'dist', isDirectory: () => true, isFile: () => false },
-          ] as any;
+          return [{ name: 'dist', isDirectory: () => true, isFile: () => false }] as any;
         }
 
         // For the root directory, return the mock items

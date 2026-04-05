@@ -8,7 +8,6 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { copyFile, cp, mkdir, readFile, writeFile } from 'fs/promises';
 import { join, resolve } from 'path';
-
 import type { BuildDeploymentConfig } from '../config/types';
 
 /**
@@ -23,18 +22,11 @@ export async function createMinimalPackageJson(
 
   // Read the original root package.json
   const rootPackageJsonPath = join(config.workspaceRoot, 'package.json');
-  const rootPackageJson = JSON.parse(
-    await readFile(rootPackageJsonPath, 'utf8'),
-  );
+  const rootPackageJson = JSON.parse(await readFile(rootPackageJsonPath, 'utf8'));
 
   // Read server package.json for production dependencies
-  const serverPackageJsonPath = join(
-    config.workspaceRoot,
-    'apps/server/package.json',
-  );
-  const serverPackageJson = JSON.parse(
-    await readFile(serverPackageJsonPath, 'utf8'),
-  );
+  const serverPackageJsonPath = join(config.workspaceRoot, 'apps/server/package.json');
+  const serverPackageJson = JSON.parse(await readFile(serverPackageJsonPath, 'utf8'));
 
   // Extract only production dependencies from server
   const productionDependencies = {
@@ -61,10 +53,7 @@ export async function createMinimalPackageJson(
 
   // Filter out any remaining workspace: dependencies
   Object.keys(productionDependencies).forEach((key) => {
-    if (
-      productionDependencies[key] &&
-      productionDependencies[key].includes('workspace:')
-    ) {
+    if (productionDependencies[key] && productionDependencies[key].includes('workspace:')) {
       delete productionDependencies[key];
       console.log(`  🧹 Removed workspace dependency: ${key}`);
     }
@@ -84,7 +73,7 @@ export async function createMinimalPackageJson(
       start: 'run-p start:server start:client',
       'start:server': 'node start-server.js',
       'start:client': 'node start-client.js',
-      postinstall: 'echo \'Touch Monorepo deployed successfully!\'',
+      postinstall: "echo 'Touch Monorepo deployed successfully!'",
     },
     dependencies: productionDependencies,
     optionalDependencies,
@@ -92,11 +81,7 @@ export async function createMinimalPackageJson(
 
   // Write the minimal package.json
   const buildPackageJsonPath = join(buildWorkspace, 'package.json');
-  await writeFile(
-    buildPackageJsonPath,
-    JSON.stringify(minimalPackageJson, null, 2),
-    'utf8',
-  );
+  await writeFile(buildPackageJsonPath, JSON.stringify(minimalPackageJson, null, 2), 'utf8');
 
   console.log('✅ Minimal package.json created');
   console.log(
@@ -109,12 +94,8 @@ export async function createMinimalPackageJson(
  * Install only production dependencies in isolated workspace
  * This is much faster than copying 30GB+ of node_modules
  */
-export async function installProductionDependencies(
-  buildWorkspace: string,
-): Promise<void> {
-  console.log(
-    '🚀 Installing production dependencies (this will be much faster)...',
-  );
+export async function installProductionDependencies(buildWorkspace: string): Promise<void> {
+  console.log('🚀 Installing production dependencies (this will be much faster)...');
 
   const startTime = Date.now();
 
@@ -133,9 +114,7 @@ export async function installProductionDependencies(
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`✅ Production dependencies installed in ${duration}s`);
-    console.log(
-      '   This is dramatically faster than copying 30GB+ of node_modules!',
-    );
+    console.log('   This is dramatically faster than copying 30GB+ of node_modules!');
   } catch (error) {
     console.error('❌ Failed to install production dependencies:', error);
     throw error;
@@ -145,9 +124,7 @@ export async function installProductionDependencies(
 /**
  * Optimized workspace isolation - avoids massive file copying
  */
-export async function optimizedIsolateWorkspace(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function optimizedIsolateWorkspace(config: BuildDeploymentConfig): Promise<void> {
   console.log('🚀 Starting optimized workspace isolation...');
   console.log('   This new approach avoids copying 30GB+ of node_modules!');
 
@@ -156,9 +133,7 @@ export async function optimizedIsolateWorkspace(
 
   // Safety check
   if (workspaceRoot.includes(config.paths.temp)) {
-    throw new Error(
-      'Safety check failed: Cannot isolate workspace from within temp directory',
-    );
+    throw new Error('Safety check failed: Cannot isolate workspace from within temp directory');
   }
 
   // Create temp directory
@@ -181,10 +156,7 @@ export async function optimizedIsolateWorkspace(
 
   if (existsSync(pnpmWorkspacePath)) {
     console.log('🏢 Moving pnpm-workspace.yaml to isolation...');
-    await copyFile(
-      pnpmWorkspacePath,
-      join(isolationDir, 'pnpm-workspace.yaml'),
-    );
+    await copyFile(pnpmWorkspacePath, join(isolationDir, 'pnpm-workspace.yaml'));
     // Don't remove it yet
   }
 
@@ -196,9 +168,7 @@ export async function optimizedIsolateWorkspace(
 /**
  * Restore workspace after deployment
  */
-export async function optimizedRestoreWorkspace(
-  config: BuildDeploymentConfig,
-): Promise<void> {
+export async function optimizedRestoreWorkspace(config: BuildDeploymentConfig): Promise<void> {
   const workspaceRoot = config.workspaceRoot;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
@@ -212,18 +182,12 @@ export async function optimizedRestoreWorkspace(
 
   // Restore lock files only
   if (existsSync(join(isolationDir, 'pnpm-lock.yaml'))) {
-    await copyFile(
-      join(isolationDir, 'pnpm-lock.yaml'),
-      join(workspaceRoot, 'pnpm-lock.yaml'),
-    );
+    await copyFile(join(isolationDir, 'pnpm-lock.yaml'), join(workspaceRoot, 'pnpm-lock.yaml'));
     console.log('✅ pnpm-lock.yaml restored');
   }
 
   if (existsSync(join(isolationDir, 'pnpm-workspace.yaml'))) {
-    await copyFile(
-      join(isolationDir, 'pnpm-workspace.yaml'),
-      join(workspaceRoot, 'pnpm-workspace.yaml'),
-    );
+    await copyFile(join(isolationDir, 'pnpm-workspace.yaml'), join(workspaceRoot, 'pnpm-workspace.yaml'));
     console.log('✅ pnpm-workspace.yaml restored');
   }
 
@@ -241,12 +205,7 @@ export async function copyOptimizedSources(
   const workspaceRoot = config.workspaceRoot;
 
   // Copy source directories only
-  const sourceDirs = [
-    'apps/client',
-    'apps/server',
-    'packages/core',
-    'packages/i18n',
-  ];
+  const sourceDirs = ['apps/client', 'apps/server', 'packages/core', 'packages/i18n'];
 
   for (const dir of sourceDirs) {
     const srcDir = join(workspaceRoot, dir);

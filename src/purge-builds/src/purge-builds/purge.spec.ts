@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { purge, type PurgeOptions } from './purge';
@@ -38,7 +37,10 @@ describe('purge', () => {
     vi.spyOn(process, 'cwd').mockReturnValue(testDir);
     // Mock process.argv[1] by replacing the entire argv array
     Object.defineProperty(process, 'argv', {
-      value: ['node', path.join(testDir, 'node_modules', '@finografic', 'project-scripts', 'bin', 'purge-builds.js')],
+      value: [
+        'node',
+        path.join(testDir, 'node_modules', '@finografic', 'project-scripts', 'bin', 'purge-builds.js'),
+      ],
       writable: true,
       configurable: true,
     });

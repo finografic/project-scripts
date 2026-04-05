@@ -81,13 +81,13 @@ pnpm sqlite-rebuild --force --verbose --version 11.9.0
 
 ## 📋 Options
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--force` | `-f` | Force rebuild even with version mismatches |
-| `--verbose` | `-v` | Show detailed output and commands |
-| `--clean-only` | `-c` | Only clean node_modules, skip rebuild |
-| `--include-migration` | `-m` | Include database migration test |
-| `--version <version>` | | Specify target better-sqlite3 version |
+| Option                | Short | Description                                |
+| --------------------- | ----- | ------------------------------------------ |
+| `--force`             | `-f`  | Force rebuild even with version mismatches |
+| `--verbose`           | `-v`  | Show detailed output and commands          |
+| `--clean-only`        | `-c`  | Only clean node_modules, skip rebuild      |
+| `--include-migration` | `-m`  | Include database migration test            |
+| `--version <version>` |       | Specify target better-sqlite3 version      |
 
 ## 🎯 When to Use
 

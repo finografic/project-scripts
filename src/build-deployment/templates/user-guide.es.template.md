@@ -94,4 +94,4 @@ Una vez que la aplicación esté ejecutándose, puedes:
 
 ---
 
-*Generado el: {{GENERATED_DATE_ES}}*
+_Generado el: {{GENERATED_DATE_ES}}_

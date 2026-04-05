@@ -145,13 +145,13 @@ The tool automatically chooses the best approach:
 
 ## 📋 Command Line Options
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--dry-run` | `-d` | Show what would be deleted without actually deleting |
-| `--verbose` | `-v` | Show detailed progress and file lists |
-| `--recursive` | `-r` | Deep recursive cleaning throughout the entire tree |
-| `--detach` | | Force detached process deletion for node_modules |
-| `--help` | `-h` | Show help message |
+| Flag          | Short | Description                                          |
+| ------------- | ----- | ---------------------------------------------------- |
+| `--dry-run`   | `-d`  | Show what would be deleted without actually deleting |
+| `--verbose`   | `-v`  | Show detailed progress and file lists                |
+| `--recursive` | `-r`  | Deep recursive cleaning throughout the entire tree   |
+| `--detach`    |       | Force detached process deletion for node_modules     |
+| `--help`      | `-h`  | Show help message                                    |
 
 ## 📊 Usage Examples
 
@@ -208,13 +208,13 @@ purge-builds --recursive > cleanup.log 2>&1
 ```typescript
 // What gets deleted
 const DELETE_PATTERNS = {
-  directories: [".turbo", ".tsup", "dist", "node_modules", ".pnpm"],
-  files: ["pnpm-lock.yaml"],
-  fileExtensions: [".tsbuildinfo"]
+  directories: ['.turbo', '.tsup', 'dist', 'node_modules', '.pnpm'],
+  files: ['pnpm-lock.yaml'],
+  fileExtensions: ['.tsbuildinfo'],
 };
 
 // What gets protected
-const PROTECT_PATTERNS = [".git", ".env", "package.json", "src"];
+const PROTECT_PATTERNS = ['.git', '.env', 'package.json', 'src'];
 ```
 
 ### 3. **Self-Preservation Logic**
@@ -381,4 +381,4 @@ This tool represents a novel solution to the "self-deletion paradox" in CLI appl
 - ✨ **Interactive spinners** for each operation phase
 - ✨ **Accurate progress tracking** with combined deletion totals
 
-*Built with ❤️ for the JavaScript/TypeScript ecosystem*
+_Built with ❤️ for the JavaScript/TypeScript ecosystem_

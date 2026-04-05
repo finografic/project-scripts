@@ -94,4 +94,4 @@ Once the application is running, you can:
 
 ---
 
-*Generated on: {{GENERATED_DATE}}*
+_Generated on: {{GENERATED_DATE}}_

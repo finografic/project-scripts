@@ -2,21 +2,15 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-
 // import { config } from "@dotenvx/dotenvx";
 import { checkbox } from '@inquirer/prompts';
 import chalk from 'chalk';
 
 import { PATH_FOLDER_ENV } from './schemas.config';
-import {
-  getSchemaSelection,
-  loadSeedConfig,
-  loadViewConfig,
-} from './schemas.utils';
+import { getSchemaSelection, loadSeedConfig, loadViewConfig } from './schemas.utils';
 
 // Add autoConfirm flag for -y/--yes
-const autoConfirm =
-  process.argv.includes('-y') || process.argv.includes('--yes');
+const autoConfirm = process.argv.includes('-y') || process.argv.includes('--yes');
 
 console.log('--- [db-setup] Script started ---');
 
@@ -27,17 +21,10 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 console.log('[db-setup] NODE_ENV:', nodeEnv);
 
 if (!['development', 'test', 'production'].includes(nodeEnv)) {
-  console.warn(
-    chalk.yellow(
-      `⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`,
-    ),
-  );
+  console.warn(chalk.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
 }
 
-const envPath = path.resolve(
-  process.cwd(),
-  `${PATH_FOLDER_ENV}/.env.${nodeEnv}`,
-);
+const envPath = path.resolve(process.cwd(), `${PATH_FOLDER_ENV}/.env.${nodeEnv}`);
 console.log('[db-setup] Looking for env file at:', envPath);
 if (!fs.existsSync(envPath)) {
   console.error(chalk.red(`❌ Environment file not found: ${envPath}`));
@@ -90,17 +77,12 @@ async function seedData(schemas: string[]) {
   for (const schema of schemas) {
     try {
       console.log(chalk.blue(`\nSeeding ${schema}...`));
-      const seedName = schema.startsWith('auth_')
-        ? schema.replace('auth_', '')
-        : schema;
+      const seedName = schema.startsWith('auth_') ? schema.replace('auth_', '') : schema;
       console.log(`[db-setup] Seeding: ${seedName}`);
-      execSync(
-        `pnpm --filter @workspace/server db.migrations.seed ${seedName}`,
-        {
-          stdio: 'inherit',
-          env: process.env,
-        },
-      );
+      execSync(`pnpm --filter @workspace/server db.migrations.seed ${seedName}`, {
+        stdio: 'inherit',
+        env: process.env,
+      });
       console.log(chalk.green(`✅ Seeded ${schema} successfully!`));
     } catch (error) {
       console.error(chalk.red(`❌ Error seeding ${schema}:`), error);
@@ -125,13 +107,10 @@ async function createViews() {
     for (const view of viewConfigs) {
       try {
         console.log(chalk.blue(`Creating view: ${view.name}...`));
-        execSync(
-          `pnpm --filter @workspace/server db.views.create.single ${view.name}`,
-          {
-            stdio: 'inherit',
-            env: process.env,
-          },
-        );
+        execSync(`pnpm --filter @workspace/server db.views.create.single ${view.name}`, {
+          stdio: 'inherit',
+          env: process.env,
+        });
         console.log(chalk.green(`✅ Created view: ${view.name}`));
       } catch (error) {
         console.error(chalk.red(`❌ Error creating view ${view.name}:`), error);
@@ -154,10 +133,7 @@ export async function main() {
     let operations: string[];
     if (autoConfirm) {
       operations = ['seed', 'views']; // Default: only seed data, adjust as needed
-      console.log(
-        '[db-setup] Auto-confirm enabled: defaulting to operations:',
-        operations,
-      );
+      console.log('[db-setup] Auto-confirm enabled: defaulting to operations:', operations);
     } else {
       operations = await checkbox({
         message: 'Select operations to perform',
@@ -182,10 +158,7 @@ export async function main() {
       if (autoConfirm) {
         const { seedConfigs } = await loadSeedConfig();
         schemas = seedConfigs.map((s) => s.name);
-        console.log(
-          '[db-setup] Auto-confirm enabled: seeding all schemas:',
-          schemas,
-        );
+        console.log('[db-setup] Auto-confirm enabled: seeding all schemas:', schemas);
       } else {
         const { seedConfigs } = await loadSeedConfig();
         schemas = await getSchemaSelection({ seedConfigs });

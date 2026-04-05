@@ -2,24 +2,16 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { readdir, readFile, writeFile } from 'fs/promises';
 import { join, resolve } from 'path';
-
 import type { BuildDeploymentConfig } from '../config/types';
 
 /**
  * Build client or server application
  */
-export async function buildApp(
-  config: BuildDeploymentConfig,
-  type: 'client' | 'server',
-): Promise<void> {
+export async function buildApp(config: BuildDeploymentConfig, type: 'client' | 'server'): Promise<void> {
   const command = `pnpm --filter ${config.packageNames[type]} ${config.buildCommands[type]}`;
 
   // Use the isolated build workspace for builds
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   console.log(`🔒 Building from isolated workspace: ${buildWorkspace}`);
   console.log(`  📦 Command: ${command}`);
@@ -101,15 +93,8 @@ export async function createPackageJson(
     },
   };
 
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
-  await writeFile(
-    join(buildWorkspace, 'package.json'),
-    JSON.stringify(packageJson, null, 2),
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
+  await writeFile(join(buildWorkspace, 'package.json'), JSON.stringify(packageJson, null, 2));
 }
 
 /**
@@ -143,28 +128,15 @@ export async function createStandalonePackage(
     },
   };
 
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
-  await writeFile(
-    join(buildWorkspace, 'package.json'),
-    JSON.stringify(packageJson, null, 2),
-  );
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
+  await writeFile(join(buildWorkspace, 'package.json'), JSON.stringify(packageJson, null, 2));
 }
 
 /**
  * Install production dependencies
  */
-export async function installDependencies(
-  config: BuildDeploymentConfig,
-): Promise<void> {
-  const buildWorkspace = resolve(
-    config.workspaceRoot,
-    config.paths.temp,
-    'deployment',
-  );
+export async function installDependencies(config: BuildDeploymentConfig): Promise<void> {
+  const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, 'deployment');
 
   // Safety check: ensure we're working in the isolated .temp directory
   if (!buildWorkspace.includes(config.paths.temp)) {
@@ -193,9 +165,7 @@ export async function installDependencies(
         env: { ...process.env, NODE_ENV: 'production' },
       });
     } catch (_forceError: unknown) {
-      console.log(
-        '⚠️  Force install failed, trying with no-frozen-lockfile...',
-      );
+      console.log('⚠️  Force install failed, trying with no-frozen-lockfile...');
 
       try {
         // Third attempt: allow lockfile updates
@@ -205,9 +175,7 @@ export async function installDependencies(
           env: { ...process.env, NODE_ENV: 'production' },
         });
       } catch (_lockfileError: unknown) {
-        console.log(
-          '⚠️  Lockfile install failed, trying with ignore-scripts...',
-        );
+        console.log('⚠️  Lockfile install failed, trying with ignore-scripts...');
 
         // Fourth attempt: skip problematic postinstall scripts
         execSync('npm install --production --ignore-scripts', {
@@ -225,9 +193,7 @@ export async function installDependencies(
  */
 export function killPortIfOccupied(port: number): void {
   try {
-    const result = execSync(`lsof -ti:${port}`, { stdio: 'pipe' })
-      .toString()
-      .trim();
+    const result = execSync(`lsof -ti:${port}`, { stdio: 'pipe' }).toString().trim();
     if (result) {
       console.log(`⚠️  Port ${port} is occupied, killing process...`);
       execSync(`lsof -ti:${port} | xargs kill -9`, { stdio: 'inherit' });
