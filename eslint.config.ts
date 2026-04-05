@@ -32,8 +32,26 @@ export default defineConfig([
   },
 
   {
+    files: ['bin/**/*.mjs'],
+    rules: {
+      'no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
+  },
+
+  {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['_templates/feature/**'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

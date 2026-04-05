@@ -94,9 +94,10 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "========== DEV": "=======================================================",
+    "---------- DEV_AND_BUILD": "---------------------------------------------",
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
-    "·········· BUILD": "·····················································",
+    "link": "pnpm build && pnpm link --global",
+    "unlink": "pnpm unlink --global",
     "build": "tsdown",
     "·········· TESTING": "···················································",
     "test": "vitest",
@@ -194,7 +195,11 @@
       "dprint fmt --allow-no-files",
       "eslint --fix"
     ],
-    "*.{json,jsonc,md,yml,yaml,toml}": [
+    "*.md": [
+      "dprint fmt --allow-no-files",
+      "eslint --fix"
+    ],
+    "*.{json,jsonc,yml,yaml,toml}": [
       "dprint fmt --allow-no-files"
     ]
   },
