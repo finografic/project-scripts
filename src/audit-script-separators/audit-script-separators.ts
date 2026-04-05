@@ -99,7 +99,7 @@ async function findAllPackageJsonFiles(dir: string): Promise<string[]> {
       const fullPath = join(current, entry.name);
 
       if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.git') continue;
+        if (['node_modules', '.git', 'dist', 'bin'].includes(entry.name)) continue;
         await walk(fullPath);
       } else if (entry.name === 'package.json') {
         results.push(relative(WORKSPACE_ROOT, fullPath));
@@ -123,6 +123,28 @@ async function findWorkflowFiles(): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+async function findMarkdownFiles(dir: string): Promise<string[]> {
+  const results: string[] = [];
+
+  async function walk(current: string) {
+    const entries = await readdir(current, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = join(current, entry.name);
+
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || entry.name === '.git') continue;
+        await walk(fullPath);
+      } else if (entry.name.endsWith('.md')) {
+        results.push(relative(WORKSPACE_ROOT, fullPath));
+      }
+    }
+  }
+
+  await walk(dir);
+  return results.sort();
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -284,7 +306,8 @@ export async function main(): Promise<void> {
 
   const packageJsonFiles = await findAllPackageJsonFiles(WORKSPACE_ROOT);
   const workflowFiles = await findWorkflowFiles();
-  const auditTargets = [...packageJsonFiles, ...workflowFiles];
+  const markdownFiles = await findMarkdownFiles(WORKSPACE_ROOT);
+  const auditTargets = [...packageJsonFiles, ...workflowFiles, ...markdownFiles];
 
   const scripts = (await Promise.all(packageJsonFiles.map((p) => loadPackageScripts(p)))).flat();
 
