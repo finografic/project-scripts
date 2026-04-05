@@ -24,6 +24,10 @@ export default defineConfig([
     treeshake: true,
     shims: true,
 
+    outputOptions: {
+      chunkFileNames: '[name].mjs',
+    },
+
     banner: {
       js: '#!/usr/bin/env node',
     },
@@ -34,6 +38,10 @@ export default defineConfig([
         to: 'bin/build-deployment/templates',
       },
     ],
+
+    onSuccess: async () => {
+      await chmod('bin/sqlite-rebuild.mjs', 0o755);
+    },
   },
 
   /* ---------------------------------------------------------------------- */
@@ -51,7 +59,7 @@ export default defineConfig([
     },
 
     outDir: 'dist',
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     target: 'node22',
     platform: 'node',
     clean: true,
@@ -59,15 +67,15 @@ export default defineConfig([
     treeshake: true,
     shims: true,
 
+    outputOptions: {
+      chunkFileNames: '[name].mjs',
+    },
+
     copy: [
       {
         from: 'src/build-deployment/templates',
         to: 'dist/build-deployment/templates',
       },
     ],
-
-    onSuccess: async () => {
-      await chmod('bin/sqlite-rebuild.mjs', 0o755);
-    },
   },
 ]);

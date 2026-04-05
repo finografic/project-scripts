@@ -39,9 +39,9 @@
     "cli",
     "finografic"
   ],
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "module": "./dist/index.mjs",
+  "main": "./dist/utils.mjs",
+  "types": "./dist/utils.d.mts",
+  "module": "./dist/utils.mjs",
   "files": [
     "bin",
     "dist",
@@ -57,39 +57,32 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.mjs",
-      "require": "./dist/utils.cjs"
+      "types": "./dist/utils.d.mts",
+      "import": "./dist/utils.mjs"
     },
     "./clean-docs": {
-      "types": "./dist/clean-docs.d.ts",
-      "import": "./dist/clean-docs.mjs",
-      "require": "./dist/clean-docs.cjs"
+      "types": "./dist/clean-docs.d.mts",
+      "import": "./dist/clean-docs.mjs"
     },
     "./db-setup": {
-      "types": "./dist/db-setup.d.ts",
-      "import": "./dist/db-setup.mjs",
-      "require": "./dist/db-setup.cjs"
+      "types": "./dist/db-setup.d.mts",
+      "import": "./dist/db-setup.mjs"
     },
     "./db-setup/config.template": {
-      "types": "./dist/db-setup/config.template.d.ts",
-      "import": "./dist/db-setup/config.template.mjs",
-      "require": "./dist/db-setup/config.template.cjs"
+      "types": "./dist/db-setup/config.template.d.mts",
+      "import": "./dist/db-setup/config.template.mjs"
     },
     "./purge-builds": {
-      "types": "./dist/purge-builds.d.ts",
-      "import": "./dist/purge-builds.mjs",
-      "require": "./dist/purge-builds.cjs"
+      "types": "./dist/purge-builds.d.mts",
+      "import": "./dist/purge-builds.mjs"
     },
     "./sqlite-rebuild": {
-      "types": "./dist/sqlite-rebuild.d.ts",
-      "import": "./dist/sqlite-rebuild.mjs",
-      "require": "./dist/sqlite-rebuild.cjs"
+      "types": "./dist/sqlite-rebuild.d.mts",
+      "import": "./dist/sqlite-rebuild.mjs"
     },
     "./build-deployment": {
-      "types": "./dist/build-deployment.d.ts",
-      "import": "./dist/build-deployment.mjs",
-      "require": "./dist/build-deployment.cjs"
+      "types": "./dist/build-deployment.d.mts",
+      "import": "./dist/build-deployment.mjs"
     },
     "./package.json": "./package.json"
   },
