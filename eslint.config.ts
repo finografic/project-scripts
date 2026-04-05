@@ -1,13 +1,12 @@
 /// <reference path="./src/declarations.d.ts" />
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
-import type { Linter } from 'eslint';
-import { defineConfig, globalIgnores } from 'eslint/config';
 import markdownlintPlugin from 'eslint-plugin-markdownlint';
 import markdownlintParser from 'eslint-plugin-markdownlint/parser.js';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
-
 import tseslint from 'typescript-eslint';
+import type { Linter } from 'eslint';
 
 export default defineConfig([
   globalIgnores([
@@ -140,8 +139,6 @@ export default defineConfig([
       'markdownlint/md045': 'off', // images require alt text
 
       // Formatting consistency
-      '@stylistic/no-multiple-empty-lines': ['error', { max: 1, maxBOF: 0, maxEOF: 1 }],
-      '@stylistic/no-trailing-spaces': 'error',
       '@stylistic/no-multi-spaces': ['error', { exceptions: { Property: true } }],
     },
   },

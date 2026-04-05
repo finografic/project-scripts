@@ -2,7 +2,6 @@
   "npm.packageManager": "pnpm",
 
   "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "file",
 
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
@@ -12,10 +11,33 @@
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.validate": ["javascript", "typescript", "css", "markdown"],
+  "oxc.typeAware": true,
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSaveMode": "file",
 
   "prettier.enable": false,
   "typescript.tsdk": "node_modules/typescript/lib",
-
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
   "markdownlint.config": {
     "default": true,
     "MD013": { "line_length": 120, "tables": false, "code_blocks": false }, // Allow line length
