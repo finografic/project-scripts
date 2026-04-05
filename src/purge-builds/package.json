@@ -22,9 +22,9 @@
     "dev": "tsc --watch",
     "build": "rm -rf dist && tsup",
     "clean": "./purge-builds/dist/index.js",
-    "clean.dry": "./purge-builds/dist/index.js --dry-run",
+    "clean:dry": "./purge-builds/dist/index.js --dry-run",
     "lint": "eslint .",
-    "lint.fix": "eslint . --fix",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -12,9 +12,9 @@ Typical scripts (yours may differ):
 
 ```bash
 pnpm lint          # ESLint / project lint
-pnpm lint.fix      # Lint with fixes, if defined
-pnpm format.fix    # Formatter (e.g. oxfmt)
-pnpm format.check  # Check formatting without writing
+pnpm lint:fix      # Lint with fixes, if defined
+pnpm format:fix    # Formatter (e.g. oxfmt)
+pnpm format:check  # Check formatting without writing
 pnpm typecheck     # TypeScript across packages
 pnpm test          # Tests
 ```
@@ -107,7 +107,7 @@ See [Release Process](./RELEASE_PROCESS.md) if this template includes release au
 **Example** (adjust script names to your repo):
 
 ```bash
-pnpm release.patch   # or release.github.patch, changeset publish, etc.
+pnpm release.patch   # or release:github:patch, changeset publish, etc.
 ```
 
 ---

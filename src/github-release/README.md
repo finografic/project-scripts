@@ -30,15 +30,15 @@ in consuming projects.
 
 {
 "scripts": {
-"release.github.patch": "github-release patch",
-"release.github.minor": "github-release minor",
-"release.github.major": "github-release major"
+"release:github:patch": "github-release patch",
+"release:github:minor": "github-release minor",
+"release:github:major": "github-release major"
 }
 }
 
 Then run:
 
-pnpm run release.github.patch
+pnpm run release:github:patch
 
 ---
 
