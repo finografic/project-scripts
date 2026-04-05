@@ -32,7 +32,7 @@
     "@inquirer/core": "10.1.9",
     "@inquirer/input": "4.1.8",
     "@inquirer/prompts": "7.1.0",
-    "chalk": "5.4.1",
+    "picocolors": "^1.1.1",
     "del": "8.0.0",
     "fs-extra": "^11.2.0",
     "glob": "^11.0.3",

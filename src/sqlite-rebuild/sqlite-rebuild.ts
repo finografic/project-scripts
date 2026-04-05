@@ -1,7 +1,8 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import chalk from 'chalk';
+
+import { pc } from 'utils/picocolors';
 
 interface RebuildOptions {
   force?: boolean;
@@ -49,17 +50,17 @@ class SqliteRebuilder {
 
   private log(message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') {
     const colors = {
-      info: chalk.blue,
-      success: chalk.green,
-      error: chalk.red,
-      warning: chalk.yellow,
+      info: pc.blue,
+      success: pc.green,
+      error: pc.red,
+      warning: pc.yellow,
     };
     console.log(colors[type](`[SQLite Rebuilder] ${message}`));
   }
 
   private logVerbose(message: string) {
     if (this.options.verbose) {
-      console.log(chalk.gray(`[DEBUG] ${message}`));
+      console.log(pc.gray(`[DEBUG] ${message}`));
     }
   }
 
@@ -373,7 +374,7 @@ async function main() {
   try {
     await rebuilder.rebuild();
   } catch (error) {
-    console.error(chalk.red(`\n❌ Rebuild failed: ${error}`));
+    console.error(pc.red(`\n❌ Rebuild failed: ${error}`));
     process.exit(1);
   }
 }

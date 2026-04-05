@@ -11,6 +11,7 @@ import type { Linter } from 'eslint';
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    '**/bin/**',
     '**/dist/**',
     '**/.cursor/hooks/**',
     '**/.cursor/chats/**',
@@ -27,25 +28,6 @@ export default defineConfig([
       globals: {
         ...globals.node,
       },
-    },
-  },
-
-  {
-    files: ['bin/**/*.mjs'],
-    rules: {
-      'no-unused-vars': [
-        'error',
-        {
-          args: 'all',
-          argsIgnorePattern: '^_',
-          caughtErrors: 'all',
-          caughtErrorsIgnorePattern: '^_',
-          destructuredArrayIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        },
-      ],
-      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
 

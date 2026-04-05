@@ -1,10 +1,5 @@
 # AGENTS.md - AI Assistant Guide
 
-## New here and require INITIAL CONTEXT ?
-
-- If **NO** initial context needed, then SKIP to NEXT section.
-- If **YES**, initial context needed, then READ [Project Concept & Manifesto](</LLAAB\ -\ CONCEPT\ &\ MANIFESTO.md>)
-
 ## Rules - General
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
@@ -19,6 +14,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - [Modern TypeScript Patterns](/.github/instructions/06-modern-typescript-patterns.instructions.md)
 - [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
 - [README Standards](/.github/instructions/08-readme-standards.instructions.md)
+- [Picocolors CLI styling](/.github/instructions/09-picocolors-cli-styling.instructions.md)
 
 ## Rules - Project-Specific
 
@@ -26,6 +22,7 @@ Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 
 - Published to GitHub Packages (`https://npm.pkg.github.com`).
 - Do not reference `@workspace/*` -— all imports and deps must use published package names.
+- **CLI colors:** `import { pc } from 'utils/picocolors'` and use `pc.cyan('…')`, `pc.bold(pc.red('…'))`, etc. (single string per call; combine with template literals). Details: [09-picocolors-cli-styling.instructions.md](/.github/instructions/09-picocolors-cli-styling.instructions.md).
 
 ## Rules - Markdown Tables
 

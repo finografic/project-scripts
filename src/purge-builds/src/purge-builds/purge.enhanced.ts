@@ -4,8 +4,9 @@ import fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout } from 'node:timers';
-import chalk from 'chalk';
 import ora from 'ora';
+
+import { pc } from 'utils/picocolors';
 
 export interface PurgeOptions {
   dryRun?: boolean;
@@ -436,8 +437,8 @@ export async function purge({
 
   // Safety check
   if (dryRun) {
-    console.log(chalk.green('🔒 DRY RUN MODE - NO FILES WILL BE DELETED\n'));
-    console.log(chalk.yellow('⚠️  This is a simulation only. Remove --dry-run to actually delete files.\n'));
+    console.log(pc.green('🔒 DRY RUN MODE - NO FILES WILL BE DELETED\n'));
+    console.log(pc.yellow('⚠️  This is a simulation only. Remove --dry-run to actually delete files.\n'));
   }
 
   const scanSpinner = ora('Scanning for build artifacts...').start();
@@ -458,39 +459,39 @@ export async function purge({
   scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
 
   // Show what will be deleted
-  console.log(chalk.gray(`   • ${dirCount} directories`));
-  console.log(chalk.gray(`   • ${fileCount} files`));
-  console.log(chalk.gray(`   • ${formatBytes(totalSize)} total size\n`));
+  console.log(pc.gray(`   • ${dirCount} directories`));
+  console.log(pc.gray(`   • ${fileCount} files`));
+  console.log(pc.gray(`   • ${formatBytes(totalSize)} total size\n`));
 
   if (verbose || dryRun) {
-    console.log(chalk.white('📝 Items to be processed:\n'));
+    console.log(pc.white('📝 Items to be processed:\n'));
 
     // Group by type for better display
     const directories = itemsToDelete.filter((item) => item.type === 'directory');
     const files = itemsToDelete.filter((item) => item.type === 'file');
 
     if (directories.length > 0) {
-      console.log(chalk.cyan('📁 Directories:'));
+      console.log(pc.cyan('📁 Directories:'));
       directories.forEach((item) => {
         const relativePath = path.relative(workingDir, item.path);
-        console.log(chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`));
+        console.log(pc.gray(`   ${relativePath} (${formatBytes(item.size)})`));
       });
       console.log();
     }
 
     if (files.length > 0) {
-      console.log(chalk.cyan('📄 Files:'));
+      console.log(pc.cyan('📄 Files:'));
       files.forEach((item) => {
         const relativePath = path.relative(workingDir, item.path);
-        console.log(chalk.gray(`   ${relativePath} (${formatBytes(item.size)})`));
+        console.log(pc.gray(`   ${relativePath} (${formatBytes(item.size)})`));
       });
       console.log();
     }
   }
 
   if (dryRun) {
-    console.log(chalk.yellow('🔒 DRY RUN: No files were actually deleted.'));
-    console.log(chalk.gray(`Would have freed ${formatBytes(totalSize)} of space.`));
+    console.log(pc.yellow('🔒 DRY RUN: No files were actually deleted.'));
+    console.log(pc.gray(`Would have freed ${formatBytes(totalSize)} of space.`));
     return;
   }
 
@@ -516,7 +517,7 @@ export async function purge({
     } else {
       errorCount++;
       if (verbose) {
-        console.log(chalk.red(`\nFailed to delete: ${relativePath}`));
+        console.log(pc.red(`\nFailed to delete: ${relativePath}`));
       }
     }
   }
@@ -525,7 +526,7 @@ export async function purge({
 
   // Handle deferred deletions (node_modules that we can't delete while running from them)
   if (deferredItems.length > 0) {
-    console.log(chalk.cyan('\n🔄 Handling deferred deletions...\n'));
+    console.log(pc.cyan('\n🔄 Handling deferred deletions...\n'));
 
     for (const item of deferredItems) {
       const relativePath = path.relative(workingDir, item.path);
@@ -538,13 +539,11 @@ export async function purge({
 
         if (!deleted) {
           // Fallback to timer approach
-          console.log(chalk.cyan('⏰ Falling back to timer approach...'));
+          console.log(pc.cyan('⏰ Falling back to timer approach...'));
           deleted = await scheduleDeferredDeletion(item.path, relativePath);
 
           if (deleted) {
-            console.log(
-              chalk.green(`⏰ Timer-scheduled: ${relativePath} will be deleted after process exits`),
-            );
+            console.log(pc.green(`⏰ Timer-scheduled: ${relativePath} will be deleted after process exits`));
           }
         }
       } else {
@@ -552,15 +551,15 @@ export async function purge({
         deleted = await scheduleDeferredDeletion(item.path, relativePath);
 
         if (deleted) {
-          console.log(chalk.green(`⏰ Scheduled: ${relativePath} will be deleted after process exits`));
+          console.log(pc.green(`⏰ Scheduled: ${relativePath} will be deleted after process exits`));
         }
       }
 
       if (!deleted) {
         // Fallback to manual instructions
-        console.log(chalk.yellow(`⏸️  Deferred: ${relativePath} (automatic deletion failed)`));
-        console.log(chalk.gray(`   Run after this completes: rm -rf ${relativePath} && pnpm install`));
-        console.log(chalk.gray('   Or try: pnpm clean --detach for automatic deletion'));
+        console.log(pc.yellow(`⏸️  Deferred: ${relativePath} (automatic deletion failed)`));
+        console.log(pc.gray(`   Run after this completes: rm -rf ${relativePath} && pnpm install`));
+        console.log(pc.gray('   Or try: pnpm clean --detach for automatic deletion'));
       }
     }
   }
@@ -572,17 +571,17 @@ export async function purge({
 
   // Final summary
   const duration = Date.now() - startTime;
-  console.log(chalk.green(`\n✅ Cleanup completed in ${duration}ms`));
-  console.log(chalk.gray(`   • ${deletedCount} items deleted`));
-  console.log(chalk.gray(`   • ${formatBytes(freedSpace)} freed`));
+  console.log(pc.green(`\n✅ Cleanup completed in ${duration}ms`));
+  console.log(pc.gray(`   • ${deletedCount} items deleted`));
+  console.log(pc.gray(`   • ${formatBytes(freedSpace)} freed`));
 
   if (deferredItems.length > 0) {
     const deferredSize = deferredItems.reduce((sum, item) => sum + item.size, 0);
-    console.log(chalk.yellow(`   • ${deferredItems.length} items deferred (${formatBytes(deferredSize)})`));
+    console.log(pc.yellow(`   • ${deferredItems.length} items deferred (${formatBytes(deferredSize)})`));
   }
 
   if (errorCount > 0) {
-    console.log(chalk.yellow(`   • ${errorCount} errors encountered`));
+    console.log(pc.yellow(`   • ${errorCount} errors encountered`));
   }
 
   console.log();

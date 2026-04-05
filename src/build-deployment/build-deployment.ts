@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { rm } from 'fs/promises';
 import { join, resolve } from 'path';
 import { checkbox, confirm, select } from '@inquirer/prompts';
-import chalk from 'chalk';
 
 import {
   buildApp,
@@ -32,6 +31,7 @@ import {
   loadTemplate,
   loadUserGuideTemplate,
 } from './utils/template.utils.js';
+import { pc } from 'utils/picocolors';
 import { defaultConfig } from './config/default.config.js';
 import type { BuildDeploymentConfig } from './config/types';
 import { deploymentOptions, getDefaultPlatform, platformConfigs } from './platforms.config.js';
@@ -43,7 +43,7 @@ async function generateAndDeployBuildAgent(
   config: BuildDeploymentConfig,
   _options: BuildOptions,
 ): Promise<void> {
-  console.log(chalk.blue('🤖 Generating Deployment Agent...'));
+  console.log(pc.blue('🤖 Generating Deployment Agent...'));
 
   // Create the build agent script content
   const buildAgentScript = `#!/usr/bin/env node
@@ -300,8 +300,8 @@ executeBuild();
 
   await writeExecutableFile(agentScriptPath, buildAgentScript, true);
 
-  console.log(chalk.green('✅ Deployment Agent generated and deployed!'));
-  console.log(chalk.blue('🤖 Executing from isolation...'));
+  console.log(pc.green('✅ Deployment Agent generated and deployed!'));
+  console.log(pc.blue('🤖 Executing from isolation...'));
 
   // Execute the build agent from within isolation
   execSync(`node "${agentScriptPath}"`, {
@@ -329,13 +329,13 @@ interface BuildOptions {
 }
 
 async function getInteractiveOptions(): Promise<BuildOptions> {
-  console.log(chalk.cyan('\n🏗️  Monorepo Deployment Builder'));
-  console.log(chalk.gray('═'.repeat(50)));
+  console.log(pc.cyan('\n🏗️  Monorepo Deployment Builder'));
+  console.log(pc.gray('═'.repeat(50)));
 
   if (autoConfirm) {
     const defaultPlatform = getDefaultPlatform();
     const defaultConfig = platformConfigs.find((config) => config.value === defaultPlatform);
-    console.log(chalk.yellow(`📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`));
+    console.log(pc.yellow(`📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`));
 
     return {
       platform: defaultConfig?.platform || 'macos',
@@ -347,7 +347,7 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   // Platform selection
   const selectedPlatform = await select({
-    message: chalk.bold('🎯 Select deployment platform:'),
+    message: pc.bold('🎯 Select deployment platform:'),
     choices: platformConfigs.map((config) => ({
       name: config.name,
       value: config.value,
@@ -363,18 +363,18 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   // Additional options
   const additionalOptions = await checkbox({
-    message: chalk.bold('⚙️  Select additional options:'),
+    message: pc.bold('⚙️  Select additional options:'),
     choices: deploymentOptions,
   });
 
   // Confirmation
   const shouldProceed = await confirm({
-    message: chalk.bold(`🚀 Build ${platformConfig.name}?`),
+    message: pc.bold(`🚀 Build ${platformConfig.name}?`),
     default: true,
   });
 
   if (!shouldProceed) {
-    console.log(chalk.yellow('📦 Build cancelled by user'));
+    console.log(pc.yellow('📦 Build cancelled by user'));
     process.exit(0);
   }
 
@@ -427,7 +427,7 @@ function parseArguments(): BuildOptions {
       case '--help':
       case '-h':
         console.log(
-          chalk.cyan(`
+          pc.cyan(`
 🏗️  Monorepo Deployment Builder
 
 Usage: pnpm build.deployment [options]
@@ -518,16 +518,16 @@ async function createPlatformFiles(config: BuildDeploymentConfig, options: Build
 async function main(): Promise<void> {
   // Handle emergency workspace restoration
   if (emergencyRestore) {
-    console.log(chalk.red('🚨 Emergency workspace restoration mode'));
-    console.log(chalk.gray('═'.repeat(60)));
+    console.log(pc.red('🚨 Emergency workspace restoration mode'));
+    console.log(pc.gray('═'.repeat(60)));
 
     try {
       const { emergencyRestoreWorkspace } = await import('./utils/file.utils.js');
       await emergencyRestoreWorkspace(defaultConfig.workspaceRoot);
-      console.log(chalk.green('✅ Emergency restoration completed'));
+      console.log(pc.green('✅ Emergency restoration completed'));
       process.exit(0);
     } catch (error) {
-      console.error(chalk.red('❌ Emergency restoration failed:'), error);
+      console.error(pc.red('❌ Emergency restoration failed:'), error);
       process.exit(1);
     }
   }
@@ -566,21 +566,21 @@ async function main(): Promise<void> {
   }
 
   // Display build configuration
-  console.log(chalk.cyan('\n🏗️  Building Monorepo Deployment'));
-  console.log(chalk.gray('═'.repeat(60)));
-  console.log(`${chalk.bold('Platform:')} ${options.platform || 'universal'}`);
-  console.log(`${chalk.bold('Architecture:')} ${options.arch || 'universal'}`);
-  console.log(`${chalk.bold('Standalone:')} ${options.standalone ? 'Yes' : 'No'}`);
-  console.log(`${chalk.bold('Include Node:')} ${options.includeNode ? 'Yes' : 'No'}`);
-  console.log(`${chalk.bold('Create Zip:')} ${options.zip ? 'Yes' : 'No'}`);
-  console.log(`${chalk.bold('Workspace Root:')} ${defaultConfig.workspaceRoot}`);
+  console.log(pc.cyan('\n🏗️  Building Monorepo Deployment'));
+  console.log(pc.gray('═'.repeat(60)));
+  console.log(`${pc.bold('Platform:')} ${options.platform || 'universal'}`);
+  console.log(`${pc.bold('Architecture:')} ${options.arch || 'universal'}`);
+  console.log(`${pc.bold('Standalone:')} ${options.standalone ? 'Yes' : 'No'}`);
+  console.log(`${pc.bold('Include Node:')} ${options.includeNode ? 'Yes' : 'No'}`);
+  console.log(`${pc.bold('Create Zip:')} ${options.zip ? 'Yes' : 'No'}`);
+  console.log(`${pc.bold('Workspace Root:')} ${defaultConfig.workspaceRoot}`);
   console.log(
-    `${chalk.bold('Build Workspace:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`,
+    `${pc.bold('Build Workspace:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.temp)}`,
   );
   console.log(
-    `${chalk.bold('Zip Destination:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`,
+    `${pc.bold('Zip Destination:')} ${resolve(defaultConfig.workspaceRoot, defaultConfig.paths.deployments)}`,
   );
-  console.log(chalk.gray('═'.repeat(60)));
+  console.log(pc.gray('═'.repeat(60)));
 
   try {
     // Kill occupied ports
@@ -588,21 +588,21 @@ async function main(): Promise<void> {
     killPortIfOccupied(defaultConfig.ports.server);
 
     // Optimized workspace isolation - avoids copying 30GB+ of node_modules
-    console.log(chalk.blue('🚀 Starting optimized workspace isolation...'));
+    console.log(pc.blue('🚀 Starting optimized workspace isolation...'));
     await optimizedIsolateWorkspace(defaultConfig);
 
     // Additional safety check before proceeding
     const { canProceedWithBuild } = await import('./utils/file.utils.js');
     const canProceed = await canProceedWithBuild(defaultConfig);
     if (!canProceed) {
-      console.log(chalk.yellow('⚠️  Safety check failed - deploying build agent instead...'));
-      console.log(chalk.blue('🤖 Transitioning to agent mode...'));
+      console.log(pc.yellow('⚠️  Safety check failed - deploying build agent instead...'));
+      console.log(pc.blue('🤖 Transitioning to agent mode...'));
 
       // Deploy the build agent instead of failing
       await generateAndDeployBuildAgent(defaultConfig, options);
 
       // Continue with platform files and ZIP creation after agent completes
-      console.log(chalk.blue('📋 Creating platform files and deployment package...'));
+      console.log(pc.blue('📋 Creating platform files and deployment package...'));
 
       // const buildWorkspace = join(
       //   defaultConfig.workspaceRoot,
@@ -611,7 +611,7 @@ async function main(): Promise<void> {
       // );
 
       // Copy build artifacts to expected structure (apps/client/dist -> dist/client, etc.)
-      console.log(chalk.blue('📁 Copying build artifacts to deployment structure...'));
+      console.log(pc.blue('📁 Copying build artifacts to deployment structure...'));
       await copyBuildArtifacts(defaultConfig, 'client');
       await copyBuildArtifacts(defaultConfig, 'server');
       await copyDataFiles(defaultConfig);
@@ -621,25 +621,25 @@ async function main(): Promise<void> {
 
       // Create ZIP archive if requested
       if (options.zip) {
-        console.log(chalk.blue('📦 Creating deployment ZIP archive...'));
+        console.log(pc.blue('📦 Creating deployment ZIP archive...'));
         await createZipArchive(defaultConfig, options.platform || 'macos', options.arch || 'arm64');
-        console.log(chalk.green('✅ ZIP archive created successfully!'));
+        console.log(pc.green('✅ ZIP archive created successfully!'));
       }
 
       // Clean up and restore workspace
-      console.log(chalk.blue('🔓 Restoring workspace from isolation...'));
+      console.log(pc.blue('🔓 Restoring workspace from isolation...'));
       await cleanupTempDirectory(defaultConfig);
       await optimizedRestoreWorkspace(defaultConfig);
 
-      console.log(chalk.green('🎉 Deployment completed via agent!'));
+      console.log(pc.green('🎉 Deployment completed via agent!'));
       return;
     }
 
-    console.log(chalk.green('🔒 Workspace isolation complete - safe to proceed with build'));
-    console.log(chalk.gray('   - pnpm workspace files moved to isolation'));
-    console.log(chalk.gray('   - node_modules moved to isolation'));
-    console.log(chalk.gray('   - backup created for safety'));
-    console.log(chalk.gray('═'.repeat(60)));
+    console.log(pc.green('🔒 Workspace isolation complete - safe to proceed with build'));
+    console.log(pc.gray('   - pnpm workspace files moved to isolation'));
+    console.log(pc.gray('   - node_modules moved to isolation'));
+    console.log(pc.gray('   - backup created for safety'));
+    console.log(pc.gray('═'.repeat(60)));
 
     // Create directory structure in .temp (build isolation)
     await cleanPlatformArtifacts(defaultConfig);
@@ -692,7 +692,7 @@ async function main(): Promise<void> {
     }
 
     // Clean up .temp build directory and restore workspace
-    console.log(chalk.blue('🔓 Restoring workspace from isolation...'));
+    console.log(pc.blue('🔓 Restoring workspace from isolation...'));
     await cleanupTempDirectory(defaultConfig);
     await optimizedRestoreWorkspace(defaultConfig);
 

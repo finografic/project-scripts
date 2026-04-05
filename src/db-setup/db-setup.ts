@@ -4,8 +4,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 // import { config } from "@dotenvx/dotenvx";
 import { checkbox } from '@inquirer/prompts';
-import chalk from 'chalk';
 
+import { pc } from 'utils/picocolors';
 import { PATH_FOLDER_ENV } from './schemas.config';
 import { getSchemaSelection, loadSeedConfig, loadViewConfig } from './schemas.utils';
 
@@ -21,13 +21,13 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 console.log('[db-setup] NODE_ENV:', nodeEnv);
 
 if (!['development', 'test', 'production'].includes(nodeEnv)) {
-  console.warn(chalk.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
+  console.warn(pc.yellow(`⚠️ Unexpected NODE_ENV: ${nodeEnv}, defaulting to development`));
 }
 
 const envPath = path.resolve(process.cwd(), `${PATH_FOLDER_ENV}/.env.${nodeEnv}`);
 console.log('[db-setup] Looking for env file at:', envPath);
 if (!fs.existsSync(envPath)) {
-  console.error(chalk.red(`❌ Environment file not found: ${envPath}`));
+  console.error(pc.red(`❌ Environment file not found: ${envPath}`));
   process.exit(1);
 }
 
@@ -76,16 +76,16 @@ async function runMigrations() {
 async function seedData(schemas: string[]) {
   for (const schema of schemas) {
     try {
-      console.log(chalk.blue(`\nSeeding ${schema}...`));
+      console.log(pc.blue(`\nSeeding ${schema}...`));
       const seedName = schema.startsWith('auth_') ? schema.replace('auth_', '') : schema;
       console.log(`[db-setup] Seeding: ${seedName}`);
       execSync(`pnpm --filter @workspace/server db.migrations.seed ${seedName}`, {
         stdio: 'inherit',
         env: process.env,
       });
-      console.log(chalk.green(`✅ Seeded ${schema} successfully!`));
+      console.log(pc.green(`✅ Seeded ${schema} successfully!`));
     } catch (error) {
-      console.error(chalk.red(`❌ Error seeding ${schema}:`), error);
+      console.error(pc.red(`❌ Error seeding ${schema}:`), error);
       throw error;
     }
   }
@@ -100,25 +100,25 @@ async function createViews() {
     const { viewConfigs } = await loadViewConfig();
 
     if (!viewConfigs || viewConfigs.length === 0) {
-      console.log(chalk.yellow('⚠️ No views configured to create'));
+      console.log(pc.yellow('⚠️ No views configured to create'));
       return;
     }
 
     for (const view of viewConfigs) {
       try {
-        console.log(chalk.blue(`Creating view: ${view.name}...`));
+        console.log(pc.blue(`Creating view: ${view.name}...`));
         execSync(`pnpm --filter @workspace/server db.views.create.single ${view.name}`, {
           stdio: 'inherit',
           env: process.env,
         });
-        console.log(chalk.green(`✅ Created view: ${view.name}`));
+        console.log(pc.green(`✅ Created view: ${view.name}`));
       } catch (error) {
-        console.error(chalk.red(`❌ Error creating view ${view.name}:`), error);
+        console.error(pc.red(`❌ Error creating view ${view.name}:`), error);
         throw error;
       }
     }
   } catch (error) {
-    console.error(chalk.red('❌ Error loading view configuration:'), error);
+    console.error(pc.red('❌ Error loading view configuration:'), error);
     throw error;
   }
 }
@@ -168,28 +168,28 @@ export async function main() {
 
     // Execute selected operations
     if (operations.includes('generate')) {
-      console.log(chalk.blue('\n1. Generating migrations...'));
+      console.log(pc.blue('\n1. Generating migrations...'));
       await generateMigrations();
     }
 
     if (operations.includes('migrate')) {
-      console.log(chalk.blue('\n2. Running migrations...'));
+      console.log(pc.blue('\n2. Running migrations...'));
       await runMigrations();
     }
 
     if (operations.includes('seed')) {
-      console.log(chalk.blue('\n3. Seeding data...'));
+      console.log(pc.blue('\n3. Seeding data...'));
       await seedData(schemas);
     }
 
     if (operations.includes('views')) {
-      console.log(chalk.blue('\n4. Creating views...'));
+      console.log(pc.blue('\n4. Creating views...'));
       await createViews();
     }
 
     console.log('--- [db-setup] Script finished ---');
   } catch (error) {
-    console.error(chalk.red('\n❌ Unexpected error:'));
+    console.error(pc.red('\n❌ Unexpected error:'));
     console.error(error);
     process.exit(1);
   }

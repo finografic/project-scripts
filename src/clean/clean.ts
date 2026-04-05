@@ -6,10 +6,10 @@
 
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import chalk from 'chalk';
 import { deleteAsync } from 'del';
 import type { CleanOptions, DeleteProgress } from './clean.types';
 
+import { pc } from 'utils/picocolors';
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';
 import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean.config';
@@ -36,12 +36,12 @@ const matchesIncludePattern = (filePath: string): boolean => {
  */
 export async function clean({ dryRun = false, verbose = false, recursive = false }: CleanOptions = {}) {
   if (dryRun) {
-    console.log(chalk.green('DRY RUN - no files will be deleted\n'));
+    console.log(pc.green('DRY RUN - no files will be deleted\n'));
   }
   // Path info
-  console.log(chalk.white('\nPath Information:'));
-  console.log(chalk.gray('  Current Directory:', process.cwd()));
-  console.log(chalk.gray('  Project Root:', WORKSPACE_ROOT));
+  console.log(pc.white('\nPath Information:'));
+  console.log(pc.gray(`  Current Directory: ${process.cwd()}`));
+  console.log(pc.gray(`  Project Root: ${WORKSPACE_ROOT}`));
 
   const packageScope = getPackageScope();
   const baseDir = packageScope ? path.join(WORKSPACE_ROOT, packageScope) : WORKSPACE_ROOT;
@@ -49,21 +49,21 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
   // Determine scope type for messaging
   const scopeType = packageScope ? 'Local package' : recursive ? 'Project (deep)' : 'Project root (only)';
 
-  console.log(chalk.gray('  Package Scope:', packageScope || 'none'));
-  console.log(chalk.gray('  Base Directory:', baseDir));
-  console.log(chalk.gray('  Scope Type:', scopeType));
+  console.log(pc.gray(`  Package Scope: ${packageScope || 'none'}`));
+  console.log(pc.gray(`  Base Directory: ${baseDir}`));
+  console.log(pc.gray(`  Scope Type: ${scopeType}`));
 
   // Operation info
-  console.log(chalk[dryRun ? 'white' : 'magenta'](`\nCleaning ${scopeType}...\n`));
+  console.log((dryRun ? pc.white : pc.magenta)(`\nCleaning ${scopeType}...\n`));
 
   if (dryRun) {
-    console.log(chalk.gray('Patterns to be processed:'));
+    console.log(pc.gray('Patterns to be processed:'));
     GLOB_DELETE_INCLUDE.forEach((pattern) => {
-      console.log(chalk.gray(`  - ${pattern}`));
+      console.log(pc.gray(`  - ${pattern}`));
     });
-    console.log(chalk.gray('\nExcluded patterns:'));
+    console.log(pc.gray('\nExcluded patterns:'));
     GLOB_DELETE_EXCLUDE.forEach((pattern) => {
-      console.log(chalk.gray(`  - ${pattern}`));
+      console.log(pc.gray(`  - ${pattern}`));
     });
     console.log('');
   }
@@ -80,8 +80,8 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
       const finalPattern = !packageScope && recursive ? fullPattern : fullPattern.replace(/^\*\*\//, '');
 
       if (verbose) {
-        console.log(chalk[dryRun ? 'gray' : 'magenta'](`\nProcessing pattern: ${pattern}`));
-        console.log(chalk[dryRun ? 'gray' : 'magenta'](`Final pattern: ${finalPattern}`));
+        console.log((dryRun ? pc.gray : pc.magenta)(`\nProcessing pattern: ${pattern}`));
+        console.log((dryRun ? pc.gray : pc.magenta)(`Final pattern: ${finalPattern}`));
       }
 
       const deletedPaths = await deleteAsync(finalPattern, {
@@ -91,7 +91,7 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
           ? (progress: DeleteProgress) => {
               const { deletedCount, totalCount, percent } = progress;
               console.log(
-                chalk[dryRun ? 'gray' : 'magenta'](
+                (dryRun ? pc.gray : pc.magenta)(
                   `Progress: ${deletedCount}/${totalCount} (${percent.toFixed(1)}%)`,
                 ),
               );
@@ -101,9 +101,9 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
       });
 
       if (verbose && deletedPaths.length > 0) {
-        console.log(chalk[dryRun ? 'gray' : 'magenta']('\nPaths affected:'));
+        console.log((dryRun ? pc.gray : pc.magenta)('\nPaths affected:'));
         deletedPaths.forEach((file) => {
-          console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`));
+          console.log((dryRun ? pc.gray : pc.magenta)(`  - ${file}`));
         });
       }
 
@@ -123,33 +123,33 @@ export async function clean({ dryRun = false, verbose = false, recursive = false
     if (verbose || dryRun) {
       const filteredRootPaths = Array.from(rootPaths).filter(matchesIncludePattern);
       if (filteredRootPaths.length > 0) {
-        console.log(chalk[dryRun ? 'gray' : 'magenta']('\nRoot paths affected:'));
+        console.log((dryRun ? pc.gray : pc.magenta)('\nRoot paths affected:'));
         filteredRootPaths
           .sort()
-          .forEach((file) => console.log(chalk[dryRun ? 'gray' : 'magenta'](`  - ${file}`)));
+          .forEach((file) => console.log((dryRun ? pc.gray : pc.magenta)(`  - ${file}`)));
       }
     }
 
     // Summary
     console.log(
-      chalk[dryRun ? 'gray' : 'green'](
+      (dryRun ? pc.gray : pc.green)(
         `\n✔ Clean ${dryRun ? 'simulation' : 'operation'} completed successfully`,
       ),
     );
-    console.log(chalk.gray(`  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`));
-    console.log(chalk.gray(`  ${totalPaths} total paths processed`));
+    console.log(pc.gray(`  ${rootPaths.size} root paths ${dryRun ? 'would be' : 'were'} affected`));
+    console.log(pc.gray(`  ${totalPaths} total paths processed`));
     if (totalFiles > 0) {
-      console.log(chalk.gray(`  ${totalFiles} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
+      console.log(pc.gray(`  ${totalFiles} total files ${dryRun ? 'would be' : 'were'} deleted\n`));
     }
   } catch (error: unknown) {
-    console.error(chalk.yellow('\n✘ Clean operation failed:'));
+    console.error(pc.yellow('\n✘ Clean operation failed:'));
     if (error instanceof Error) {
-      console.error(chalk.yellow('  Error:', error.message));
+      console.error(pc.yellow(`  Error: ${error.message}`));
       if (error.stack) {
-        console.error(chalk.yellow('  Stack:', error.stack));
+        console.error(pc.yellow(`  Stack: ${error.stack}`));
       }
     } else {
-      console.error(chalk.yellow('  Unknown error:', error));
+      console.error(pc.yellow(`  Unknown error: ${String(error)}`));
     }
     process.exit(1);
   }

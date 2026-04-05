@@ -8,14 +8,15 @@ import { purge, type PurgeOptions } from './purge.enhanced';
 // Mock dependencies
 vi.mock('node:fs/promises');
 vi.mock('node:child_process');
-vi.mock('chalk', () => ({
-  default: {
+vi.mock('utils/picocolors', () => ({
+  pc: {
     green: (str: string) => str,
     yellow: (str: string) => str,
     gray: (str: string) => str,
     cyan: (str: string) => str,
     red: (str: string) => str,
     white: (str: string) => str,
+    bold: (str: string) => str,
   },
 }));
 vi.mock('ora', () => ({

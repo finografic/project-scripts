@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { checkbox } from '@inquirer/prompts';
-import chalk from 'chalk';
 import type { SeedConfig, ViewConfig } from './db-setup.types';
 
+import { pc } from 'utils/picocolors';
 import { findScriptConfigFile } from '../utils/config.utils';
 import { findProjectRoot } from '../utils/project.utils';
 import { PATH_FILES_CONFIG, PATH_FOLDER_SCHEMAS, SCHEMAS_BLOCKLIST } from './schemas.config';
@@ -44,18 +44,18 @@ export const loadSeedConfig = async ({
       'code' in error &&
       error.code === 'ERR_UNKNOWN_FILE_EXTENSION'
     ) {
-      console.error(chalk.red('\n❌ Error loading TypeScript config file.'));
+      console.error(pc.red('\n❌ Error loading TypeScript config file.'));
       console.error(
-        chalk.yellow(
+        pc.yellow(
           "Node.js cannot import .ts files directly. Please run with: NODE_OPTIONS='--import tsx' db-setup",
         ),
       );
       console.error(
-        chalk.yellow('TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.'),
+        pc.yellow('TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.'),
       );
       process.exit(1);
     }
-    console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
+    console.error(pc.red(`❌ Error loading config from ${configPath}:`), error);
     process.exit(1);
   }
 };
@@ -95,18 +95,18 @@ export const loadViewConfig = async ({
       'code' in error &&
       error.code === 'ERR_UNKNOWN_FILE_EXTENSION'
     ) {
-      console.error(chalk.red('\n❌ Error loading TypeScript config file.'));
+      console.error(pc.red('\n❌ Error loading TypeScript config file.'));
       console.error(
-        chalk.yellow(
+        pc.yellow(
           "Node.js cannot import .ts files directly. Please run with: NODE_OPTIONS='--import tsx' db-setup",
         ),
       );
       console.error(
-        chalk.yellow('TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.'),
+        pc.yellow('TypeScript is required for type safety with SeedConfig/ViewConfig interfaces.'),
       );
       process.exit(1);
     }
-    console.error(chalk.red(`❌ Error loading config from ${configPath}:`), error);
+    console.error(pc.red(`❌ Error loading config from ${configPath}:`), error);
     process.exit(1);
   }
 };
@@ -173,7 +173,7 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
   const schemasDir = path.join(process.cwd(), PATH_FOLDER_SCHEMAS);
 
   if (!fs.existsSync(schemasDir)) {
-    console.error(chalk.red(`❌ Schemas directory not found: ${schemasDir}`));
+    console.error(pc.red(`❌ Schemas directory not found: ${schemasDir}`));
     process.exit(1);
   }
 
@@ -181,7 +181,7 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
   const schemas = getAllSchemas({ seedConfigs }).filter((schema) => !SCHEMAS_BLOCKLIST.includes(schema));
 
   if (schemas.length === 0) {
-    console.warn(chalk.yellow('⚠️ No schema files found'));
+    console.warn(pc.yellow('⚠️ No schema files found'));
     return [];
   }
 
@@ -197,9 +197,9 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
   // Validate dependencies
   const missingDeps = validateDependencies({ seedConfigs, selectedSchemas });
   if (missingDeps.length > 0) {
-    console.error(chalk.red('\n❌ Missing dependencies:'));
+    console.error(pc.red('\n❌ Missing dependencies:'));
     missingDeps.forEach(({ schema, dependencies }) => {
-      console.error(chalk.red(`  ${schema} requires: ${dependencies.join(', ')}`));
+      console.error(pc.red(`  ${schema} requires: ${dependencies.join(', ')}`));
     });
     process.exit(1);
   }
