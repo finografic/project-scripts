@@ -1,69 +1,112 @@
-# @finografic/project-scripts
+# 🦋 @finografic/project-scripts
 
-```sh
-# 1. Edit pnpm-workspace.yaml to remove the project-scripts directory
-# (temporarily remove or comment out the packages/* line if needed)
+A collection of utility scripts for managing monorepo projects, including cleaning build artifacts and database setup tools.
 
-# 2. Remove the directory from git tracking (but keep the files)
-git rm -r --cached packages/project-scripts
+## Installation
 
-# 3. Now you can add it as a submodule
-git submodule add git@github.com:finografic/project-scripts.git packages/project-scripts
-
-# 4. Commit the changes
-git commit -m "Convert project-scripts to submodule"
-
-# 5. Don't forget to restore your pnpm-workspace.yaml if you modified it
-
+```bash
+pnpm add -D @finografic/project-scripts
 ```
 
----
+## Utilities
 
-## INIT: how to install as dep and setup scripts
+### `clean`
 
-Install as a dev dependency from the root of the monorepo
+A utility for cleaning build artifacts and dependencies from your project.
 
-```sh
-pnpm add -D @finografic/project-scripts --latest --recursive --registry http://localhost:4873",
+```bash
+# Clean with default options
+clean
+
+# Clean recursively (includes all workspaces)
+clean --recursive
+
+# Dry run (shows what would be deleted)
+clean --dry-run
+
+# Available flags
+--recursive, -r    Clean all workspaces recursively
+--dry-run, -d     Show what would be deleted without actually deleting
+--verbose, -v     Show detailed progress
 ```
 
-Add update script to the root package.json
+### `db-setup`
+
+An interactive database setup utility for managing schema migrations and seeding data.
+
+#### Prerequisites
+
+1. Create a `seed.config.ts` file in your project's `scripts` folder:
+
+```typescript
+import type { SeedConfig } from '@finografic/project-scripts/db-setup';
+
+export const seedOrder: SeedConfig[] = [
+  {
+    name: 'users',
+    description: 'Base user tables',
+  },
+  {
+    name: 'products',
+    description: 'Product catalog',
+    dependencies: ['users'], // Will ensure users are seeded first
+  },
+];
+```
+
+2. The `db-setup` script requires `tsx` to load TypeScript config files. You have two options:
+
+**Option A: Install `tsx` in your project (recommended)**
 
 ```json
 {
-  "·········· LINTING": "···················································",
-  "update:project-scripts": "pnpm update @finografic/project-scripts --latest --recursive --registry http://localhost:4873"
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  },
+  "scripts": {
+    "db.setup": "db-setup"
+  }
 }
 ```
 
-## `.npmrc` file - THIS source repository
+**Option B: Use `NODE_OPTIONS` (works with `pnpm dlx`)**
 
-```config
-# For local development/publishing
-registry=http://localhost:4873
-@finografic:registry=http://localhost:4873
-
-# For GitHub Packages publishing
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```json
+{
+  "scripts": {
+    "db.setup": "NODE_OPTIONS='--import tsx' db-setup"
+  }
+}
 ```
 
-## `.npmrc` file - CONSUMER repository
+Note: `tsx` is a peerDependency of `@finografic/project-scripts` and is required for `db-setup` to work.
 
-this allows to pull from GitHub Packages, when running `pnpm install`
+#### Usage
 
-```config
-@finografic:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```bash
+pnpm db.setup
 ```
 
----
+The command will present an interactive interface to:
 
-## OTHER: how to reference this as a submodule inside of a monorepo
+1. Select operations to perform (seed data, run migrations, generate migrations)
+2. Choose specific schemas to process (if seeding data)
+3. Execute operations in the correct order, respecting dependencies
 
-Keep the `workspace:*` specifier since it's still a workspace package
+#### Configuration
 
-```
-"devDependencies": {
-  "@finografic/project-scripts": "workspace:*"
+- Environment files should be located in `apps/server/.env.[environment]`
+- Schema files should be in `apps/server/src/db/schemas/`
+- Migration commands are executed using `pnpm --filter @touch/server`
+
+## Package Scripts
+
+To keep the package updated in your project:
+
+```json
+{
+  "scripts": {
+    "project-scripts": "dotenvx run -- pnpm update @finografic/project-scripts --latest --recursive"
+  }
 }
 ```
