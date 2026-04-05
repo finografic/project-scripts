@@ -1,0 +1,54 @@
+{
+  "name": "@workspace/purge-builds",
+  "version": "0.0.2",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.17.1",
+    "pnpm": ">=10.8.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./src/purge-builds/index.ts",
+  "bin": {
+    "purge-builds": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/purge-builds/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsup",
+    "clean": "./purge-builds/dist/index.js",
+    "clean.dry": "./purge-builds/dist/index.js --dry-run",
+    "lint": "eslint .",
+    "lint.fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@inquirer/confirm": "5.1.8",
+    "@inquirer/core": "10.1.9",
+    "@inquirer/input": "4.1.8",
+    "@inquirer/prompts": "7.1.0",
+    "chalk": "5.4.1",
+    "del": "8.0.0",
+    "fs-extra": "^11.2.0",
+    "glob": "^11.0.3",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "20.15.0",
+    "@types/prompts": "^2.4.9",
+    "@types/yargs": "^17.0.33",
+    "dotenv": "^16.5.0",
+    "env-cmd": "^10.1.0",
+    "tsup": "8.5.0",
+    "tsx": "4.19.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
