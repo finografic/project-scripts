@@ -2,26 +2,28 @@
   "npm.packageManager": "pnpm",
 
   "editor.formatOnSave": true,
-
-  // Match lint-staged (*.{ts,tsx,...}: oxfmt then eslint --fix): default formatter runs first,
-  // then ESLint fixes. Do not rely on ESLint for indentation — oxfmt owns layout.
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always"
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports": "never",
+    "source.sortImports": "explicit",
+    "source.addMissingImports": "explicit"
   },
 
-  "eslint.format.enable": true,
-  "eslint.enable": true,
-  "eslint.useFlatConfig": true,
-  "eslint.validate": ["javascript", "typescript", "css", "markdown"],
-  "oxc.typeAware": true,
-
-  "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSaveMode": "file",
-
+  "eslint.enable": false,
   "prettier.enable": false,
 
+  "oxc.typeAware": true,
+  "oxc.lint.run": "onSave",
+
   "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+
   "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[json]": {
@@ -30,27 +32,18 @@
   "[jsonc]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
-  "[typescript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  },
   "[yaml]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[toml]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
-  "markdownlint.config": {
-    "default": true,
-    "MD013": { "line_length": 120, "tables": false, "code_blocks": false }, // Allow line length
-    "MD024": false, // Allow duplicate headings
-    "MD025": false, // Allow multiple top-level headings
-    "MD036": false, // No emphasis as heading
-    "MD040": false, // Allow fenced code blocks
-    "MD041": false, // Don't require first line to be a top-level heading
-    "MD060": { "style": "aligned" } // Allow heading indentation
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": true
   },
-  "markdown.styles": [".vscode/markdown-github-light.css"]
+
+  "eslint.validate": ["javascript", "typescript", "css", "markdown"],
+
+  "markdown.styles": ["node_modules/@finografic/md-lint/styles/markdown-github-light.css"]
 }

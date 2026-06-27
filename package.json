@@ -103,8 +103,11 @@
     "test:run:silent": "vitest run --silent",
     "test:coverage": "vitest run --coverage",
     "·········· LINTING": "···················································",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "oxlint -c oxlint.config.ts",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix",
+    "lint:ci": "oxlint -c oxlint.config.ts --quiet",
+    "lint:md": "md-lint",
+    "lint:md:fix": "md-lint --fix",
     "·········· FORMATTING": "················································",
     "format:check": "oxfmt --check",
     "format:fix": "oxfmt",
@@ -118,15 +121,14 @@
     "view:registry:github": "pnpm view @finografic/project-scripts --registry=https://npm.pkg.github.com",
     "·········· PACKAGES": "···················································",
     "update:core": "pnpm update @finografic/core --latest",
-    "update:eslint-config": "pnpm update @finografic/eslint-config --latest",
-    "update:oxfmt-config": "pnpm update @finografic/oxfmt-config --latest && pnpm update oxfmt --latest",
+    "update:oxc-config": "pnpm update @finografic/oxc-config --latest && pnpm update oxfmt --latest && pnpm update oxlint --latest",
     "upgrade:deps:all": "pnpm update --latest",
     "·········· UTILS": "·····················································",
     "tsc:debug": "tsc --pretty --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "tooling:check": "tsx scripts/check-tooling.ts",
     "prepack": "pnpm build",
-    "prepare": "simple-git-hooks"
+    "prepare": "husky"
   },
   "dependencies": {
     "@inquirer/confirm": "5.1.18",
@@ -141,28 +143,22 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.2.0",
-    "@commitlint/config-conventional": "^20.2.0",
+    "@commitlint/cli": "^21.1.0",
+    "@commitlint/config-conventional": "^21.1.0",
     "@dotenvx/dotenvx": "1.51.0",
-    "@eslint/js": "^9.39.2",
-    "@finografic/eslint-config": "9.18.4",
-    "@finografic/oxfmt-config": "^1.0.3",
-    "@stylistic/eslint-plugin": "^5.6.1",
-    "@types/node": "^24.0.0",
+    "@finografic/md-lint": "^0.16.6",
+    "@finografic/oxc-config": "^2.8.2",
+    "@types/node": "24.12.0",
     "@types/yargs": "^17.0.33",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.51.0",
-    "eslint": "^9.39.2",
-    "eslint-plugin-markdownlint": "^0.9.0",
-    "globals": "^17.3.0",
-    "lint-staged": "^16.2.7",
-    "oxfmt": "^0.43.0",
-    "simple-git-hooks": "^2.13.1",
-    "tsdown": "0.20.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "oxlint-tsgolint": "^0.23.0",
+    "tsdown": "^0.22.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.9"
   },
   "peerDependencies": {
     "tsx": "^4.0.0"
@@ -184,16 +180,14 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
-      "eslint --fix"
+      "oxlint -c oxlint.config.ts --fix --no-error-on-unmatched-pattern"
     ],
     "*.md": [
-      "eslint --fix"
+      "oxfmt --no-error-on-unmatched-pattern",
+      "md-lint --fix"
     ],
-    "*.{json,jsonc,md,yml,yaml,toml}": [
+    "*.{json,jsonc,yml,yaml,toml}": [
       "oxfmt --no-error-on-unmatched-pattern"
     ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
   }
 }
