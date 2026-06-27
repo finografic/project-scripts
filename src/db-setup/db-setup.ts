@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkbox } from '@inquirer/prompts';
+import type { ViewConfig } from './db-setup.types';
 
 import { isCliEntry } from 'utils/is-cli-entry';
 import { pc } from 'utils/picocolors';
@@ -89,32 +90,19 @@ async function seedData(schemas: string[]) {
 
 // ─── CREATE VIEWS FUNCTION ────────────────────────────────────────────────────
 
-async function createViews() {
-  try {
-    console.log('[db-setup] Loading view config...');
-    const { viewConfigs } = await loadViewConfig();
-
-    if (!viewConfigs || viewConfigs.length === 0) {
-      console.log(pc.yellow('⚠️ No views configured to create'));
-      return;
+async function createViews(viewConfigs: ViewConfig[]) {
+  for (const view of viewConfigs) {
+    try {
+      console.log(pc.blue(`Creating view: ${view.name}...`));
+      execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.viewsCreateSingle} ${view.name}`, {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      console.log(pc.green(`✅ Created view: ${view.name}`));
+    } catch (error) {
+      console.error(pc.red(`❌ Error creating view ${view.name}:`), error);
+      throw error;
     }
-
-    for (const view of viewConfigs) {
-      try {
-        console.log(pc.blue(`Creating view: ${view.name}...`));
-        execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.viewsCreateSingle} ${view.name}`, {
-          stdio: 'inherit',
-          env: process.env,
-        });
-        console.log(pc.green(`✅ Created view: ${view.name}`));
-      } catch (error) {
-        console.error(pc.red(`❌ Error creating view ${view.name}:`), error);
-        throw error;
-      }
-    }
-  } catch (error) {
-    console.error(pc.red('❌ Error loading view configuration:'), error);
-    throw error;
   }
 }
 
@@ -177,8 +165,16 @@ export async function main() {
     }
 
     if (operations.includes('views')) {
-      console.log(pc.blue('\n4. Creating views...'));
-      await createViews();
+      try {
+        const { viewConfigs } = await loadViewConfig();
+        if (viewConfigs.length > 0) {
+          console.log(pc.blue('\n4. Creating views...'));
+          await createViews(viewConfigs);
+        }
+      } catch (error) {
+        console.error(pc.red('❌ Error loading view configuration:'), error);
+        throw error;
+      }
     }
 
     console.log('--- [db-setup] Script finished ---');
