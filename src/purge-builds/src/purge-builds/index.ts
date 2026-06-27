@@ -1,4 +1,6 @@
 // CLI entry point
+import { isCliEntry } from 'utils/is-cli-entry';
+
 import { purge } from './purge';
 
 // Display help information
@@ -67,6 +69,6 @@ async function main() {
 }
 
 // Check if this file is being run directly (not imported)
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isCliEntry(import.meta.url)) {
   main();
 }

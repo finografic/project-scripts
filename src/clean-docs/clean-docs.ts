@@ -1,8 +1,8 @@
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { deleteAsync } from 'del';
 import type { CleanOptions, DeleteProgress } from './clean-docs.types';
 
+import { isCliEntry } from 'utils/is-cli-entry';
 import { pc } from 'utils/picocolors';
 
 import { isFile } from '../utils/fs.utils';
@@ -143,7 +143,7 @@ export async function clean({ dryRun = false, verbose = false }: CleanOptions = 
 }
 
 // Allow running directly or importing
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isCliEntry(import.meta.url)) {
   const args = process.argv.slice(2);
   clean({
     dryRun: args.includes('--dry-run') || args.includes('-d'),

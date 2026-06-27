@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { isCliEntry } from 'utils/is-cli-entry';
 import { pc } from 'utils/picocolors';
 
 function formatError(error: unknown): string {
@@ -384,7 +385,7 @@ async function main() {
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isCliEntry(import.meta.url)) {
   main();
 }
 

@@ -1,9 +1,9 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { checkbox } from '@inquirer/prompts';
 
+import { isCliEntry } from 'utils/is-cli-entry';
 import { pc } from 'utils/picocolors';
 
 import { PATH_FOLDER_ENV, SERVER_DB_SCRIPTS, SERVER_PACKAGE } from './schemas.config';
@@ -193,7 +193,7 @@ export async function main() {
 export default main;
 
 // Run when called directly (e.g., via CLI)
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isCliEntry(import.meta.url)) {
   main().catch((error) => {
     console.error('Failed to run db-setup:', error);
     process.exit(1);
