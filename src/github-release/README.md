@@ -1,5 +1,7 @@
 # github-release
 
+> **Implementation backlog:** see [`TODO_GITHUB_RELEASE.md`](../../TODO_GITHUB_RELEASE.md) at the repo root (reference `release.ts` from design-system + full port plan).
+
 Opinionated GitHub release workflow for Finografic projects.
 
 This CLI enforces a safe, repeatable release process by verifying

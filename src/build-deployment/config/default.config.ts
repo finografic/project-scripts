@@ -40,8 +40,8 @@ export const defaultConfig: BuildDeploymentConfig = {
   },
 
   buildCommands: {
-    client: 'build.production',
-    server: 'build.production',
+    client: 'build:production',
+    server: 'build:production',
   },
 
   env: {

@@ -31,8 +31,8 @@ export interface BuildDeploymentConfig {
 
   // Build Commands
   buildCommands: {
-    client: string; // e.g., "build.production"
-    server: string; // e.g., "build.production"
+    client: string; // e.g., "build:production"
+    server: string; // e.g., "build:production"
   };
 
   // Environment Variables

@@ -297,6 +297,74 @@ async function fixReferences(filePath: string, dottedToColonMap: Map<string, str
   return totalChanges;
 }
 
+async function findTypeScriptFiles(dir: string): Promise<string[]> {
+  const results: string[] = [];
+
+  async function walk(current: string) {
+    const entries = await readdir(current, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = join(current, entry.name);
+
+      if (entry.isDirectory()) {
+        if (['node_modules', '.git', 'dist', 'bin'].includes(entry.name)) continue;
+        await walk(fullPath);
+      } else if (entry.name.endsWith('.ts')) {
+        results.push(relative(WORKSPACE_ROOT, fullPath));
+      }
+    }
+  }
+
+  await walk(dir);
+  return results.sort();
+}
+
+/** `pnpm db.migrations.run` / `npm run build:production` style invocations */
+const DOTTED_INVOCATION_PATTERN = /(?:pnpm|npm run)\s+([a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]+)+)/g;
+
+async function findDottedScriptInvocations(targetPaths: readonly string[]): Promise<FileMatch[]> {
+  const matches: FileMatch[] = [];
+
+  for (const targetPath of targetPaths) {
+    const absolutePath = join(WORKSPACE_ROOT, targetPath);
+
+    let content: string;
+    try {
+      content = await readFile(absolutePath, 'utf-8');
+    } catch {
+      continue;
+    }
+
+    const count = [...content.matchAll(DOTTED_INVOCATION_PATTERN)].length;
+
+    if (count > 0) {
+      matches.push({ filePath: targetPath, count });
+    }
+  }
+
+  return matches;
+}
+
+async function fixDottedInvocations(filePath: string): Promise<number> {
+  const absolutePath = join(WORKSPACE_ROOT, filePath);
+
+  let content: string;
+  try {
+    content = await readFile(absolutePath, 'utf-8');
+  } catch {
+    return 0;
+  }
+
+  const updated = content.replace(DOTTED_INVOCATION_PATTERN, (match, scriptName: string) =>
+    match.replace(scriptName, toColonKey(scriptName)),
+  );
+
+  if (updated === content) return 0;
+
+  await writeFile(absolutePath, updated);
+  return 1;
+}
+
 /* -------------------------------------------------------------------------------------------------
  * main
  * ------------------------------------------------------------------------------------------------- */
@@ -307,51 +375,69 @@ export async function main(): Promise<void> {
   const packageJsonFiles = await findAllPackageJsonFiles(WORKSPACE_ROOT);
   const workflowFiles = await findWorkflowFiles();
   const markdownFiles = await findMarkdownFiles(WORKSPACE_ROOT);
+  const typeScriptFiles = await findTypeScriptFiles(join(WORKSPACE_ROOT, 'src'));
+  const scriptFiles = await findTypeScriptFiles(join(WORKSPACE_ROOT, 'scripts'));
   const auditTargets = [...packageJsonFiles, ...workflowFiles, ...markdownFiles];
+  const invocationTargets = [...auditTargets, ...typeScriptFiles, ...scriptFiles];
 
   const scripts = (await Promise.all(packageJsonFiles.map((p) => loadPackageScripts(p)))).flat();
 
   const dottedScripts = scripts.filter((s) => isDottedScriptKey(s.key));
+  const dottedInvocations = await findDottedScriptInvocations(invocationTargets);
 
   console.log('');
   console.log(c.title('Script separator audit'));
   console.log('');
 
-  if (dottedScripts.length === 0) {
-    console.log(c.ok('No dotted script keys found.'));
+  if (dottedScripts.length === 0 && dottedInvocations.length === 0) {
+    console.log(c.ok('No dotted script keys or invocations found.'));
+    console.log('');
     return;
   }
 
-  console.log(c.section('Audit results:'));
-  console.log('');
+  if (dottedScripts.length > 0) {
+    console.log(c.section('Dotted package.json script keys:'));
+    console.log('');
 
-  let totalReferences = 0;
+    let totalReferences = 0;
 
-  for (const script of dottedScripts) {
-    const matches = await findScriptReferences(script.key, auditTargets);
-    const scriptTotal = matches.reduce((acc, m) => acc + m.count, 0);
-    totalReferences += scriptTotal;
+    for (const script of dottedScripts) {
+      const matches = await findScriptReferences(script.key, auditTargets);
+      const scriptTotal = matches.reduce((acc, m) => acc + m.count, 0);
+      totalReferences += scriptTotal;
 
-    console.log(`file: ${c.filePath(script.filePath)}`);
-    console.log(`${styleText('bold', 'script:')} ${c.key(script.key)}`);
+      console.log(`file: ${c.filePath(script.filePath)}`);
+      console.log(`${styleText('bold', 'script:')} ${c.key(script.key)}`);
 
-    if (matches.length === 0) {
-      console.log(c.muted('references: none found'));
-    } else {
-      console.log('references:');
-      for (const match of matches) {
-        console.log(`- ${match.filePath}: ${c.count(String(match.count))}`);
+      if (matches.length === 0) {
+        console.log(c.muted('references: none found'));
+      } else {
+        console.log('references:');
+        for (const match of matches) {
+          console.log(`- ${match.filePath}: ${c.count(String(match.count))}`);
+        }
       }
+
+      console.log('');
+    }
+
+    console.log(c.section('Package.json summary:'));
+    console.log('');
+    console.log(`- Dotted scripts: ${dottedScripts.length}`);
+    console.log(`- Total references: ${totalReferences}`);
+    console.log('');
+  }
+
+  if (dottedInvocations.length > 0) {
+    console.log(c.section('Dotted script invocations in source/docs:'));
+    console.log('');
+
+    for (const match of dottedInvocations) {
+      console.log(`- ${match.filePath}: ${c.count(String(match.count))}`);
     }
 
     console.log('');
   }
-
-  console.log(c.section('Summary:'));
-  console.log('');
-  console.log(`- Dotted scripts: ${dottedScripts.length}`);
-  console.log(`- Total references: ${totalReferences}`);
-  console.log('');
 
   if (!SHOULD_FIX) {
     console.log(c.ok('No files were written (audit only)'));
@@ -377,11 +463,17 @@ export async function main(): Promise<void> {
     referenceFixes += await fixReferences(file, dottedToColon);
   }
 
+  let invocationFixes = 0;
+  for (const file of invocationTargets) {
+    invocationFixes += await fixDottedInvocations(file);
+  }
+
   console.log('');
   console.log(c.section('Fix Summary:'));
   console.log('');
   console.log(`- Script keys updated: ${scriptFixes}`);
   console.log(`- References updated: ${referenceFixes}`);
+  console.log(`- Invocation sites updated: ${invocationFixes}`);
   console.log('');
   console.log(c.ok('Fixes applied successfully'));
   console.log('');

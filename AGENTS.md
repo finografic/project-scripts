@@ -1,6 +1,6 @@
 # AGENTS.md - AI Assistant Guide
 
-## Rules - General
+## Rules — Global
 
 Rules are canonical in `.github/instructions/` and shared across Claude Code, Cursor, and GitHub Copilot.
 Follow general TypeScript, ESLint, and naming conventions from prior context.
@@ -9,7 +9,7 @@ Follow general TypeScript, ESLint, and naming conventions from prior context.
 - [File Naming](/.github/instructions/01-file-naming.instructions.md)
 - [TypeScript Patterns](/.github/instructions/02-typescript-patterns.instructions.md)
 - [Provider & Context Patterns](/.github/instructions/03-provider-context-patterns.instructions.md)
-- [ESLint & Code Style](/.github/instructions/04-eslint-code-style.instructions.md)
+- [ESLint & Code Style](/.github/instructions/04-linting-code-style.instructions.md)
 - [Documentation](/.github/instructions/05-documentation.instructions.md)
 - [Modern TypeScript Patterns](/.github/instructions/06-modern-typescript-patterns.instructions.md)
 - [Variable Naming](/.github/instructions/07-variable-naming.instructions.md)
@@ -39,7 +39,7 @@ Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 ## Learned User Preferences
 
 - For personal or ecosystem-only repos, keep contributor workflow in `docs/process/`; add a root `CONTRIBUTING.md` mainly when a public repo needs GitHub’s usual discoverability.
-- In `AGENTS.md` `## Git Policy` sections: place IMPORTANT hard-stop bullets first, then anchored links (e.g. `#commits`, `#releases`). The `## Rules - General` section lists only bare file links.
+- In `AGENTS.md` `## Git Policy` sections: place IMPORTANT hard-stop bullets first, then anchored links (e.g. `#commits`, `#releases`). The `## Rules — Global` section lists only bare file links.
 
 ## Learned Workspace Facts
 

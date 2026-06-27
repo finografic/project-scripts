@@ -268,7 +268,7 @@ async function executeBuild() {
       if (!serverDistExists) {
         console.log("  🖥️  Building server app...");
         try {
-          execSync("npm run build.production", {
+          execSync("npm run build:production", {
             cwd: join(buildWorkspace, "apps/server"),
             stdio: "inherit"
           });
@@ -430,11 +430,11 @@ function parseArguments(): BuildOptions {
           pc.cyan(`
 🏗️  Monorepo Deployment Builder
 
-Usage: pnpm build.deployment [options]
+Usage: pnpm build:deployment [options]
 
 Interactive Mode (Recommended):
-  pnpm build.deployment           Interactive platform selection
-  pnpm build.deployment -y        Auto-confirm with host platform
+  pnpm build:deployment           Interactive platform selection
+  pnpm build:deployment -y        Auto-confirm with host platform
 
 Legacy CLI Mode:
   --platform, -p <platform>      Target platform (windows|linux|macos|universal)
@@ -448,10 +448,10 @@ Legacy CLI Mode:
   --help, -h                     Show this help
 
 Examples:
-  pnpm build.deployment                    # Interactive mode
-  pnpm build.deployment -y                 # Quick build with host platform
-  pnpm build.deployment -p macos -z        # Legacy: macOS with zip
-  pnpm build.deployment --restore          # Emergency workspace restoration
+  pnpm build:deployment                    # Interactive mode
+  pnpm build:deployment -y                 # Quick build with host platform
+  pnpm build:deployment -p macos -z        # Legacy: macOS with zip
+  pnpm build:deployment --restore          # Emergency workspace restoration
         `),
         );
         process.exit(0);

@@ -17,7 +17,7 @@ Releases are a **human-only operation**. Do not initiate, trigger, or assist wit
 
 - Do not bump versions (`pnpm version`, `npm version`, direct edits to `package.json` version field).
 - Do not push tags or `--follow-tags`.
-- Do not run `pnpm publish`, `pnpm release.*`, or any equivalent.
+- Do not run `pnpm publish`, `pnpm release:*`, or any equivalent.
 - Do not create or edit GitHub Releases or draft releases.
 - Do not generate or modify changelogs unless asked for the content only (not to commit or push it).
 

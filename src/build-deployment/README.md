@@ -123,8 +123,8 @@ export const config: BuildDeploymentConfig = {
 
   // Build Commands
   buildCommands: {
-    client: 'build.production',
-    server: 'build.production',
+    client: 'build:production',
+    server: 'build:production',
   },
 
   // Environment Variables

@@ -18,7 +18,7 @@
 - General: [.github/instructions/00-general.instructions.md](.github/instructions/00-general.instructions.md)
 - File Naming: [.github/instructions/01-file-naming.instructions.md](.github/instructions/01-file-naming.instructions.md)
 - TypeScript: [.github/instructions/02-typescript-patterns.instructions.md](.github/instructions/02-typescript-patterns.instructions.md)
-- ESLint & Style: [.github/instructions/04-eslint-code-style.instructions.md](.github/instructions/04-eslint-code-style.instructions.md)
+- ESLint & Style: [.github/instructions/04-linting-code-style.instructions.md](.github/instructions/04-linting-code-style.instructions.md)
 - Documentation: [.github/instructions/05-documentation.instructions.md](.github/instructions/05-documentation.instructions.md)
 - Modern TS Patterns: [.github/instructions/06-modern-typescript-patterns.instructions.md](.github/instructions/06-modern-typescript-patterns.instructions.md)
 - Variable Naming: [.github/instructions/07-variable-naming.instructions.md](.github/instructions/07-variable-naming.instructions.md)
@@ -26,7 +26,7 @@
 - Picocolors CLI styling: [.github/instructions/09-picocolors-cli-styling.instructions.md](.github/instructions/09-picocolors-cli-styling.instructions.md)
 - Git Policy: [.github/instructions/10-git-policy.instructions.md](.github/instructions/10-git-policy.instructions.md)
 
-## Project-Specific Rules
+## Rules — Project-Specific
 
 Project-specific rules live in `.github/instructions/project/*.instructions.md`.
 

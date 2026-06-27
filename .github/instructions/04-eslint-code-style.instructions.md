@@ -1,10 +1,10 @@
-# ESLint & Code Style Rules
+# Linting & Code Style Rules
 
 ## Import Sorting
 
 - Use `simple-import-sort` and group imports logically (external → internal → relative → side-effects)
   separated by blank lines.
-- Prefer auto-fix via ESLint; avoid manual reordering.
+- Prefer auto-fix via oxfmt; avoid manual reordering.
 
 ## JSX Formatting
 
@@ -13,9 +13,9 @@
 ## Fixing
 
 ```bash
-npm run lint:fix -- path/to/file.tsx
-npm run lint:fix -- "src/**/*.tsx"
-npm run lint -- path/to/file.tsx
+pnpm lint -- path/to/file.tsx
+pnpm lint:fix -- path/to/file.tsx
+pnpm lint:fix -- "src/**/*.tsx"
 ```
 
 ## Disabled Rules (intentional)

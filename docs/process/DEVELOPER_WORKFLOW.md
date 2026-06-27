@@ -107,7 +107,7 @@ See [Release Process](./RELEASE_PROCESS.md) if this template includes release au
 **Example** (adjust script names to your repo):
 
 ```bash
-pnpm release.patch   # or release:github:patch, changeset publish, etc.
+pnpm release:github:patch   # or changeset publish, etc.
 ```
 
 ---
