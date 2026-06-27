@@ -64,7 +64,7 @@ export const seedOrder: SeedConfig[] = [
     "tsx": "^4.0.0"
   },
   "scripts": {
-    "db.setup": "db-setup"
+    "db:setup": "db-setup"
   }
 }
 ```
@@ -74,7 +74,7 @@ export const seedOrder: SeedConfig[] = [
 ```json
 {
   "scripts": {
-    "db.setup": "NODE_OPTIONS='--import tsx' db-setup"
+    "db:setup": "NODE_OPTIONS='--import tsx' db-setup"
   }
 }
 ```
@@ -84,7 +84,7 @@ Note: `tsx` is a peerDependency of `@finografic/project-scripts` and is required
 #### Usage
 
 ```bash
-pnpm db.setup
+pnpm db:setup
 ```
 
 The command will present an interactive interface to:

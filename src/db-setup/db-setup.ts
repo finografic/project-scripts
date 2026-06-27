@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { checkbox } from '@inquirer/prompts';
 
 import { pc } from 'utils/picocolors';
-import { PATH_FOLDER_ENV } from './schemas.config';
+import { PATH_FOLDER_ENV, SERVER_DB_SCRIPTS, SERVER_PACKAGE } from './schemas.config';
 import { getSchemaSelection, loadSeedConfig, loadViewConfig } from './schemas.utils';
 
 const autoConfirm = process.argv.includes('-y') || process.argv.includes('--yes');
@@ -54,7 +54,7 @@ console.log('[db-setup] Loaded env config');
 
 async function generateMigrations() {
   console.log('[db-setup] Running generateMigrations...');
-  execSync('pnpm --filter @workspace/server db.migrations.generate', {
+  execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.migrationsGenerate}`, {
     stdio: 'inherit',
     env: process.env,
   });
@@ -62,7 +62,7 @@ async function generateMigrations() {
 
 async function runMigrations() {
   console.log('[db-setup] Running runMigrations...');
-  execSync('pnpm --filter @workspace/server db.migrations.run', {
+  execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.migrationsRun}`, {
     stdio: 'inherit',
     env: process.env,
   });
@@ -74,7 +74,7 @@ async function seedData(schemas: string[]) {
       console.log(pc.blue(`\nSeeding ${schema}...`));
       const seedName = schema.startsWith('auth_') ? schema.replace('auth_', '') : schema;
       console.log(`[db-setup] Seeding: ${seedName}`);
-      execSync(`pnpm --filter @workspace/server db.migrations.seed ${seedName}`, {
+      execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.migrationsSeed} ${seedName}`, {
         stdio: 'inherit',
         env: process.env,
       });
@@ -101,7 +101,7 @@ async function createViews() {
     for (const view of viewConfigs) {
       try {
         console.log(pc.blue(`Creating view: ${view.name}...`));
-        execSync(`pnpm --filter @workspace/server db.views.create.single ${view.name}`, {
+        execSync(`pnpm --filter ${SERVER_PACKAGE} ${SERVER_DB_SCRIPTS.viewsCreateSingle} ${view.name}`, {
           stdio: 'inherit',
           env: process.env,
         });

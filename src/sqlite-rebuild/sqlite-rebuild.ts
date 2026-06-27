@@ -286,7 +286,7 @@ class SqliteRebuilder {
         return true;
       }
 
-      await this.runCommand('pnpm db.migrations.run', serverPath);
+      await this.runCommand('pnpm db:migrations:run', serverPath);
       this.log('✅ Database migration test passed', 'success');
       return true;
     } catch {
