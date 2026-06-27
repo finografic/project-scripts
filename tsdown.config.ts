@@ -55,7 +55,7 @@ export default defineConfig([
       'db-setup/config.template': 'src/db-setup/config.template.ts',
       'purge-builds': 'src/purge-builds/src/purge-builds/index.ts',
       'sqlite-rebuild': 'src/sqlite-rebuild/index.ts',
-      utils: 'src/utils/index.ts',
+      'utils': 'src/utils/index.ts',
       'build-deployment': 'src/build-deployment/index.ts',
       'audit-script-separators': 'src/audit-script-separators/audit-script-separators.ts',
     },

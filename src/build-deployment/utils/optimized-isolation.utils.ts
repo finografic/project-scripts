@@ -34,7 +34,7 @@ export async function createMinimalPackageJson(
     ...serverPackageJson.dependencies,
     // Essential build tools that are needed for production
     'cross-env': rootPackageJson.devDependencies['cross-env'],
-    tsx: rootPackageJson.devDependencies['tsx'],
+    'tsx': rootPackageJson.devDependencies['tsx'],
     'better-sqlite3': rootPackageJson.devDependencies['better-sqlite3'],
     // Remove workspace dependencies that will be built
   };
@@ -42,7 +42,7 @@ export async function createMinimalPackageJson(
   // Define optional dependencies for the deployment
   const optionalDependencies = {
     'npm-run-all': '^4.1.5',
-    serve: '^14.0.0',
+    'serve': '^14.0.0',
   };
 
   // Remove all workspace dependencies as they'll be built locally
@@ -70,10 +70,10 @@ export async function createMinimalPackageJson(
       npm: '>=8.0.0',
     },
     scripts: {
-      start: 'run-p start:server start:client',
+      'start': 'run-p start:server start:client',
       'start:server': 'node start-server.js',
       'start:client': 'node start-client.js',
-      postinstall: "echo 'Touch Monorepo deployed successfully!'",
+      'postinstall': "echo 'Touch Monorepo deployed successfully!'",
     },
     dependencies: productionDependencies,
     optionalDependencies,
@@ -128,7 +128,7 @@ export async function optimizedIsolateWorkspace(config: BuildDeploymentConfig): 
   console.log('🚀 Starting optimized workspace isolation...');
   console.log('   This new approach avoids copying 30GB+ of node_modules!');
 
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
 
   // Safety check
@@ -169,7 +169,7 @@ export async function optimizedIsolateWorkspace(config: BuildDeploymentConfig): 
  * Restore workspace after deployment
  */
 export async function optimizedRestoreWorkspace(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
 
@@ -202,7 +202,7 @@ export async function copyOptimizedSources(
   config: BuildDeploymentConfig,
   buildWorkspace: string,
 ): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
 
   // Copy source directories only
   const sourceDirs = ['apps/client', 'apps/server', 'packages/core', 'packages/i18n'];

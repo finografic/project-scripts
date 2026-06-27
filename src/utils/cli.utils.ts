@@ -21,6 +21,6 @@ export async function exec(command: string): Promise<ExecResult> {
       throw error;
     }
 
-    throw new Error('failed to execute command');
+    throw new Error('failed to execute command', { cause: error });
   }
 }

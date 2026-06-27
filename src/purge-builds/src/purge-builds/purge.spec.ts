@@ -2,8 +2,9 @@ import fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PurgeOptions } from './purge';
 
-import { purge, type PurgeOptions } from './purge';
+import { purge } from './purge';
 
 // Mock dependencies
 vi.mock('node:fs/promises');

@@ -1,6 +1,6 @@
 /**
- * @fileoverview Utility functions for project scripts
  * @module utils
+ * @file Utility functions for project scripts
  */
 
 // Configuration utilities

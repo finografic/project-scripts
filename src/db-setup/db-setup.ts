@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { checkbox } from '@inquirer/prompts';
 
 import { pc } from 'utils/picocolors';
+
 import { PATH_FOLDER_ENV, SERVER_DB_SCRIPTS, SERVER_PACKAGE } from './schemas.config';
 import { getSchemaSelection, loadSeedConfig, loadViewConfig } from './schemas.utils';
 

@@ -32,8 +32,10 @@ import {
   loadUserGuideTemplate,
 } from './utils/template.utils.js';
 import { pc } from 'utils/picocolors';
+
 import { defaultConfig } from './config/default.config.js';
 import type { BuildDeploymentConfig } from './config/types';
+
 import { deploymentOptions, getDefaultPlatform, platformConfigs } from './platforms.config.js';
 
 /**
@@ -334,13 +336,13 @@ async function getInteractiveOptions(): Promise<BuildOptions> {
 
   if (autoConfirm) {
     const defaultPlatform = getDefaultPlatform();
-    const defaultConfig = platformConfigs.find((config) => config.value === defaultPlatform);
-    console.log(pc.yellow(`📦 Auto-confirm mode: Using ${defaultConfig?.name || 'macOS'}`));
+    const defaultPlatformConfig = platformConfigs.find((config) => config.value === defaultPlatform);
+    console.log(pc.yellow(`📦 Auto-confirm mode: Using ${defaultPlatformConfig?.name || 'macOS'}`));
 
     return {
-      platform: defaultConfig?.platform || 'macos',
-      arch: defaultConfig?.arch || 'x64',
-      standalone: defaultConfig?.standalone || false,
+      platform: defaultPlatformConfig?.platform || 'macos',
+      arch: defaultPlatformConfig?.arch || 'x64',
+      standalone: defaultPlatformConfig?.standalone || false,
       zip: true,
     };
   }

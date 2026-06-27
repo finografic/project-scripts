@@ -4,6 +4,10 @@ import * as path from 'path';
 
 import { pc } from 'utils/picocolors';
 
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 interface RebuildOptions {
   force?: boolean;
   verbose?: boolean;
@@ -78,7 +82,7 @@ class SqliteRebuilder {
       if (this.options.verbose) {
         throw error;
       }
-      throw new Error(`Command failed: ${command}\n${error.message}`);
+      throw new Error(`Command failed: ${command}\n${error.message}`, { cause: error });
     }
   }
 
@@ -180,7 +184,7 @@ class SqliteRebuilder {
         fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
         this.log(`  ✅ Updated ${pkg.name} to ${this.options.targetVersion}`, 'success');
       } catch (error) {
-        this.log(`  ❌ Failed to update ${pkg.name}: ${error}`, 'error');
+        this.log(`  ❌ Failed to update ${pkg.name}: ${formatError(error)}`, 'error');
       }
     }
   }
@@ -202,7 +206,7 @@ class SqliteRebuilder {
           fs.rmSync(dir, { recursive: true, force: true });
           this.log(`  ✅ Cleaned ${path.relative(this.workspaceRoot, dir)}`, 'success');
         } catch (error) {
-          this.log(`  ❌ Failed to clean ${dir}: ${error}`, 'error');
+          this.log(`  ❌ Failed to clean ${dir}: ${formatError(error)}`, 'error');
         }
       }
     }
@@ -346,7 +350,7 @@ class SqliteRebuilder {
 
       this.log('🎉 better-sqlite3 rebuild completed successfully!', 'success');
     } catch (error) {
-      this.log(`❌ Rebuild failed: ${error}`, 'error');
+      this.log(`❌ Rebuild failed: ${formatError(error)}`, 'error');
       throw error;
     }
   }
@@ -374,7 +378,7 @@ async function main() {
   try {
     await rebuilder.rebuild();
   } catch (error) {
-    console.error(pc.red(`\n❌ Rebuild failed: ${error}`));
+    console.error(pc.red(`\n❌ Rebuild failed: ${formatError(error)}`));
     process.exit(1);
   }
 }

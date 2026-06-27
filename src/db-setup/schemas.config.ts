@@ -4,7 +4,7 @@ export const PATH_FILES_CONFIG = ['config/db-setup.config.ts', 'db-setup.config.
 
 export const SERVER_PACKAGE = '@workspace/server';
 
-/** pnpm script names on `@workspace/server` — colon-separated segment convention. */
+/** Pnpm script names on `@workspace/server` — colon-separated segment convention. */
 export const SERVER_DB_SCRIPTS = {
   migrationsGenerate: 'db:migrations:generate',
   migrationsRun: 'db:migrations:run',

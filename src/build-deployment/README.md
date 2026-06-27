@@ -213,7 +213,7 @@ pnpm build-deployment --platform universal --zip
 
 1. **Node.js Not Found**
    - Setup scripts will detect and guide installation
-   - Download from <https://nodejs.org/> (LTS recommended)
+   - Download from [https://nodejs.org/](https://nodejs.org/) (LTS recommended)
 
 2. **Port Conflicts**
    - Scripts automatically kill conflicting processes

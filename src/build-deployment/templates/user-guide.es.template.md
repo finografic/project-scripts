@@ -31,7 +31,7 @@ Esta guía te ayudará a configurar y ejecutar la aplicación {{APP_NAME}} en tu
 ## 🌐 Usando la Aplicación
 
 1. **Abre tu navegador web** (Chrome, Firefox, Safari, Edge)
-2. **Ve a**: <http://localhost:{{CLIENT_PORT}}>
+2. **Ve a**: [http://localhost:{{CLIENT_PORT}}](http://localhost:{{CLIENT_PORT}})
 3. **La aplicación debería cargar** y estar lista para usar!
 
 ## 🔧 Solución de Problemas
@@ -86,7 +86,7 @@ Para soporte técnico, por favor proporciona:
 
 Una vez que la aplicación esté ejecutándose, puedes:
 
-- Acceder a ella en <http://localhost:{{CLIENT_PORT}}>
+- Acceder a ella en [http://localhost:{{CLIENT_PORT}}](http://localhost:{{CLIENT_PORT}})
 - Usar todas las funciones de la aplicación {{APP_NAME}}
 - Cerrar las ventanas de terminal/línea de comandos cuando hayas terminado
 

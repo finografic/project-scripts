@@ -31,7 +31,7 @@ This guide will help you set up and run the {{APP_NAME}} application on your com
 ## 🌐 Using the Application
 
 1. **Open your web browser** (Chrome, Firefox, Safari, Edge)
-2. **Go to**: <http://localhost:{{CLIENT_PORT}}>
+2. **Go to**: [http://localhost:{{CLIENT_PORT}}](http://localhost:{{CLIENT_PORT}})
 3. **The application should load** and be ready to use!
 
 ## 🔧 Troubleshooting
@@ -86,7 +86,7 @@ For technical support, please provide:
 
 Once the application is running, you can:
 
-- Access it at <http://localhost:{{CLIENT_PORT}}>
+- Access it at [http://localhost:{{CLIENT_PORT}}](http://localhost:{{CLIENT_PORT}})
 - Use all the features of the {{APP_NAME}} application
 - Close the terminal/command prompt windows when you're done
 

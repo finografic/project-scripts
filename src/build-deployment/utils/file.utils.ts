@@ -295,7 +295,7 @@ export async function cleanPlatformArtifacts(config: BuildDeploymentConfig): Pro
  * This prevents pnpm from interfering with the main monorepo during deployment
  */
 export async function isolateWorkspace(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const nodeModulesPath = join(workspaceRoot, 'node_modules');
   const pnpmLockPath = join(workspaceRoot, 'pnpm-lock.yaml');
@@ -314,8 +314,8 @@ export async function isolateWorkspace(config: BuildDeploymentConfig): Promise<v
   }
 
   // Check if workspace is currently in use
-  const { checkWorkspaceInUse } = await import('./file.utils.js');
-  const workspaceInUse = await checkWorkspaceInUse(config);
+  const { checkWorkspaceInUse: isWorkspaceInUse } = await import('./file.utils.js');
+  const workspaceInUse = await isWorkspaceInUse(config);
   if (workspaceInUse) {
     throw new Error(
       'Workspace is currently in use. Please stop all pnpm and Node.js processes before isolation.',
@@ -386,7 +386,7 @@ export async function isolateWorkspace(config: BuildDeploymentConfig): Promise<v
  * Restore workspace by moving node_modules and pnpm-lock.yaml back
  */
 export async function restoreWorkspace(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
 
@@ -426,8 +426,8 @@ export async function restoreWorkspace(config: BuildDeploymentConfig): Promise<v
 
     // Try to restore from backup if main restoration fails
     try {
-      const { restoreFromBackup } = await import('./file.utils.js');
-      await restoreFromBackup(config);
+      const { restoreFromBackup: restoreWorkspaceFromBackup } = await import('./file.utils.js');
+      await restoreWorkspaceFromBackup(config);
     } catch (backupError) {
       console.error('❌ Failed to restore from backup:', backupError);
     }
@@ -468,8 +468,8 @@ export async function emergencyRestoreWorkspace(workspaceRoot: string): Promise<
 
         // Try backup restoration
         try {
-          const { restoreFromBackup } = await import('./file.utils.js');
-          await restoreFromBackup({
+          const { restoreFromBackup: restoreWorkspaceFromBackup } = await import('./file.utils.js');
+          await restoreWorkspaceFromBackup({
             workspaceRoot,
             paths: {
               temp: tempDir.replace(workspaceRoot, '').replace(/^[/\\]/, ''),
@@ -514,7 +514,7 @@ export async function cleanupTempDirectory(config: BuildDeploymentConfig): Promi
  * Verify that workspace is properly isolated
  */
 export async function verifyWorkspaceIsolation(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const nodeModulesPath = join(workspaceRoot, 'node_modules');
   const pnpmLockPath = join(workspaceRoot, 'pnpm-lock.yaml');
   const pnpmWorkspacePath = join(workspaceRoot, 'pnpm-workspace.yaml');
@@ -543,7 +543,7 @@ export async function verifyWorkspaceIsolation(config: BuildDeploymentConfig): P
  * Check if workspace is currently in use (has active processes)
  */
 export async function checkWorkspaceInUse(config: BuildDeploymentConfig): Promise<boolean> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
 
   try {
     // Check if there are any active pnpm processes in this workspace
@@ -585,7 +585,7 @@ export async function checkWorkspaceInUse(config: BuildDeploymentConfig): Promis
  * Create backup of workspace files before isolation
  */
 export async function createWorkspaceBackup(config: BuildDeploymentConfig): Promise<string> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const backupDir = join(tempDir, 'workspace-backup');
 
@@ -622,7 +622,7 @@ export async function createWorkspaceBackup(config: BuildDeploymentConfig): Prom
  * Restore workspace from backup if main restoration fails
  */
 export async function restoreFromBackup(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const backupDir = join(tempDir, 'workspace-backup');
 
@@ -646,7 +646,7 @@ export async function restoreFromBackup(config: BuildDeploymentConfig): Promise<
     }
 
     // Sort by timestamp (newest first)
-    backupFolders.sort().reverse();
+    backupFolders.toSorted().reverse();
     const latestBackup = join(backupDir, backupFolders[0]);
 
     console.log(`📦 Restoring from backup: ${latestBackup}`);
@@ -675,7 +675,7 @@ export async function restoreFromBackup(config: BuildDeploymentConfig): Promise<
  * Check if build can proceed safely after isolation
  */
 export async function canProceedWithBuild(config: BuildDeploymentConfig): Promise<boolean> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
 
@@ -723,7 +723,7 @@ export async function canProceedWithBuild(config: BuildDeploymentConfig): Promis
  * Prepare isolated build workspace with necessary dependencies
  */
 export async function prepareIsolatedBuildWorkspace(config: BuildDeploymentConfig): Promise<void> {
-  const workspaceRoot = config.workspaceRoot;
+  const { workspaceRoot } = config;
   const tempDir = resolve(workspaceRoot, config.paths.temp);
   const isolationDir = join(tempDir, 'workspace-isolation');
   const buildWorkspace = join(tempDir, 'deployment');

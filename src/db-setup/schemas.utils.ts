@@ -5,6 +5,7 @@ import { checkbox } from '@inquirer/prompts';
 import type { SeedConfig, ViewConfig } from './db-setup.types';
 
 import { pc } from 'utils/picocolors';
+
 import { findScriptConfigFile } from '../utils/config.utils';
 import { findProjectRoot } from '../utils/project.utils';
 import { PATH_FILES_CONFIG, PATH_FOLDER_SCHEMAS, SCHEMAS_BLOCKLIST } from './schemas.config';
@@ -119,7 +120,7 @@ export const validateDependencies = ({
   seedConfigs: SeedConfig[];
   selectedSchemas: string[];
 }) => {
-  const missing: { schema: string; dependencies: string[] }[] = [];
+  const missing: Array<{ schema: string; dependencies: string[] }> = [];
 
   selectedSchemas.forEach((schema) => {
     const config = seedConfigs.find((c) => c.name === schema);

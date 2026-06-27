@@ -35,7 +35,7 @@ const DELETE_PATTERNS = {
  */
 async function scheduleDeferredDeletion(itemPath: string, _relativePath: string): Promise<boolean> {
   try {
-    const platform = process.platform;
+    const { platform } = process;
 
     if (platform === 'win32') {
       // Windows: Use timeout to delay execution

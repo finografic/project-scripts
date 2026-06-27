@@ -1,8 +1,7 @@
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { createRequire } from 'module';
-import { join } from 'path';
-import { dirname } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 // Load templates from files

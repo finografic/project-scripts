@@ -76,7 +76,7 @@ export async function createPackageJson(
     private: true,
     type: 'module',
     scripts: {
-      start: 'run-p start:server start:client',
+      'start': 'run-p start:server start:client',
       'start:server': 'node start-server.js',
       'start:client': 'node start-client.js',
     },
@@ -86,7 +86,7 @@ export async function createPackageJson(
     },
     optionalDependencies: {
       'npm-run-all': '^4.1.5',
-      serve: '^14.0.0',
+      'serve': '^14.0.0',
     },
     engines: {
       node: '>=20.0.0',
@@ -111,14 +111,14 @@ export async function createStandalonePackage(
     private: true,
     type: 'module',
     scripts: {
-      start: 'run-p start:server start:client',
+      'start': 'run-p start:server start:client',
       'start:server': 'node dist/server/index.js',
       'start:client': 'node dist/client/server.js',
-      setup: platform === 'windows' ? 'setup.bat' : './setup.sh',
+      'setup': platform === 'windows' ? 'setup.bat' : './setup.sh',
     },
     dependencies: {
       'better-sqlite3': '^11.9.0',
-      dotenv: '^16.0.0',
+      'dotenv': '^16.0.0',
     },
     optionalDependencies: {
       'npm-run-all': '^4.1.5',

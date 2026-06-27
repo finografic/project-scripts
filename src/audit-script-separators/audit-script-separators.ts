@@ -108,7 +108,7 @@ async function findAllPackageJsonFiles(dir: string): Promise<string[]> {
   }
 
   await walk(dir);
-  return results.sort();
+  return results.toSorted();
 }
 
 async function findWorkflowFiles(): Promise<string[]> {
@@ -119,7 +119,7 @@ async function findWorkflowFiles(): Promise<string[]> {
     return entries
       .filter((e) => e.isFile())
       .map((e) => relative(WORKSPACE_ROOT, join(workflowDir, e.name)))
-      .sort();
+      .toSorted();
   } catch {
     return [];
   }
@@ -144,7 +144,7 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
   }
 
   await walk(dir);
-  return results.sort();
+  return results.toSorted();
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -316,7 +316,7 @@ async function findTypeScriptFiles(dir: string): Promise<string[]> {
   }
 
   await walk(dir);
-  return results.sort();
+  return results.toSorted();
 }
 
 /** `pnpm db.migrations.run` / `npm run build:production` style invocations */

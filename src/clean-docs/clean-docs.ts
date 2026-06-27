@@ -4,6 +4,7 @@ import { deleteAsync } from 'del';
 import type { CleanOptions, DeleteProgress } from './clean-docs.types';
 
 import { pc } from 'utils/picocolors';
+
 import { isFile } from '../utils/fs.utils';
 import { findProjectRoot, getPackageScope } from '../utils/project.utils';
 import { GLOB_DELETE_EXCLUDE, GLOB_DELETE_INCLUDE } from './clean-docs.config';
@@ -110,7 +111,7 @@ export async function clean({ dryRun = false, verbose = false }: CleanOptions = 
       if (filteredRootPaths.length > 0) {
         console.log((dryRun ? pc.gray : pc.magenta)('\nRoot paths affected:'));
         filteredRootPaths
-          .sort()
+          .toSorted()
           .forEach((file) => console.log((dryRun ? pc.gray : pc.magenta)(`  - ${file}`)));
       }
     }
