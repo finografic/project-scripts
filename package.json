@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.5.4",
   "engines": {
-    "node": ">=24.3.0"
+    "node": ">=24.16.0"
   },
   "description": "Fingorafic Project Scripts",
   "homepage": "https://github.com/finografic/project-scripts",
@@ -143,8 +143,8 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.1.0",
-    "@commitlint/config-conventional": "^21.1.0",
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
     "@dotenvx/dotenvx": "1.51.0",
     "@finografic/md-lint": "^0.16.6",
     "@finografic/oxc-config": "^2.8.2",
@@ -152,13 +152,13 @@
     "@types/yargs": "^17.0.33",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "oxfmt": "^0.56.0",
-    "oxlint": "^1.71.0",
-    "oxlint-tsgolint": "^0.23.0",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
+    "oxlint-tsgolint": "^0.24.0",
     "tsdown": "^0.22.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "peerDependencies": {
     "tsx": "^4.0.0"
@@ -168,7 +168,7 @@
       "optional": false
     }
   },
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@10.33.4",
   "pnpm": {
     "onlyBuiltDependencies": [
       "dprint",
