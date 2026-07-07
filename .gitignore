@@ -3,60 +3,105 @@ node_modules/
 .pnpm-store/
 
 # Build outputs
-bin/
 dist/
 build/
-*.tgz
-*.tsbuildinfo
-deployment/
-
-# Turborepo
-.turbo/
 
 # Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Agents
 .agents/*
 !.agents/
 !.agents/handoff.md
 .codex/
-.claude/
+.claude/*
 !.claude/settings.json
+!.claude/commands/
+!.claude/commands/**
 .worktrees/
-**/worktrees/
 
 # IDE
 **/.cursor/**
 !**/.cursor/.gitkeep
-!.cursor/rules/
+!**/.cursor/rules/
+!**/.cursor/rules/**
 !.vscode/settings.json
 .idea/
 *.swp
 *.swo
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Docs
+docs/drafts/
 
-# Runtime data and caches
+# Logs
+*.log
+
+# Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
-.cache/
 
-# Coverage
+# Cache
+.cache/
+.llm-cache/
+.tmp/
+
+# Testing
 coverage/
+.playwright-mcp/
 
 # TypeScript
 *.tsbuildinfo
 
+# CSS tooling (generated)
+styled-system/
+
+# Monorepos
+.turbo/
+.moon/cache
+.moon/docker
+
+# Database and local app data
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+data/db/
+data/uploads/
+!data/migrations/
+
+# Web host folders
+cgi-bin/
+fcgi-bin/
+html/
+
+# HTTP client cookies
+cookies.txt
+cookies_*.txt
+
+# Graphify
+graphify-out/
+
+# Archives
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+
+# Security
+deps-xscan-report.json
+
+# Project-specific
 # Large local model binaries
 *.gguf
 *.bin
@@ -64,12 +109,3 @@ coverage/
 # Debug / scratch
 *.local.*
 *.tmp.*
-
-# OS
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-*~ehthumbs.db
-Desktop.ini
-*~

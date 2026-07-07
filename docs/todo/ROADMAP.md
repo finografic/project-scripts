@@ -19,6 +19,10 @@ When an item is done, move it to the Done section at the bottom with a completio
 
 ---
 
+## Next
+
+- [ ] Review and update this list for the project.
+
 ## P0 — Active
 
 _Nothing active right now — pick from P1._

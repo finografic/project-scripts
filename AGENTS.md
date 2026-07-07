@@ -2,12 +2,11 @@
 
 ## Project Memory Model
 
-- `docs/todo/ROADMAP.md` = milestone plan and completed history.
-- `docs/todo/NEXT_STEPS.md` = near-term tasks and manual checks.
+- `docs/todo/ROADMAP.md` = milestone plan, near-term tasks, and completed history.
 - `.agents/handoff.md` = stable current project state.
 - `.agents/memory.md` = chronological session log.
 
-Promote durable findings from memory → handoff, priorities → roadmap, and concrete follow-ups → next steps.
+Promote durable findings from memory → handoff, priorities and follow-ups → roadmap.
 
 Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMORY_MODEL.md)
 
@@ -16,7 +15,7 @@ Reference: [`docs/process/PROJECT_MEMORY_MODEL.md`](./docs/process/PROJECT_MEMOR
 ## Roadmap and Planning Docs
 
 - Check `ROADMAP.md` before proposing new initiatives.
-- Use `NEXT_STEPS.md` for small follow-ups and manual validation.
+- Use `ROADMAP.md#next` for small follow-ups and manual validation.
 - Keep detailed plans in `docs/todo/TODO_*.md`; graduate completed plans to `DONE_*.md`.
 - Follow `.github/instructions/documentation/todo-done-docs.instructions.md`.
 
@@ -69,7 +68,10 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 ## Rules — Markdown Tables
 
 - Padded pipes: one space on each side of every `|`, including the separator row.
-- Align column widths so all cells in the same column are equal width.
+- **Do NOT manually align column widths or pad cells to equal width.** `oxfmt` (run automatically
+  by lint-staged on commit and by `pnpm format:fix`) fixes table alignment automatically. Spending
+  tokens counting characters and iterating on spacing is wasted effort — write the content, let the
+  formatter handle alignment.
 
 ---
 
@@ -84,6 +86,12 @@ Shared across Claude Code, Cursor, and GitHub Copilot.
 
 - Project-specific rules live in `.github/instructions/project/**/*.instructions.md`.
 - Do not reference `@workspace/*` — all imports and deps must use published package names.
+
+## Cursor
+
+- Always-on rules: `.cursor/rules/` (`alwaysApply` — entry point is `AGENTS.md`, same as `CLAUDE.md`)
+
+---
 
 ## Learned User Preferences
 
