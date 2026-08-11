@@ -163,7 +163,7 @@ console.log(
 
 ## NOTE: EXTRA CHECKS NEEDED ??? (example from use-case where release was able to be made DESPITE lint errors being found)
 
-![47549](/Users/justin/repos-finografic/@finografic-project-scripts/TODO_GITHUB_RELEASE.assets/47549.png)
+![47549](./47549.png)
 
 ---
 
