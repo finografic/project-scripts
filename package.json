@@ -170,14 +170,6 @@
     }
   },
   "packageManager": "pnpm@10.33.4",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "dprint",
-      "esbuild",
-      "simple-git-hooks",
-      "unrs-resolver"
-    ]
-  },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
