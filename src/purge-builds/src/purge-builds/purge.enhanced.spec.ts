@@ -66,7 +66,7 @@ describe('purge.enhanced', () => {
 
         // For directories being scanned for size, return empty
         if (['dist', 'node_modules'].includes(dirName)) {
-          return [] as any;
+          return [];
         }
 
         // For the root directory, return the mock items
@@ -75,7 +75,7 @@ describe('purge.enhanced', () => {
         }
 
         // Default: return empty to prevent infinite recursion
-        return [] as any;
+        return [];
       });
 
       const mockStat = vi.spyOn(fs, 'stat').mockResolvedValue({
@@ -116,7 +116,7 @@ describe('purge.enhanced', () => {
 
         // For directories being scanned for size, return empty
         if (['dist', '.turbo'].includes(dirName)) {
-          return [] as any;
+          return [];
         }
 
         // For the root directory, return the mock items
@@ -125,7 +125,7 @@ describe('purge.enhanced', () => {
         }
 
         // Default: return empty
-        return [] as any;
+        return [];
       });
 
       const mockStat = vi.spyOn(fs, 'stat').mockResolvedValue({
@@ -168,7 +168,7 @@ describe('purge.enhanced', () => {
 
         // For directories being scanned for size, return empty
         if (dirName === 'dist') {
-          return [] as any;
+          return [];
         }
 
         // For packages directory, return a nested package
@@ -187,7 +187,7 @@ describe('purge.enhanced', () => {
         }
 
         // Default: return empty
-        return [] as any;
+        return [];
       });
 
       const mockStat = vi.spyOn(fs, 'stat').mockResolvedValue({
@@ -226,7 +226,7 @@ describe('purge.enhanced', () => {
 
         // For directories being scanned for size, return empty
         if (['dist', 'node_modules'].includes(dirName)) {
-          return [] as any;
+          return [];
         }
 
         // For the root directory, return the mock items
@@ -235,7 +235,7 @@ describe('purge.enhanced', () => {
         }
 
         // Default: return empty
-        return [] as any;
+        return [];
       });
 
       const mockStat = vi.spyOn(fs, 'stat').mockResolvedValue({
