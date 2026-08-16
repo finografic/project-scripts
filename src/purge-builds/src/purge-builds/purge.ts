@@ -8,11 +8,14 @@ import ora from 'ora';
 
 import { pc } from 'utils/picocolors';
 
+import { healMinimumReleaseAgeViolations } from './heal-lockfile';
+
 export interface PurgeOptions {
   dryRun?: boolean;
   verbose?: boolean;
   recursive?: boolean;
   forceDetach?: boolean; // Force use of detached process for node_modules deletion
+  noHealLockfile?: boolean; // Skip the automatic pnpm minimumReleaseAge lockfile heal
 }
 
 interface FindResult {
@@ -411,6 +414,7 @@ export async function purge({
   verbose = false,
   recursive = false,
   forceDetach = false,
+  noHealLockfile = false,
 }: PurgeOptions = {}) {
   const startTime = Date.now();
   const workingDir = process.cwd();
@@ -557,6 +561,26 @@ export async function purge({
   const cleanupSpinner = ora('Cleaning up empty directories...').start();
   await cleanupEmptyDirectories(workingDir);
   cleanupSpinner.succeed('Cleaned up empty directories');
+
+  // A fresh resolve (no existing lockfile — which is the usual case right
+  // here, since pnpm-lock.yaml was just deleted above) already respects
+  // pnpm 11's minimumReleaseAge policy on its own. This only matters when a
+  // lockfile survives anyway (--dry-run wasn't used but some other process
+  // restores it, this repo isn't the one calling `pnpm install` next, etc.)
+  // and it's pinned to a version that predates the policy — that's the
+  // ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION case, which needs an explicit
+  // re-pin since `pnpm update` alone can't reach transitive dependencies.
+  if (!noHealLockfile) {
+    try {
+      await healMinimumReleaseAgeViolations(workingDir);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(pc.red(`\n✗ Automatic lockfile heal failed: ${message}`));
+      console.error(
+        pc.gray('   Continuing — your own `pnpm install` step will surface the underlying error.\n'),
+      );
+    }
+  }
 
   // Final summary
   const duration = Date.now() - startTime;

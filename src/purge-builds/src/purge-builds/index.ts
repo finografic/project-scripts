@@ -16,6 +16,8 @@ OPTIONS:
   -v, --verbose       Show detailed progress and file lists
   -r, --recursive     Deep recursive cleaning throughout the entire tree
   --detach            Force detached process deletion for node_modules
+  --no-heal-lockfile  Skip auto-fixing pnpm's minimumReleaseAge lockfile
+                      rejections (see FEATURES below)
   -h, --help          Show this help message
 
 EXAMPLES:
@@ -41,6 +43,12 @@ FEATURES:
   • Accurate size reporting
   • Clearer dry-run output
   • More reliable deletion
+  • Auto-heals pnpm 11's minimumReleaseAge lockfile rejections: after
+    deleting pnpm-lock.yaml, runs \`pnpm install\` and if it fails with
+    ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, pins the offending package(s)
+    to the newest compliant version and re-resolves, so the caller's own
+    subsequent \`pnpm install\` just succeeds. Disable with
+    --no-heal-lockfile.
 `);
 }
 
@@ -61,6 +69,7 @@ async function main() {
       verbose: args.includes('--verbose') || args.includes('-v'),
       recursive: args.includes('--recursive') || args.includes('-r'),
       forceDetach: args.includes('--detach'),
+      noHealLockfile: args.includes('--no-heal-lockfile'),
     });
   } catch (error) {
     console.error('Error:', error);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { access } from "fs/promises";
 import { execa } from "execa";
+import { access } from "fs/promises";
 //#region src/utils/log.utils.ts
 const log = {
 	header(message) {

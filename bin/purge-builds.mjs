@@ -1,12 +1,170 @@
 #!/usr/bin/env node
 import { t as isCliEntry } from "./is-cli-entry.mjs";
 import { t as pc } from "./picocolors.mjs";
+import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import fs from "node:fs/promises";
+import fs$1 from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { setTimeout } from "node:timers";
 import ora from "ora";
+import { execa } from "execa";
+import { parse, stringify } from "yaml";
+//#region src/purge-builds/src/purge-builds/heal-lockfile.ts
+const VIOLATION_MARKER = "ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION";
+const VIOLATION_LINE = /^\s+(.+)@([^@\s]+) was published at (\S+), within the minimumReleaseAge cutoff \(([^)]+)\)/;
+/** Parses pnpm's ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION output into structured violations. */
+function parseReleaseAgeViolations(output) {
+	const violations = [];
+	for (const line of output.split("\n")) {
+		const match = VIOLATION_LINE.exec(line);
+		if (match) {
+			const [, name, version, publishedAt, cutoff] = match;
+			violations.push({
+				name,
+				version,
+				publishedAt,
+				cutoff
+			});
+		}
+	}
+	return violations;
+}
+/**
+* Finds the newest version of `pkgName` published strictly before `cutoffIso`,
+* by reading the registry's per-version publish-time map. Returns null if the
+* package can't be resolved (private/scoped package on a registry this
+* doesn't know how to reach, network failure, etc.) — callers should treat
+* that as "can't heal automatically".
+*/
+async function findCompliantVersion(pkgName, cutoffIso) {
+	try {
+		const res = await fetch(`https://registry.npmjs.org/${pkgName}`);
+		if (!res.ok) return null;
+		const data = await res.json();
+		const cutoff = new Date(cutoffIso).getTime();
+		let best = null;
+		for (const [version, iso] of Object.entries(data.time ?? {})) {
+			if (version === "created" || version === "modified") continue;
+			const time = new Date(iso).getTime();
+			if (time < cutoff && (!best || time > best.time)) best = {
+				version,
+				time
+			};
+		}
+		return best?.version ?? null;
+	} catch {
+		return null;
+	}
+}
+async function runPnpmInstall(cwd) {
+	return execa("pnpm", ["install"], {
+		cwd,
+		reject: false,
+		all: true
+	});
+}
+/**
+* Self-heals pnpm 11's `minimumReleaseAge` supply-chain policy rejections.
+*
+* A fresh resolve (no existing lockfile) already respects this policy on its
+* own — it just excludes too-recent candidates when picking "latest
+* satisfying range". The failure mode this fixes is a lockfile that's
+* already pinned to a version published before the policy caught up to it:
+* pnpm's own docs call this a "stale" lockfile. Plain `pnpm install` reuses
+* that pin without re-resolving (fails immediately on the stale entry), and
+* `pnpm update <pkg>` only reaches *direct* dependencies — not the
+* transitive ones this usually hits (e.g. electron-to-chromium via
+* browserslist, jose via an auth package) — so there's no way to just
+* "install past it" without an explicit re-pin.
+*
+* The fix: pin the violating package(s) to the newest version that predates
+* the policy cutoff via a temporary `overrides` + `minimumReleaseAge: 0` in
+* pnpm-workspace.yaml (NOT package.json's "pnpm" field — pnpm stopped
+* reading that field entirely, even in 10.x; it silently ignores it), force
+* re-resolution, then revert pnpm-workspace.yaml to its original content and
+* verify the lockfile now passes with the policy fully active again. The
+* lockfile is left holding the compliant pins; pnpm-workspace.yaml doesn't
+* change permanently.
+*
+* No-ops (returns without touching anything) when there's no
+* pnpm-workspace.yaml (this is inherently a workspace-scoped policy; a
+* single-package repo without one is left to the caller's own `pnpm
+* install`), when `pnpm install` isn't available, or when a first install
+* just succeeds. Rethrows for any install failure that ISN'T this specific
+* violation — this is not a general-purpose "swallow install errors" tool.
+*/
+async function healMinimumReleaseAgeViolations(workingDir) {
+	const workspaceYamlPath = path.join(workingDir, "pnpm-workspace.yaml");
+	let originalRaw;
+	try {
+		originalRaw = await fs$1.readFile(workspaceYamlPath, "utf8");
+	} catch {
+		return;
+	}
+	const first = await runPnpmInstall(workingDir);
+	if (first.exitCode === 0) return;
+	const output = `${first.all ?? ""}\n${first.stderr ?? ""}`;
+	if (!output.includes(VIOLATION_MARKER)) {
+		console.error(pc.red("\n✗ pnpm install failed (not a minimumReleaseAge violation — not auto-healing):"));
+		console.error(output);
+		throw new Error("pnpm install failed");
+	}
+	const violations = parseReleaseAgeViolations(output);
+	if (violations.length === 0) {
+		console.error(output);
+		throw new Error(`Detected ${VIOLATION_MARKER} but could not parse the violating package(s) from its output`);
+	}
+	console.log(pc.yellow(`\n⚠️  pnpm's minimumReleaseAge policy rejected ${violations.length} package(s) published too recently — auto-healing:`));
+	const fixes = {};
+	for (const violation of violations) {
+		const compliant = await findCompliantVersion(violation.name, violation.cutoff);
+		if (!compliant) {
+			console.error(pc.red(`   ✗ ${violation.name}@${violation.version}: no older compliant version found on the registry`));
+			throw new Error(`Could not find a minimumReleaseAge-compliant version for ${violation.name}`);
+		}
+		fixes[violation.name] = compliant;
+		console.log(pc.gray(`   • ${violation.name}: ${violation.version} → ${compliant}`));
+	}
+	const restoreSync = () => {
+		try {
+			fs.writeFileSync(workspaceYamlPath, originalRaw);
+		} catch {}
+	};
+	const onSignal = () => {
+		restoreSync();
+		process.exit(130);
+	};
+	process.once("SIGINT", onSignal);
+	process.once("SIGTERM", onSignal);
+	try {
+		const workspace = parse(originalRaw) ?? {};
+		workspace.overrides = {
+			...workspace.overrides ?? {},
+			...fixes
+		};
+		workspace.minimumReleaseAge = 0;
+		await fs$1.writeFile(workspaceYamlPath, stringify(workspace));
+		const heal = await runPnpmInstall(workingDir);
+		if (heal.exitCode !== 0) {
+			console.error(pc.red("\n✗ Re-resolution with pinned versions still failed:"));
+			console.error(`${heal.all ?? ""}\n${heal.stderr ?? ""}`);
+			throw new Error("Failed to heal minimumReleaseAge lockfile violation");
+		}
+	} finally {
+		await fs$1.writeFile(workspaceYamlPath, originalRaw);
+		process.removeListener("SIGINT", onSignal);
+		process.removeListener("SIGTERM", onSignal);
+	}
+	const verify = await runPnpmInstall(workingDir);
+	if (verify.exitCode !== 0) {
+		console.error(pc.red("\n✗ pnpm install failed after reverting the temporary override:"));
+		console.error(`${verify.all ?? ""}\n${verify.stderr ?? ""}`);
+		throw new Error("Lockfile healed but install failed once the policy bypass was reverted");
+	}
+	console.log(pc.green(`✅ Healed ${violations.length} minimumReleaseAge violation(s) — lockfile now passes with the policy active.\n`));
+}
+//#endregion
 //#region src/purge-builds/src/purge-builds/purge.ts
 const DELETE_PATTERNS = {
 	directories: [
@@ -44,7 +202,7 @@ async function scheduleDeferredDeletion(itemPath, _relativePath) {
 */
 async function executeFromMemory(originalPath) {
 	try {
-		const tempDir = await fs.mkdtemp(path.join(tmpdir(), "purge-builds-"));
+		const tempDir = await fs$1.mkdtemp(path.join(tmpdir(), "purge-builds-"));
 		const tempScript = path.join(tempDir, "purge-builds-detached.js");
 		const detachedScript = `
 // Detached purge script
@@ -94,13 +252,13 @@ async function cleanupNodeModules() {
 // Wait a bit for parent process to exit, then cleanup
 setTimeout(cleanupNodeModules, 1000);
 `;
-		await fs.writeFile(tempScript, detachedScript);
+		await fs$1.writeFile(tempScript, detachedScript);
 		spawn(process.execPath, [tempScript], {
 			detached: true,
 			stdio: "ignore"
 		}).unref();
 		try {
-			await fs.access(originalPath);
+			await fs$1.access(originalPath);
 		} catch {
 			return true;
 		}
@@ -110,7 +268,7 @@ setTimeout(cleanupNodeModules, 1000);
 		while (attempts < maxAttempts) {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			try {
-				await fs.access(originalPath);
+				await fs$1.access(originalPath);
 			} catch {
 				spinner.succeed("Successfully deleted node_modules");
 				return true;
@@ -178,13 +336,13 @@ function shouldDelete(itemPath, itemName, isDirectory) {
 */
 async function getDirectorySize(dirPath) {
 	try {
-		const items = await fs.readdir(dirPath, { withFileTypes: true });
+		const items = await fs$1.readdir(dirPath, { withFileTypes: true });
 		let totalSize = 0;
 		for (const item of items) {
 			const itemPath = path.join(dirPath, item.name);
 			if (item.isDirectory()) totalSize += await getDirectorySize(itemPath);
 			else if (item.isFile()) {
-				const stats = await fs.stat(itemPath);
+				const stats = await fs$1.stat(itemPath);
 				totalSize += stats.size;
 			}
 		}
@@ -198,12 +356,12 @@ async function getDirectorySize(dirPath) {
 */
 async function findItemsToDelete(dirPath, recursive = false, results = [], currentDepth = 0) {
 	try {
-		const items = await fs.readdir(dirPath, { withFileTypes: true });
+		const items = await fs$1.readdir(dirPath, { withFileTypes: true });
 		for (const item of items) {
 			const itemPath = path.join(dirPath, item.name);
 			const isDirectory = item.isDirectory();
 			if (shouldDelete(itemPath, item.name, isDirectory)) {
-				const size = isDirectory ? await getDirectorySize(itemPath) : (await fs.stat(itemPath)).size;
+				const size = isDirectory ? await getDirectorySize(itemPath) : (await fs$1.stat(itemPath)).size;
 				results.push({
 					path: itemPath,
 					type: isDirectory ? "directory" : "file",
@@ -221,11 +379,11 @@ async function findItemsToDelete(dirPath, recursive = false, results = [], curre
 */
 async function deleteItem(itemPath, isDirectory) {
 	try {
-		if (isDirectory) await fs.rm(itemPath, {
+		if (isDirectory) await fs$1.rm(itemPath, {
 			recursive: true,
 			force: true
 		});
-		else await fs.unlink(itemPath);
+		else await fs$1.unlink(itemPath);
 		return true;
 	} catch {
 		return false;
@@ -238,7 +396,7 @@ async function cleanupEmptyDirectories(workingDir) {
 	try {
 		const emptyDirs = await findEmptyNodeModulesDirectories(workingDir);
 		for (const dir of emptyDirs) try {
-			await fs.rmdir(dir);
+			await fs$1.rmdir(dir);
 		} catch {}
 	} catch {}
 }
@@ -248,11 +406,11 @@ async function cleanupEmptyDirectories(workingDir) {
 async function findEmptyNodeModulesDirectories(dirPath) {
 	const emptyDirs = [];
 	try {
-		const items = await fs.readdir(dirPath, { withFileTypes: true });
+		const items = await fs$1.readdir(dirPath, { withFileTypes: true });
 		for (const item of items) if (item.isDirectory()) {
 			const itemPath = path.join(dirPath, item.name);
 			if (item.name === "node_modules") try {
-				if ((await fs.readdir(itemPath)).length === 0) emptyDirs.push(itemPath);
+				if ((await fs$1.readdir(itemPath)).length === 0) emptyDirs.push(itemPath);
 			} catch {}
 			else {
 				const subEmptyDirs = await findEmptyNodeModulesDirectories(itemPath);
@@ -280,7 +438,7 @@ function formatBytes(bytes) {
 /**
 * Main purge function - V2 approach
 */
-async function purge({ dryRun = false, verbose = false, recursive = false, forceDetach = false } = {}) {
+async function purge({ dryRun = false, verbose = false, recursive = false, forceDetach = false, noHealLockfile = false } = {}) {
 	const startTime = Date.now();
 	const workingDir = process.cwd();
 	if (dryRun) {
@@ -377,6 +535,13 @@ async function purge({ dryRun = false, verbose = false, recursive = false, force
 	const cleanupSpinner = ora("Cleaning up empty directories...").start();
 	await cleanupEmptyDirectories(workingDir);
 	cleanupSpinner.succeed("Cleaned up empty directories");
+	if (!noHealLockfile) try {
+		await healMinimumReleaseAgeViolations(workingDir);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(pc.red(`\n✗ Automatic lockfile heal failed: ${message}`));
+		console.error(pc.gray("   Continuing — your own `pnpm install` step will surface the underlying error.\n"));
+	}
 	const duration = Date.now() - startTime;
 	console.log(pc.green(`\n✅ Cleanup completed in ${duration}ms`));
 	const deferredSize = deferredItems.reduce((sum, item) => sum + item.size, 0);
@@ -401,6 +566,8 @@ OPTIONS:
   -v, --verbose       Show detailed progress and file lists
   -r, --recursive     Deep recursive cleaning throughout the entire tree
   --detach            Force detached process deletion for node_modules
+  --no-heal-lockfile  Skip auto-fixing pnpm's minimumReleaseAge lockfile
+                      rejections (see FEATURES below)
   -h, --help          Show this help message
 
 EXAMPLES:
@@ -426,6 +593,12 @@ FEATURES:
   • Accurate size reporting
   • Clearer dry-run output
   • More reliable deletion
+  • Auto-heals pnpm 11's minimumReleaseAge lockfile rejections: after
+    deleting pnpm-lock.yaml, runs \`pnpm install\` and if it fails with
+    ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, pins the offending package(s)
+    to the newest compliant version and re-resolves, so the caller's own
+    subsequent \`pnpm install\` just succeeds. Disable with
+    --no-heal-lockfile.
 `);
 }
 async function main() {
@@ -439,7 +612,8 @@ async function main() {
 			dryRun: args.includes("--dry-run") || args.includes("-d"),
 			verbose: args.includes("--verbose") || args.includes("-v"),
 			recursive: args.includes("--recursive") || args.includes("-r"),
-			forceDetach: args.includes("--detach")
+			forceDetach: args.includes("--detach"),
+			noHealLockfile: args.includes("--no-heal-lockfile")
 		});
 	} catch (error) {
 		console.error("Error:", error);
