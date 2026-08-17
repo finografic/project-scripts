@@ -31,7 +31,18 @@ _Nothing active right now — pick from P1._
 
 ## P1 — Next Up
 
-_No items yet._
+### Port `triage-docs` from genx
+
+Move genx's `scripts/triage-docs.ts` here as a `triage-docs` bin, consumed via `pnpm dlx` like
+`clean-docs` and `purge-builds`. It is a repo-hygiene tool with nothing genx-specific about it, and
+every managed repo already depends on this package.
+
+The genx-side decoupling is already done, so the logic lifts unchanged. The real work is the prompt
+layer: the script uses `@clack/prompts` and this package standardises on `@inquirer` + `ora`.
+Converting rather than adding a second prompt stack — and handling cancellation correctly, since
+inquirer throws where clack returns a symbol, and the branches being guarded move and delete files.
+
+Detail: [`TODO_TRIAGE_DOCS.md`](./TODO_TRIAGE_DOCS.md)
 
 ---
 
