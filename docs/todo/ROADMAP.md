@@ -37,12 +37,28 @@ Move genx's `scripts/triage-docs.ts` here as a `triage-docs` bin, consumed via `
 `clean-docs` and `purge-builds`. It is a repo-hygiene tool with nothing genx-specific about it, and
 every managed repo already depends on this package.
 
-The genx-side decoupling is already done, so the logic lifts unchanged. The real work is the prompt
-layer: the script uses `@clack/prompts` and this package standardises on `@inquirer` + `ora`.
-Converting rather than adding a second prompt stack — and handling cancellation correctly, since
-inquirer throws where clack returns a symbol, and the branches being guarded move and delete files.
+The genx-side decoupling is already done, so the logic lifts unchanged — including its prompts,
+which are already clack. Do this before the Inquirer migration below: it introduces `@clack/prompts`
+via a file that is already written and verified, and becomes the in-repo reference for converting
+the rest.
 
 Detail: [`TODO_TRIAGE_DOCS.md`](./TODO_TRIAGE_DOCS.md)
+
+### Migrate prompts from Inquirer to Clack
+
+Inquirer predates the ecosystem's move to `@clack/prompts`. genx, gli and everything generated from
+`_templates/` are clack-based, so this package is the odd one out and users meet two interaction
+styles depending on which tool they run.
+
+Smaller than it sounds: one Inquirer package is imported, across three files, plus `ora` for
+spinners. Four declared dependencies (`@inquirer/confirm`, `@inquirer/core`, `@inquirer/input`,
+`yargs`) have no imports at all and can be dropped first.
+
+The risk is cancellation: Inquirer throws on Ctrl-C, clack returns a symbol that must be checked
+with `isCancel`. An unconverted call site keeps compiling and treats the cancel symbol as an answer
+— in `db-setup` and `build-deployment` that gates database and file operations.
+
+Detail: [`TODO_MIGRATE_TO_CLACK.md`](./TODO_MIGRATE_TO_CLACK.md)
 
 ---
 

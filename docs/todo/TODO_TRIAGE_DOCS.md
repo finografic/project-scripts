@@ -37,35 +37,22 @@ Verified running unchanged from an unrelated scratch repo with no genx on the pa
 
 ---
 
-## The one real porting decision: prompts
+## Prompts: keep clack, do not convert
 
-**This is the whole reason it is not a copy-paste.**
+`triage-docs` is written against `@clack/prompts`. This package still uses `@inquirer/prompts` in
+three files, but **clack is the direction of travel** — see
+[`TODO_MIGRATE_TO_CLACK.md`](./TODO_MIGRATE_TO_CLACK.md).
 
-|                | genx              | project-scripts                          |
-| -------------- | ----------------- | ---------------------------------------- |
-| Prompt library | `@clack/prompts`  | `@inquirer/prompts`, `@inquirer/confirm` |
-| Spinner        | `clack.spinner()` | `ora`                                    |
+So the port lands the file as-is and adds `@clack/prompts` as a dependency. Converting it to
+inquirer on the way in would mean writing code that is already scheduled for deletion.
 
-`triage-docs` uses `clack.intro`, `clack.outro`, `clack.spinner`, `clack.select`, `clack.log.*`,
-`clack.isCancel` and `clack.cancel`.
+**Do this port first.** It is the cheapest way to introduce clack here: the file is already written,
+already verified, and proves the dependency builds through `tsdown` before any existing bin is
+touched. It then serves as the in-repo reference for converting the other three.
 
-**Recommendation: rewrite the prompt layer to `@inquirer` + `ora`.** Adding `@clack/prompts` would
-put two prompt stacks in one published package — heavier install for every consumer and two
-different interaction styles depending on which bin you happened to run. The prompt surface is
-small and mechanical to convert:
-
-| clack                          | inquirer / ora                                          |
-| ------------------------------ | ------------------------------------------------------- |
-| `clack.intro(msg)`             | `console.log` with `pc.bgCyan(pc.black(...))`           |
-| `clack.spinner()`              | `ora(...)` — already used by other bins here            |
-| `clack.select({ options })`    | `select` from `@inquirer/prompts`                       |
-| `clack.log.info/success/warn`  | `console.log` with `pc.*`, matching `clean-docs` output |
-| `clack.isCancel` / `.cancel()` | inquirer throws `ExitPromptError` on Ctrl-C — catch it  |
-
-⚠️ **Cancellation is the part to get right.** clack returns a cancel _symbol_ that the current code
-checks with `clack.isCancel`; inquirer _throws_ instead. A naive conversion that drops the check
-would fall through to the next `switch` branch on Ctrl-C — and the branches move and delete files.
-Wrap the loop in `try/catch` and treat `ExitPromptError` as a clean abort.
+The two prompt stacks coexist only for the window between this port and the migration completing.
+That is the intended sequence, not an oversight — but do not let the window stay open indefinitely,
+since it means two interaction styles depending on which bin a user runs.
 
 ---
 
@@ -84,7 +71,7 @@ Wrap the loop in `try/catch` and treat `ExitPromptError` as a clean abort.
 2. **Swap internals for this package's own utils** — the inlined picocolors shim becomes
    `src/utils/picocolors.ts`, and `isCliEntry` comes from `src/utils/is-cli-entry.ts`.
 
-3. **Convert the prompt layer** per the table above.
+3. **Add `@clack/prompts`** to `dependencies`. No prompt-layer rewrite — see above.
 
 4. **Decide the scan root.** genx uses `process.cwd()`. Other bins here use `findProjectRoot()` /
    `getPackageScope()` from `src/utils/project.utils.ts`. In a monorepo those differ: `cwd` triages
@@ -110,7 +97,7 @@ Wrap the loop in `try/catch` and treat `ExitPromptError` as a clean abort.
 ## Acceptance criteria
 
 - [ ] `pnpm --package=@finografic/project-scripts dlx triage-docs` runs in any repo
-- [ ] Ctrl-C at the prompt aborts without moving or deleting anything
+- [ ] Ctrl-C at the prompt aborts without moving or deleting anything (clack's `isCancel` path)
 - [ ] Intro names the repo being triaged, from its `package.json`
 - [ ] `--scan-dir=<path>` still adds directories to the default set
 - [ ] Empty scan exits cleanly with "Nothing to triage"
