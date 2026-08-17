@@ -55,7 +55,8 @@ async function createMinimalPackageJson(config, buildWorkspace) {
 		dependencies: productionDependencies,
 		optionalDependencies
 	};
-	await writeFile(join(buildWorkspace, "package.json"), JSON.stringify(minimalPackageJson, null, 2), "utf8");
+	const buildPackageJsonPath = join(buildWorkspace, "package.json");
+	await writeFile(buildPackageJsonPath, JSON.stringify(minimalPackageJson, null, 2), "utf8");
 	console.log("✅ Minimal package.json created");
 	console.log(`   Dependencies: ${Object.keys(productionDependencies).length} (vs ${Object.keys(rootPackageJson.dependencies || {}).length + Object.keys(rootPackageJson.devDependencies || {}).length} in original)`);
 	console.log("   Size reduction: ~90% fewer dependencies");
@@ -116,7 +117,8 @@ async function optimizedIsolateWorkspace(config) {
 */
 async function optimizedRestoreWorkspace(config) {
 	const { workspaceRoot } = config;
-	const isolationDir = join(resolve(workspaceRoot, config.paths.temp), "workspace-isolation");
+	const tempDir = resolve(workspaceRoot, config.paths.temp);
+	const isolationDir = join(tempDir, "workspace-isolation");
 	console.log("🔓 Restoring workspace from optimized isolation...");
 	if (!existsSync(isolationDir)) {
 		console.log("ℹ️  No isolation directory found, nothing to restore");

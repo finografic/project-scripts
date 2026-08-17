@@ -1,3 +1,7 @@
+allowBuilds:
+  # Needed: esbuild's install script links the platform binary. Already trusted via
+  # onlyBuiltDependencies below — pnpm 11 asks again under the new key.
+  esbuild: true
 onlyBuiltDependencies:
   - dprint
   - esbuild

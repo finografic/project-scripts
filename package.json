@@ -94,8 +94,8 @@
   "scripts": {
     "---------- DEV_AND_BUILD": "---------------------------------------------",
     "dev": "npx @eslint/config-inspector --config eslint.config.ts",
-    "link": "pnpm build && pnpm link --global",
-    "unlink": "pnpm unlink --global",
+    "link": "pnpm build && pnpm add -g .",
+    "unlink": "pnpm remove -g $npm_package_name",
     "build": "tsdown",
     "·········· TESTING": "···················································",
     "test": "vitest",
@@ -144,21 +144,21 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.0",
-    "@commitlint/config-conventional": "^21.2.0",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@dotenvx/dotenvx": "1.51.0",
     "@finografic/md-lint": "^0.16.6",
     "@finografic/oxc-config": "^2.8.2",
     "@types/node": "24.12.0",
     "@types/yargs": "^17.0.33",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
-    "oxlint-tsgolint": "^0.24.0",
-    "tsdown": "^0.22.3",
+    "lint-staged": "^17.3.0",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "tsdown": "^0.22.14",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "7.0.2",
     "vitest": "^4.1.10"
   },
   "peerDependencies": {
@@ -169,7 +169,7 @@
       "optional": false
     }
   },
-  "packageManager": "pnpm@10.33.4",
+  "packageManager": "pnpm@11.14.0",
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",

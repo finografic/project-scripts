@@ -257,13 +257,15 @@ async function main() {
 		}
 		console.log("[db-setup] Loading seed config...");
 		let schemas = [];
-		if (operations.includes("seed")) if (autoConfirm) {
-			const { seedConfigs } = await loadSeedConfig();
-			schemas = seedConfigs.map((s) => s.name);
-			console.log("[db-setup] Auto-confirm enabled: seeding all schemas:", schemas);
-		} else {
-			const { seedConfigs } = await loadSeedConfig();
-			schemas = await getSchemaSelection({ seedConfigs });
+		if (operations.includes("seed")) {
+			if (autoConfirm) {
+				const { seedConfigs } = await loadSeedConfig();
+				schemas = seedConfigs.map((s) => s.name);
+				console.log("[db-setup] Auto-confirm enabled: seeding all schemas:", schemas);
+			} else {
+				const { seedConfigs } = await loadSeedConfig();
+				schemas = await getSchemaSelection({ seedConfigs });
+			}
 		}
 		console.log("[db-setup] Schemas selected:", schemas);
 		if (operations.includes("generate")) {

@@ -73,7 +73,8 @@ async function createPackageJson(config, serverPackagePath) {
 		},
 		engines: { node: ">=20.0.0" }
 	};
-	await writeFile(join(resolve(config.workspaceRoot, config.paths.temp, "deployment"), "package.json"), JSON.stringify(packageJson, null, 2));
+	const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, "deployment");
+	await writeFile(join(buildWorkspace, "package.json"), JSON.stringify(packageJson, null, 2));
 }
 /**
 * Create standalone package.json
@@ -98,7 +99,8 @@ async function createStandalonePackage(config, platform) {
 		optionalDependencies: { "npm-run-all": "^4.1.5" },
 		engines: { node: ">=20.0.0" }
 	};
-	await writeFile(join(resolve(config.workspaceRoot, config.paths.temp, "deployment"), "package.json"), JSON.stringify(packageJson, null, 2));
+	const buildWorkspace = resolve(config.workspaceRoot, config.paths.temp, "deployment");
+	await writeFile(join(buildWorkspace, "package.json"), JSON.stringify(packageJson, null, 2));
 }
 /**
 * Install production dependencies
@@ -171,7 +173,8 @@ function killPortIfOccupied(port) {
 //#region src/build-deployment/utils/template.utils.ts
 function getTemplateDir() {
 	try {
-		const packageRoot = dirname(createRequire(import.meta.url).resolve("@finografic/project-scripts/package.json"));
+		const packageJsonPath = createRequire(import.meta.url).resolve("@finografic/project-scripts/package.json");
+		const packageRoot = dirname(packageJsonPath);
 		const possiblePaths = [
 			join(packageRoot, "src", "build-deployment", "templates"),
 			join(packageRoot, "bin", "build-deployment", "templates"),
@@ -200,7 +203,8 @@ function getTemplateDir() {
 }
 const TEMPLATE_DIR = getTemplateDir();
 async function loadTemplateFile(templatePath) {
-	return readFile(join(TEMPLATE_DIR, templatePath), "utf-8");
+	const fullPath = join(TEMPLATE_DIR, templatePath);
+	return readFile(fullPath, "utf-8");
 }
 /**
 * Process a template with variables
@@ -242,7 +246,8 @@ function formatDate(locale) {
 }
 //#endregion
 //#region src/build-deployment/config/default.config.ts
-dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+dirname(__filename);
 const defaultConfig = {
 	appName: "Touch Monorepo",
 	appDescription: "Touch Monorepo Production Distribution",

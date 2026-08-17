@@ -147,7 +147,8 @@ async function createZipArchive(config, platform, arch) {
 		console.log("  ✅ dist/ directory copied");
 	}
 	console.log("✅ Final deployment structure created");
-	execSync(`cd "${finalDeployment}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`, { stdio: "inherit" });
+	const zipCommand = `cd "${finalDeployment}" && zip -r "${zipPath}" . -x "node_modules/*" "*.log" ".DS_Store"`;
+	execSync(zipCommand, { stdio: "inherit" });
 	return zipName;
 }
 /**
@@ -169,7 +170,8 @@ async function cleanPlatformArtifacts(config) {
 */
 async function restoreWorkspace(config) {
 	const { workspaceRoot } = config;
-	const isolationDir = join(resolve(workspaceRoot, config.paths.temp), "workspace-isolation");
+	const tempDir = resolve(workspaceRoot, config.paths.temp);
+	const isolationDir = join(tempDir, "workspace-isolation");
 	console.log("🔓 Restoring workspace from isolation...");
 	if (!existsSync(isolationDir)) {
 		console.log("ℹ️  No isolation directory found, nothing to restore");
@@ -290,7 +292,8 @@ async function checkWorkspaceInUse(config) {
 */
 async function restoreFromBackup(config) {
 	const { workspaceRoot } = config;
-	const backupDir = join(resolve(workspaceRoot, config.paths.temp), "workspace-backup");
+	const tempDir = resolve(workspaceRoot, config.paths.temp);
+	const backupDir = join(tempDir, "workspace-backup");
 	console.log("🔄 Attempting to restore workspace from backup...");
 	if (!existsSync(backupDir)) {
 		console.log("ℹ️  No backup directory found");
@@ -328,7 +331,8 @@ async function restoreFromBackup(config) {
 */
 async function canProceedWithBuild(config) {
 	const { workspaceRoot } = config;
-	const isolationDir = join(resolve(workspaceRoot, config.paths.temp), "workspace-isolation");
+	const tempDir = resolve(workspaceRoot, config.paths.temp);
+	const isolationDir = join(tempDir, "workspace-isolation");
 	console.log("🔍 Verifying build safety...");
 	if (!existsSync(isolationDir)) {
 		console.log("❌ Isolation directory not found - isolation may have failed");
