@@ -25,6 +25,13 @@ describe('triage-docs', () => {
     it('counts markers present in the content', () => {
       expect(scoreMarkers('## Goal\n## Architecture\n## Tasks', SPEC_MARKERS)).toBe(2);
     });
+
+    it('matches markers regardless of the casing the document uses', () => {
+      // `manual checks` is declared lowercase, but real documents write it as a sentence.
+      expect(scoreMarkers('Manual checks before tagging:', DRAFTS_MARKERS)).toBe(1);
+      expect(scoreMarkers('- [X] done', DRAFTS_MARKERS)).toBe(1);
+      expect(scoreMarkers('## goal\n## architecture', SPEC_MARKERS)).toBe(2);
+    });
   });
 
   describe('suggestCategory', () => {

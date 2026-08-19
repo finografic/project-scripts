@@ -31,17 +31,6 @@ _Nothing active right now — pick from P1._
 
 ## P1 — Next Up
 
-### Release `triage-docs` and clean up genx copy
-
-`triage-docs` is ported locally as a `triage-docs` bin, consumed via `pnpm dlx` like `clean-docs`
-and `purge-builds`. Release this package, then delete genx's old `scripts/triage-docs.ts` copy and
-update genx docs/skills to call this package.
-
-The repo-local port is complete and verified; the remaining work is intentionally external to this
-checkout.
-
-Detail: [`TODO_TRIAGE_DOCS.md`](./TODO_TRIAGE_DOCS.md)
-
 ### Manual prompt cancellation checks
 
 The Inquirer/Ora migration is complete locally: source imports and package manifests now use
@@ -68,6 +57,6 @@ _No items yet._
 
 ## Done
 
-| Item                           | Completed |
-| ------------------------------ | --------- |
-| _No completed milestones yet._ | —         |
+| Item                                                                                                                                                                    | Completed  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `triage-docs` ported from genx and released as a bin in 2.0.0; genx deleted its local copy and repointed to `pnpm dlx` — [`DONE_TRIAGE_DOCS.md`](./DONE_TRIAGE_DOCS.md) | 2026-08-19 |

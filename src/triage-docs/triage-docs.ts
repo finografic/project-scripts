@@ -17,8 +17,14 @@ import {
   SPEC_MARKERS,
 } from './triage-docs.config';
 
+/**
+ * Count how many markers appear in the content, ignoring case. Documents are written by people, so a
+ * marker cannot assume the casing it was declared with — `Manual checks` and `- [X]` are the same
+ * signal as `manual checks` and `- [x]`.
+ */
 export function scoreMarkers(content: string, markers: string[]): number {
-  return markers.filter((marker) => content.includes(marker)).length;
+  const haystack = content.toLowerCase();
+  return markers.filter((marker) => haystack.includes(marker.toLowerCase())).length;
 }
 
 export function suggestCategory(content: string): DocFile['suggestion'] {

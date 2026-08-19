@@ -1,6 +1,6 @@
-# TODO: Port `triage-docs` from genx (`@finografic/project-scripts`)
+# DONE: Port `triage-docs` from genx (`@finografic/project-scripts`)
 
-**Status:** Local port complete (2026-08-19); release and genx-side cleanup remain.
+**Status:** Complete (2026-08-19). Released in `@finografic/project-scripts` 2.0.0; genx deleted its local copy and repointed its skill, instruction file and dependency in genx 5.48.3.
 **Owner:** Finografic tooling
 **Source:** [`@finografic/genx` → `scripts/triage-docs.ts`](https://github.com/finografic/genx/blob/master/scripts/triage-docs.ts) (297 lines)
 **Related:** `src/clean-docs/`, `src/audit-script-separators/`, `bin/`
