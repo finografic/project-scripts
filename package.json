@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.7.0",
   "engines": {
-    "node": ">=24.16.0"
+    "node": ">=24.19.0"
   },
   "description": "Fingorafic Project Scripts",
   "homepage": "https://github.com/finografic/project-scripts",
@@ -149,7 +149,7 @@
     "@commitlint/config-conventional": "^21.2.2",
     "@dotenvx/dotenvx": "1.51.0",
     "@finografic/md-lint": "^0.16.6",
-    "@finografic/oxc-config": "^2.8.2",
+    "@finografic/oxc-config": "^2.9.1",
     "@types/node": "24.12.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
@@ -169,7 +169,7 @@
       "optional": false
     }
   },
-  "packageManager": "pnpm@11.14.0",
+  "packageManager": "pnpm@11.21.0",
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
       "oxfmt --no-error-on-unmatched-pattern",
