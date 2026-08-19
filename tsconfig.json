@@ -4,5 +4,5 @@
     "ignoreDeprecations": "5.0"
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", ".next", "build", "coverage"]
+  "exclude": ["node_modules", "dist", "build", "coverage", "oxlint.config.ts"]
 }

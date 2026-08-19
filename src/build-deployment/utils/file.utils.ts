@@ -314,8 +314,7 @@ export async function isolateWorkspace(config: BuildDeploymentConfig): Promise<v
   }
 
   // Check if workspace is currently in use
-  const { checkWorkspaceInUse: isWorkspaceInUse } = await import('./file.utils.js');
-  const workspaceInUse = await isWorkspaceInUse(config);
+  const workspaceInUse = await checkWorkspaceInUse(config);
   if (workspaceInUse) {
     throw new Error(
       'Workspace is currently in use. Please stop all pnpm and Node.js processes before isolation.',
@@ -426,8 +425,7 @@ export async function restoreWorkspace(config: BuildDeploymentConfig): Promise<v
 
     // Try to restore from backup if main restoration fails
     try {
-      const { restoreFromBackup: restoreWorkspaceFromBackup } = await import('./file.utils.js');
-      await restoreWorkspaceFromBackup(config);
+      await restoreFromBackup(config);
     } catch (backupError) {
       console.error('❌ Failed to restore from backup:', backupError);
     }
@@ -468,8 +466,7 @@ export async function emergencyRestoreWorkspace(workspaceRoot: string): Promise<
 
         // Try backup restoration
         try {
-          const { restoreFromBackup: restoreWorkspaceFromBackup } = await import('./file.utils.js');
-          await restoreWorkspaceFromBackup({
+          await restoreFromBackup({
             workspaceRoot,
             paths: {
               temp: tempDir.replace(workspaceRoot, '').replace(/^[/\\]/, ''),

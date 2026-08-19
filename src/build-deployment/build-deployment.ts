@@ -13,13 +13,16 @@ import {
 import {
   cleanPlatformArtifacts,
   cleanupTempDirectory,
+  canProceedWithBuild,
   copyBuildArtifacts,
   copyDataFiles,
   createDirectoryStructure,
   createZipArchive,
+  emergencyRestoreWorkspace,
   writeExecutableFile,
 } from './utils/file.utils.js';
 import {
+  copyOptimizedSources,
   createMinimalPackageJson,
   installProductionDependencies,
   optimizedIsolateWorkspace,
@@ -544,7 +547,6 @@ async function main(): Promise<void> {
     console.log(pc.gray('═'.repeat(60)));
 
     try {
-      const { emergencyRestoreWorkspace } = await import('./utils/file.utils.js');
       await emergencyRestoreWorkspace(defaultConfig.workspaceRoot);
       console.log(pc.green('✅ Emergency restoration completed'));
       process.exit(0);
@@ -614,7 +616,6 @@ async function main(): Promise<void> {
     await optimizedIsolateWorkspace(defaultConfig);
 
     // Additional safety check before proceeding
-    const { canProceedWithBuild } = await import('./utils/file.utils.js');
     const canProceed = await canProceedWithBuild(defaultConfig);
     if (!canProceed) {
       console.log(pc.yellow('⚠️  Safety check failed - deploying build agent instead...'));
@@ -676,7 +677,6 @@ async function main(): Promise<void> {
 
     // Copy source files only (no massive node_modules copying)
     console.log('📁 Copying source files to build workspace...');
-    const { copyOptimizedSources } = await import('./utils/optimized-isolation.utils.js');
     await copyOptimizedSources(defaultConfig, buildWorkspace);
 
     // Build applications
