@@ -6,7 +6,7 @@ import { a as optimizedRestoreWorkspace, i as optimizedIsolateWorkspace, n as cr
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { dirname, join, resolve } from "path";
-import { checkbox, confirm, select } from "@inquirer/prompts";
+import { cancel, confirm, isCancel, multiselect, select } from "@clack/prompts";
 import { arch, platform } from "node:os";
 import { readFile, readdir, rm, writeFile } from "fs/promises";
 import { createRequire } from "module";
@@ -674,23 +674,41 @@ async function getInteractiveOptions() {
 	}
 	const selectedPlatform = await select({
 		message: pc.bold("🎯 Select deployment platform:"),
-		choices: platformConfigs.map((config) => ({
-			name: config.name,
+		options: platformConfigs.map((config) => ({
+			label: config.name,
 			value: config.value,
-			description: config.description
+			hint: config.description
 		})),
-		default: getDefaultPlatform()
+		initialValue: getDefaultPlatform()
 	});
+	if (isCancel(selectedPlatform)) {
+		cancel("Operation cancelled");
+		process.exit(0);
+	}
 	const platformConfig = platformConfigs.find((config) => config.value === selectedPlatform);
 	if (!platformConfig) throw new Error(`Invalid platform selection: ${selectedPlatform}`);
-	const additionalOptions = await checkbox({
+	const additionalOptions = await multiselect({
 		message: pc.bold("⚙️  Select additional options:"),
-		choices: deploymentOptions
+		options: deploymentOptions.map((option) => ({
+			label: option.name,
+			value: option.value
+		})),
+		initialValues: deploymentOptions.filter((option) => option.checked).map((option) => option.value),
+		required: false
 	});
-	if (!await confirm({
+	if (isCancel(additionalOptions)) {
+		cancel("Operation cancelled");
+		process.exit(0);
+	}
+	const shouldProceed = await confirm({
 		message: pc.bold(`🚀 Build ${platformConfig.name}?`),
-		default: true
-	})) {
+		initialValue: true
+	});
+	if (isCancel(shouldProceed)) {
+		cancel("Operation cancelled");
+		process.exit(0);
+	}
+	if (!shouldProceed) {
 		console.log(pc.yellow("📦 Build cancelled by user"));
 		process.exit(0);
 	}

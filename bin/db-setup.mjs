@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { execSync } from "node:child_process";
-import { checkbox } from "@inquirer/prompts";
+import { cancel, isCancel, multiselect } from "@clack/prompts";
 //#region src/db-setup/schemas.config.ts
 const PATH_FOLDER_SCHEMAS = "apps/server/src/db/schemas";
 const PATH_FILES_CONFIG = ["config/db-setup.config.ts", "db-setup.config.ts"];
@@ -123,14 +123,19 @@ const getSchemaSelection = async ({ seedConfigs }) => {
 		console.warn(pc.yellow("⚠️ No schema files found"));
 		return [];
 	}
-	const selectedSchemas = await checkbox({
+	const selectedSchemas = await multiselect({
 		message: "Select schemas to process",
-		choices: schemas.map((schema) => ({
-			name: schema,
-			value: schema,
-			checked: true
-		}))
+		options: schemas.map((schema) => ({
+			label: schema,
+			value: schema
+		})),
+		initialValues: schemas,
+		required: false
 	});
+	if (isCancel(selectedSchemas)) {
+		cancel("Operation cancelled");
+		process.exit(0);
+	}
 	const missingDeps = validateDependencies({
 		seedConfigs,
 		selectedSchemas
@@ -225,31 +230,36 @@ async function main() {
 		if (autoConfirm) {
 			operations = ["seed", "views"];
 			console.log("[db-setup] Auto-confirm enabled: defaulting to operations:", operations);
-		} else operations = await checkbox({
-			message: "Select operations to perform",
-			choices: [
-				{
-					name: "Seed data",
-					value: "seed",
-					checked: true
-				},
-				{
-					name: "Create views",
-					value: "views",
-					checked: true
-				},
-				{
-					name: "Run migrations",
-					value: "migrate",
-					checked: false
-				},
-				{
-					name: "Generate migrations",
-					value: "generate",
-					checked: false
-				}
-			]
-		});
+		} else {
+			const selectedOperations = await multiselect({
+				message: "Select operations to perform",
+				options: [
+					{
+						label: "Seed data",
+						value: "seed"
+					},
+					{
+						label: "Create views",
+						value: "views"
+					},
+					{
+						label: "Run migrations",
+						value: "migrate"
+					},
+					{
+						label: "Generate migrations",
+						value: "generate"
+					}
+				],
+				initialValues: ["seed", "views"],
+				required: false
+			});
+			if (isCancel(selectedOperations)) {
+				cancel("Operation cancelled");
+				return;
+			}
+			operations = selectedOperations;
+		}
 		console.log("[db-setup] Operations selected:", operations);
 		if (operations.length === 0) {
 			console.log("No operations selected. Exiting...");

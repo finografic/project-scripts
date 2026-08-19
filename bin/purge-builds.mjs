@@ -4,10 +4,10 @@ import { t as pc } from "./picocolors.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { spinner } from "@clack/prompts";
 import fs$1 from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { setTimeout } from "node:timers";
-import ora from "ora";
 import { execa } from "execa";
 import { parse, stringify } from "yaml";
 //#region src/purge-builds/src/purge-builds/heal-lockfile.ts
@@ -262,7 +262,8 @@ setTimeout(cleanupNodeModules, 1000);
 		} catch {
 			return true;
 		}
-		const spinner = ora("Waiting for node_modules deletion...").start();
+		const deletionSpinner = spinner();
+		deletionSpinner.start("Waiting for node_modules deletion...");
 		let attempts = 0;
 		const maxAttempts = 10;
 		while (attempts < maxAttempts) {
@@ -270,13 +271,13 @@ setTimeout(cleanupNodeModules, 1000);
 			try {
 				await fs$1.access(originalPath);
 			} catch {
-				spinner.succeed("Successfully deleted node_modules");
+				deletionSpinner.stop("Successfully deleted node_modules");
 				return true;
 			}
 			attempts++;
-			spinner.text = `Waiting for node_modules deletion... (${attempts}/${maxAttempts})`;
+			deletionSpinner.message(`Waiting for node_modules deletion... (${attempts}/${maxAttempts})`);
 		}
-		spinner.warn("Deletion process started but completion unconfirmed");
+		deletionSpinner.stop("Deletion process started but completion unconfirmed");
 		return true;
 	} catch {
 		return false;
@@ -450,16 +451,17 @@ async function purge({ dryRun = false, verbose = false, recursive = false, force
 	console.log(pc.gray(`Operation: ${dryRun ? "DRY RUN (simulation)" : "LIVE (actual deletion)"}`));
 	const currentScript = getCurrentExecutionPath();
 	console.log(pc.gray(`Self-preservation: ${currentScript}\n`));
-	const scanSpinner = ora("Scanning for build artifacts...").start();
+	const scanSpinner = spinner();
+	scanSpinner.start("Scanning for build artifacts...");
 	const itemsToDelete = await findItemsToDelete(workingDir, recursive);
 	if (itemsToDelete.length === 0) {
-		scanSpinner.succeed("No build artifacts found to clean!");
+		scanSpinner.stop("No build artifacts found to clean!");
 		return;
 	}
 	const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
 	const dirCount = itemsToDelete.filter((item) => item.type === "directory").length;
 	const fileCount = itemsToDelete.filter((item) => item.type === "file").length;
-	scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
+	scanSpinner.stop(`Found ${itemsToDelete.length} items to clean`);
 	console.log(pc.gray(`   • ${dirCount} directories`));
 	console.log(pc.gray(`   • ${fileCount} files`));
 	console.log(pc.gray(`   • ${formatBytes(totalSize)} total size\n`));
@@ -491,13 +493,14 @@ async function purge({ dryRun = false, verbose = false, recursive = false, force
 	}
 	const immediateItems = itemsToDelete.filter((item) => !shouldDeferNodeModules(item.path));
 	const deferredItems = itemsToDelete.filter((item) => shouldDeferNodeModules(item.path));
-	const deleteSpinner = ora("Deleting items...").start();
+	const deleteSpinner = spinner();
+	deleteSpinner.start("Deleting items...");
 	let deletedCount = 0;
 	let freedSpace = 0;
 	let errorCount = 0;
 	for (const item of immediateItems) {
 		const relativePath = path.relative(workingDir, item.path);
-		deleteSpinner.text = `Deleting: ${relativePath}`;
+		deleteSpinner.message(`Deleting: ${relativePath}`);
 		if (await deleteItem(item.path, item.type === "directory")) {
 			deletedCount++;
 			freedSpace += item.size;
@@ -506,7 +509,7 @@ async function purge({ dryRun = false, verbose = false, recursive = false, force
 			if (verbose) console.log(pc.red(`\nFailed to delete: ${relativePath}`));
 		}
 	}
-	deleteSpinner.succeed(`Deleted ${deletedCount} items`);
+	deleteSpinner.stop(`Deleted ${deletedCount} items`);
 	if (deferredItems.length > 0) {
 		console.log(pc.cyan("\n🔄 Handling deferred deletions...\n"));
 		for (const item of deferredItems) {
@@ -532,9 +535,10 @@ async function purge({ dryRun = false, verbose = false, recursive = false, force
 			}
 		}
 	}
-	const cleanupSpinner = ora("Cleaning up empty directories...").start();
+	const cleanupSpinner = spinner();
+	cleanupSpinner.start("Cleaning up empty directories...");
 	await cleanupEmptyDirectories(workingDir);
-	cleanupSpinner.succeed("Cleaned up empty directories");
+	cleanupSpinner.stop("Cleaned up empty directories");
 	if (!noHealLockfile) try {
 		await healMinimumReleaseAgeViolations(workingDir);
 	} catch (error) {

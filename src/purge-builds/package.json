@@ -28,21 +28,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@inquirer/confirm": "5.1.8",
-    "@inquirer/core": "10.1.9",
-    "@inquirer/input": "4.1.8",
-    "@inquirer/prompts": "7.1.0",
-    "picocolors": "^1.1.1",
+    "@clack/prompts": "^1.7.0",
     "del": "8.0.0",
     "fs-extra": "^11.2.0",
     "glob": "^11.0.3",
-    "yargs": "^17.7.2"
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "20.15.0",
-    "@types/prompts": "^2.4.9",
-    "@types/yargs": "^17.0.33",
     "dotenv": "^16.5.0",
     "env-cmd": "^10.1.0",
     "tsup": "8.5.0",

@@ -20,13 +20,12 @@ vi.mock('utils/picocolors', () => ({
     bold: (str: string) => str,
   },
 }));
-vi.mock('ora', () => ({
-  default: vi.fn(() => ({
-    start: vi.fn().mockReturnThis(),
-    succeed: vi.fn().mockReturnThis(),
-    warn: vi.fn().mockReturnThis(),
-    fail: vi.fn().mockReturnThis(),
-    text: '',
+vi.mock('@clack/prompts', () => ({
+  spinner: vi.fn(() => ({
+    start: vi.fn(),
+    stop: vi.fn(),
+    error: vi.fn(),
+    message: vi.fn(),
   })),
 }));
 

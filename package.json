@@ -45,10 +45,12 @@
   "files": [
     "bin",
     "dist",
+    "src/triage-docs/README.md",
     "src/build-deployment/templates"
   ],
   "bin": {
     "clean-docs": "bin/clean-docs.mjs",
+    "triage-docs": "bin/triage-docs.mjs",
     "db-setup": "bin/db-setup.mjs",
     "purge-builds": "bin/purge-builds.mjs",
     "sqlite-rebuild": "bin/sqlite-rebuild.mjs",
@@ -64,6 +66,10 @@
     "./clean-docs": {
       "types": "./dist/clean-docs.d.mts",
       "import": "./dist/clean-docs.mjs"
+    },
+    "./triage-docs": {
+      "types": "./dist/triage-docs.d.mts",
+      "import": "./dist/triage-docs.mjs"
     },
     "./db-setup": {
       "types": "./dist/db-setup.d.mts",
@@ -131,17 +137,12 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@inquirer/confirm": "5.1.18",
-    "@inquirer/core": "10.2.2",
-    "@inquirer/input": "4.2.4",
-    "@inquirer/prompts": "7.8.6",
+    "@clack/prompts": "^1.7.0",
     "del": "8.0.1",
     "execa": "9.6.1",
-    "ora": "9.0.0",
     "parse-gitignore": "^2.0.0",
     "picocolors": "^1.1.1",
-    "yaml": "^2.9.0",
-    "yargs": "^18.0.0"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
@@ -150,7 +151,6 @@
     "@finografic/md-lint": "^0.16.6",
     "@finografic/oxc-config": "^2.8.2",
     "@types/node": "24.12.0",
-    "@types/yargs": "^17.0.33",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "oxfmt": "^0.63.0",

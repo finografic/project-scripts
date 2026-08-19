@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout } from 'node:timers';
-import ora from 'ora';
+import { spinner } from '@clack/prompts';
 
 import { pc } from 'utils/picocolors';
 
@@ -145,7 +145,8 @@ setTimeout(cleanupNodeModules, 1000);
     }
 
     // Wait for completion
-    const spinner = ora('Waiting for node_modules deletion...').start();
+    const deletionSpinner = spinner();
+    deletionSpinner.start('Waiting for node_modules deletion...');
     let attempts = 0;
     const maxAttempts = 10; // 5 seconds total (500ms * 10)
 
@@ -157,15 +158,15 @@ setTimeout(cleanupNodeModules, 1000);
         // Still exists
       } catch {
         // node_modules is gone
-        spinner.succeed('Successfully deleted node_modules');
+        deletionSpinner.stop('Successfully deleted node_modules');
         return true;
       }
 
       attempts++;
-      spinner.text = `Waiting for node_modules deletion... (${attempts}/${maxAttempts})`;
+      deletionSpinner.message(`Waiting for node_modules deletion... (${attempts}/${maxAttempts})`);
     }
 
-    spinner.warn('Deletion process started but completion unconfirmed');
+    deletionSpinner.stop('Deletion process started but completion unconfirmed');
     return true;
   } catch {
     return false;
@@ -434,11 +435,12 @@ export async function purge({
   console.log(pc.gray(`Self-preservation: ${currentScript}\n`));
 
   // Find all items to delete
-  const scanSpinner = ora('Scanning for build artifacts...').start();
+  const scanSpinner = spinner();
+  scanSpinner.start('Scanning for build artifacts...');
   const itemsToDelete = await findItemsToDelete(workingDir, recursive);
 
   if (itemsToDelete.length === 0) {
-    scanSpinner.succeed('No build artifacts found to clean!');
+    scanSpinner.stop('No build artifacts found to clean!');
     return;
   }
 
@@ -448,7 +450,7 @@ export async function purge({
   const fileCount = itemsToDelete.filter((item) => item.type === 'file').length;
 
   // Show what will be deleted
-  scanSpinner.succeed(`Found ${itemsToDelete.length} items to clean`);
+  scanSpinner.stop(`Found ${itemsToDelete.length} items to clean`);
   console.log(pc.gray(`   • ${dirCount} directories`));
   console.log(pc.gray(`   • ${fileCount} files`));
   console.log(pc.gray(`   • ${formatBytes(totalSize)} total size\n`));
@@ -490,14 +492,15 @@ export async function purge({
   const deferredItems = itemsToDelete.filter((item) => shouldDeferNodeModules(item.path));
 
   // Actually delete immediate items
-  const deleteSpinner = ora('Deleting items...').start();
+  const deleteSpinner = spinner();
+  deleteSpinner.start('Deleting items...');
   let deletedCount = 0;
   let freedSpace = 0;
   let errorCount = 0;
 
   for (const item of immediateItems) {
     const relativePath = path.relative(workingDir, item.path);
-    deleteSpinner.text = `Deleting: ${relativePath}`;
+    deleteSpinner.message(`Deleting: ${relativePath}`);
 
     const success = await deleteItem(item.path, item.type === 'directory');
 
@@ -512,7 +515,7 @@ export async function purge({
     }
   }
 
-  deleteSpinner.succeed(`Deleted ${deletedCount} items`);
+  deleteSpinner.stop(`Deleted ${deletedCount} items`);
 
   // Handle deferred deletions (node_modules that we can't delete while running from them)
   if (deferredItems.length > 0) {
@@ -558,9 +561,10 @@ export async function purge({
   }
 
   // Clean up any empty directories left behind
-  const cleanupSpinner = ora('Cleaning up empty directories...').start();
+  const cleanupSpinner = spinner();
+  cleanupSpinner.start('Cleaning up empty directories...');
   await cleanupEmptyDirectories(workingDir);
-  cleanupSpinner.succeed('Cleaned up empty directories');
+  cleanupSpinner.stop('Cleaned up empty directories');
 
   // A fresh resolve (no existing lockfile — which is the usual case right
   // here, since pnpm-lock.yaml was just deleted above) already respects

@@ -10,6 +10,7 @@ export default defineConfig([
       'sqlite-rebuild': 'src/sqlite-rebuild/sqlite-rebuild.ts',
       'db-setup': 'src/db-setup/db-setup.ts',
       'clean-docs': 'src/clean-docs/clean-docs.ts',
+      'triage-docs': 'src/triage-docs/triage-docs.ts',
       'purge-builds': 'src/purge-builds/src/purge-builds/index.ts',
       'build-deployment': 'src/build-deployment/cli.ts',
       'github-release': 'src/github-release/github-release.ts',
@@ -42,6 +43,7 @@ export default defineConfig([
 
     onSuccess: async () => {
       await chmod('bin/sqlite-rebuild.mjs', 0o755);
+      await chmod('bin/triage-docs.mjs', 0o755);
     },
   },
 
@@ -51,6 +53,7 @@ export default defineConfig([
   {
     entry: {
       'clean-docs': 'src/clean-docs/index.ts',
+      'triage-docs': 'src/triage-docs/index.ts',
       'db-setup': 'src/db-setup/index.ts',
       'db-setup/config.template': 'src/db-setup/config.template.ts',
       'purge-builds': 'src/purge-builds/src/purge-builds/index.ts',

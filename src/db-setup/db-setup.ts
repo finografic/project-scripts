@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkbox } from '@inquirer/prompts';
+import { cancel, isCancel, multiselect } from '@clack/prompts';
 import type { ViewConfig } from './db-setup.types';
 
 import { isCliEntry } from 'utils/is-cli-entry';
@@ -117,15 +117,24 @@ export async function main() {
       operations = ['seed', 'views']; // Default: only seed data, adjust as needed
       console.log('[db-setup] Auto-confirm enabled: defaulting to operations:', operations);
     } else {
-      operations = await checkbox({
+      const selectedOperations = await multiselect({
         message: 'Select operations to perform',
-        choices: [
-          { name: 'Seed data', value: 'seed', checked: true },
-          { name: 'Create views', value: 'views', checked: true },
-          { name: 'Run migrations', value: 'migrate', checked: false },
-          { name: 'Generate migrations', value: 'generate', checked: false },
+        options: [
+          { label: 'Seed data', value: 'seed' },
+          { label: 'Create views', value: 'views' },
+          { label: 'Run migrations', value: 'migrate' },
+          { label: 'Generate migrations', value: 'generate' },
         ],
+        initialValues: ['seed', 'views'],
+        required: false,
       });
+
+      if (isCancel(selectedOperations)) {
+        cancel('Operation cancelled');
+        return;
+      }
+
+      operations = selectedOperations;
     }
     console.log('[db-setup] Operations selected:', operations);
 

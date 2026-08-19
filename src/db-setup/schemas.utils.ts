@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { checkbox } from '@inquirer/prompts';
+import { cancel, isCancel, multiselect } from '@clack/prompts';
 import type { SeedConfig, ViewConfig } from './db-setup.types';
 
 import { pc } from 'utils/picocolors';
@@ -184,14 +184,20 @@ export const getSchemaSelection = async ({ seedConfigs }: { seedConfigs: SeedCon
     return [];
   }
 
-  const selectedSchemas = await checkbox({
+  const selectedSchemas = await multiselect({
     message: 'Select schemas to process',
-    choices: schemas.map((schema) => ({
-      name: schema,
+    options: schemas.map((schema) => ({
+      label: schema,
       value: schema,
-      checked: true,
     })),
+    initialValues: schemas,
+    required: false,
   });
+
+  if (isCancel(selectedSchemas)) {
+    cancel('Operation cancelled');
+    process.exit(0);
+  }
 
   // ─── VALIDATE DEPENDENCIES ────────────────────────────────────────────────────
 

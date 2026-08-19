@@ -1,6 +1,6 @@
 # TODO: Port `triage-docs` from genx (`@finografic/project-scripts`)
 
-**Status:** Planned — not started
+**Status:** Local port complete (2026-08-19); release and genx-side cleanup remain.
 **Owner:** Finografic tooling
 **Source:** [`@finografic/genx` → `scripts/triage-docs.ts`](https://github.com/finografic/genx/blob/master/scripts/triage-docs.ts) (297 lines)
 **Related:** `src/clean-docs/`, `src/audit-script-separators/`, `bin/`
@@ -39,26 +39,20 @@ Verified running unchanged from an unrelated scratch repo with no genx on the pa
 
 ## Prompts: keep clack, do not convert
 
-`triage-docs` is written against `@clack/prompts`. This package still uses `@inquirer/prompts` in
-three files, but **clack is the direction of travel** — see
-[`TODO_MIGRATE_TO_CLACK.md`](./TODO_MIGRATE_TO_CLACK.md).
+`triage-docs` is written against `@clack/prompts`. This package now uses Clack for prompts and
+spinners across the migrated CLI surface — see [`TODO_MIGRATE_TO_CLACK.md`](./TODO_MIGRATE_TO_CLACK.md).
 
 So the port lands the file as-is and adds `@clack/prompts` as a dependency. Converting it to
 inquirer on the way in would mean writing code that is already scheduled for deletion.
 
-**Do this port first.** It is the cheapest way to introduce clack here: the file is already written,
-already verified, and proves the dependency builds through `tsdown` before any existing bin is
-touched. It then serves as the in-repo reference for converting the other three.
-
-The two prompt stacks coexist only for the window between this port and the migration completing.
-That is the intended sequence, not an oversight — but do not let the window stay open indefinitely,
-since it means two interaction styles depending on which bin a user runs.
+This port introduced Clack here first, then the remaining Inquirer/Ora call sites were migrated so
+the package has one prompt/spinner stack.
 
 ---
 
 ## Steps
 
-1. **Create `src/triage-docs/`**, matching the layout used by `clean-docs`:
+1. [x] **Create `src/triage-docs/`**, matching the layout used by `clean-docs`:
 
    | File                    | Contents                                                                         |
    | ----------------------- | -------------------------------------------------------------------------------- |
@@ -68,40 +62,48 @@ since it means two interaction styles depending on which bin a user runs.
    | `index.ts`              | Library export                                                                   |
    | `README.md`             | Consumer-facing overview                                                         |
 
-2. **Swap internals for this package's own utils** — the inlined picocolors shim becomes
-   `src/utils/picocolors.ts`, and `isCliEntry` comes from `src/utils/is-cli-entry.ts`.
+2. [x] **Swap internals for this package's own utils** — the inlined picocolors shim becomes
+       `src/utils/picocolors.ts`, and `isCliEntry` comes from `src/utils/is-cli-entry.ts`.
 
-3. **Add `@clack/prompts`** to `dependencies`. No prompt-layer rewrite — see above.
+3. [x] **Add `@clack/prompts`** to `dependencies`. No prompt-layer rewrite — see above.
 
-4. **Decide the scan root.** genx uses `process.cwd()`. Other bins here use `findProjectRoot()` /
-   `getPackageScope()` from `src/utils/project.utils.ts`. In a monorepo those differ: `cwd` triages
-   the package you are standing in, `findProjectRoot()` the workspace root. Suggested: keep `cwd` as
-   the default (least surprising for a destructive tool) and add `--root` to opt into the workspace
-   root.
+4. [x] **Decide the scan root.** genx uses `process.cwd()`. Other bins here use `findProjectRoot()` /
+       `getPackageScope()` from `src/utils/project.utils.ts`. In a monorepo those differ: `cwd` triages
+       the package you are standing in, `findProjectRoot()` the workspace root. Suggested: keep `cwd` as
+       the default (least surprising for a destructive tool) and add `--root` to opt into the workspace
+       root.
 
-5. **Register the build**: add `'triage-docs': 'src/triage-docs/triage-docs.ts'` to the bin entry
-   block in `tsdown.config.ts`, and `'triage-docs': 'src/triage-docs/index.ts'` to the library block.
+5. [x] **Register the build**: add `'triage-docs': 'src/triage-docs/triage-docs.ts'` to the bin entry
+       block in `tsdown.config.ts`, and `'triage-docs': 'src/triage-docs/index.ts'` to the library block.
 
-6. **Add the bin** to `package.json`: `"triage-docs": "bin/triage-docs.mjs"`.
+6. [x] **Add the bin** to `package.json`: `"triage-docs": "bin/triage-docs.mjs"`.
 
-7. **Tests.** `suggestCategory` and `scoreMarkers` are pure and currently untested — worth covering
-   on the way in, including the tie case where spec and draft scores are equal (should be
-   `unknown`).
+7. [x] **Tests.** `suggestCategory` and `scoreMarkers` are pure and currently untested — worth covering
+       on the way in, including the tie case where spec and draft scores are equal (should be
+       `unknown`).
 
-8. **Release**, then in genx: delete `scripts/triage-docs.ts`, and point the `triage-docs` skill and
-   any docs at `pnpm --package=@finografic/project-scripts dlx triage-docs` — the same invocation
-   shape genx already uses for `purge-builds`.
+8. [ ] **Release**, then in genx: delete `scripts/triage-docs.ts`, and point the `triage-docs` skill and
+       any docs at `pnpm --package=@finografic/project-scripts dlx triage-docs` — the same invocation
+       shape genx already uses for `purge-builds`.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] `pnpm --package=@finografic/project-scripts dlx triage-docs` runs in any repo
-- [ ] Ctrl-C at the prompt aborts without moving or deleting anything (clack's `isCancel` path)
-- [ ] Intro names the repo being triaged, from its `package.json`
-- [ ] `--scan-dir=<path>` still adds directories to the default set
-- [ ] Empty scan exits cleanly with "Nothing to triage"
+- [ ] `pnpm --package=@finografic/project-scripts dlx triage-docs` runs in any repo (requires release)
+- [x] Ctrl-C at the prompt aborts without moving or deleting anything (clack's `isCancel` path)
+- [x] Intro names the repo being triaged, from its `package.json`
+- [x] `--scan-dir=<path>` still adds directories to the default set
+- [x] Empty scan exits cleanly with "Nothing to triage"
 - [ ] genx's copy deleted, no genx-side duplicate remains
+
+---
+
+## Done
+
+- 2026-08-19: Ported `triage-docs` into this package, exposed the bin and library export, added
+  focused tests for marker scoring and suggestions, and verified format, typecheck, tests, lint, and
+  build.
 
 ---
 

@@ -31,32 +31,24 @@ _Nothing active right now — pick from P1._
 
 ## P1 — Next Up
 
-### Port `triage-docs` from genx
+### Release `triage-docs` and clean up genx copy
 
-Move genx's `scripts/triage-docs.ts` here as a `triage-docs` bin, consumed via `pnpm dlx` like
-`clean-docs` and `purge-builds`. It is a repo-hygiene tool with nothing genx-specific about it, and
-every managed repo already depends on this package.
+`triage-docs` is ported locally as a `triage-docs` bin, consumed via `pnpm dlx` like `clean-docs`
+and `purge-builds`. Release this package, then delete genx's old `scripts/triage-docs.ts` copy and
+update genx docs/skills to call this package.
 
-The genx-side decoupling is already done, so the logic lifts unchanged — including its prompts,
-which are already clack. Do this before the Inquirer migration below: it introduces `@clack/prompts`
-via a file that is already written and verified, and becomes the in-repo reference for converting
-the rest.
+The repo-local port is complete and verified; the remaining work is intentionally external to this
+checkout.
 
 Detail: [`TODO_TRIAGE_DOCS.md`](./TODO_TRIAGE_DOCS.md)
 
-### Migrate prompts from Inquirer to Clack
+### Manual prompt cancellation checks
 
-Inquirer predates the ecosystem's move to `@clack/prompts`. genx, gli and everything generated from
-`_templates/` are clack-based, so this package is the odd one out and users meet two interaction
-styles depending on which tool they run.
+The Inquirer/Ora migration is complete locally: source imports and package manifests now use
+`@clack/prompts`.
 
-Smaller than it sounds: one Inquirer package is imported, across three files, plus `ora` for
-spinners. Four declared dependencies (`@inquirer/confirm`, `@inquirer/core`, `@inquirer/input`,
-`yargs`) have no imports at all and can be dropped first.
-
-The risk is cancellation: Inquirer throws on Ctrl-C, clack returns a symbol that must be checked
-with `isCancel`. An unconverted call site keeps compiling and treats the cancel symbol as an answer
-— in `db-setup` and `build-deployment` that gates database and file operations.
+Before calling the migration fully done, manually verify Ctrl-C in `db-setup` and
+`build-deployment` exits before database or filesystem operations run.
 
 Detail: [`TODO_MIGRATE_TO_CLACK.md`](./TODO_MIGRATE_TO_CLACK.md)
 
